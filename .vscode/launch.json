@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "api",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/examples/api/bin/server.dart",
+      "cwd": "${workspaceFolder}/examples/api"
+    },
+    {
+      "name": "books",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/examples/books/lib/main.dart",
+      "cwd": "${workspaceFolder}/examples/books"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "api & books",
+      "configurations": [
+        "api",
+        "books"
+      ]
+    }
+  ]
+}

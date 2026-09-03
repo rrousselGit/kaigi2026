@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "api",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/bin/server.dart",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
