@@ -10,6 +10,7 @@ workspace:
   - examples/books
   - examples/lints
   - examples/api_schema
+  - examples/mcp
 
 dependency_overrides:
   connectivity_plus: 6.1.3
