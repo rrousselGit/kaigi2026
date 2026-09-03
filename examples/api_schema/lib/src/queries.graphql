@@ -1,0 +1,27 @@
+query GetBooks($name: String, $genre: String) {
+  books(name: $name, genre: $genre) {
+    id
+    title
+    author
+    description
+    synopsis
+    rating
+    genre
+    pages
+    publishYear
+  }
+}
+
+query GetBook($id: ID!) {
+  book(id: $id) {
+    id
+    title
+    author
+    description
+    synopsis
+    rating
+    genre
+    pages
+    publishYear
+  }
+}

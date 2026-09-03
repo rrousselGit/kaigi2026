@@ -1,0 +1,12 @@
+name: tool_talk
+description: Monorepo workspace for tool_talk talk.
+publish_to: 'none'
+
+environment:
+  sdk: ^3.14.0-180.0.dev
+
+workspace:
+  - examples/api
+  - examples/books
+  - examples/lints
+  - examples/api_schema

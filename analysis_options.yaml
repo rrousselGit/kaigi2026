@@ -1,0 +1,18 @@
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  lints_plugin:
+    path: examples/lints
+
+analyzer:
+  exclude:
+    - "**/build/**"
+    - "**/.dart_tool/**"
+    - "**/android/**"
+    - "**/ios/**"
+    - "**/web/**"
+    - "**/windows/**"
+    - "**/macos/**"
+    - "**/linux/**"
+    - "**/*.g.dart"
+    - "**/*.graphql.dart"
