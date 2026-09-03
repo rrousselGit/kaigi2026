@@ -87,10 +87,19 @@ Response _handleGetBooks(Request request) {
     return true;
   }).toList();
 
+  if (filtered.length == 1 &&
+      (filtered.single.id == '3' ||
+          filtered.single.title.toLowerCase().contains('architects of mind'))) {
+    throw Exception('Failed to fetch Architects of Mind');
+  }
+
   return _jsonResponse(filtered.map((b) => b.toJson()).toList());
 }
 
 Response _handleGetBookDetail(Request request, String bookId) {
+  if (bookId == '3') {
+    throw Exception('Failed to fetch Architects of Mind');
+  }
   try {
     final book = sampleBooks.firstWhere((b) => b.id == bookId);
     return _jsonResponse(book.toJson());

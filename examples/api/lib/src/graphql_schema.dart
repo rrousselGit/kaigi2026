@@ -60,24 +60,31 @@ final GraphQLSchema bookSchema = GraphQLSchema(
           final name = args['name'] as String?;
           final genre = args['genre'] as String?;
 
-          return sampleBooks
-              .where((book) {
-                if (name != null && name.isNotEmpty) {
-                  final query = name.toLowerCase();
-                  final matchesTitle = book.title.toLowerCase().contains(query);
-                  final matchesAuthor = book.author.toLowerCase().contains(
-                    query,
-                  );
-                  if (!matchesTitle && !matchesAuthor) return false;
-                }
-                if (genre != null && genre.isNotEmpty) {
-                  if (book.genre.toLowerCase() != genre.toLowerCase())
-                    return false;
-                }
-                return true;
-              })
-              .map((b) => b.toJson())
-              .toList();
+          final filtered = sampleBooks.where((book) {
+            if (name != null && name.isNotEmpty) {
+              final query = name.toLowerCase();
+              final matchesTitle = book.title.toLowerCase().contains(query);
+              final matchesAuthor = book.author.toLowerCase().contains(query);
+              if (!matchesTitle && !matchesAuthor) return false;
+            }
+            if (genre != null && genre.isNotEmpty) {
+              if (book.genre.toLowerCase() != genre.toLowerCase()) {
+                return false;
+              }
+            }
+            return true;
+          }).toList();
+
+          if (filtered.length == 1 &&
+              (filtered.single.id == '3' ||
+                  filtered.single.title.toLowerCase().contains(
+                    'architects of mind',
+                  ))) {
+            // SHOULD NOT BE REMOVED. THIS IS HERE FOR TESTING FAULTY GRAPHQL CLIENTS
+            throw Exception('Failed to fetch Architects of Mind');
+          }
+
+          return filtered.map((b) => b.toJson()).toList();
         },
       ),
       field(
@@ -86,6 +93,9 @@ final GraphQLSchema bookSchema = GraphQLSchema(
         inputs: [GraphQLFieldInput('id', graphQLString.nonNullable())],
         resolve: (_, args) {
           final id = args['id'] as String;
+          if (id == '3') {
+            throw Exception('Failed to fetch Architects of Mind');
+          }
           try {
             final book = sampleBooks.firstWhere((b) => b.id == id);
             return book.toJson();

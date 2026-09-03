@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../env/env.dart';
 import '../models/book.dart';
+import '../services/graphql_service.dart';
+import '../services/logger_service.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final Book book;
@@ -17,15 +20,48 @@ class BookDetailScreen extends StatefulWidget {
 }
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
+  final GraphQLService _graphQLService = GraphQLService();
   late bool _isFavorite;
+  Book? _fetchedBook;
+  bool _isLoading = true;
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
     _isFavorite = widget.initialFavorite;
+    _fetchBookDetails();
+  }
+
+  Future<void> _fetchBookDetails() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final fetchedBookData = await _graphQLService.fetchBook(widget.book.id);
+      if (mounted) {
+        setState(() {
+          if (fetchedBookData != null) {
+            _fetchedBook = fetchedBookData.toBook();
+          }
+          _isLoading = false;
+        });
+      }
+    } catch (e, st) {
+      AppLogger.instance.logException(e, st, 'Fetch Book Detail Exception');
+      if (mounted) {
+        setState(() {
+          _error = e;
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _toggleFavorite() {
+    final book = _fetchedBook ?? widget.book;
     setState(() {
       _isFavorite = !_isFavorite;
     });
@@ -34,8 +70,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       SnackBar(
         content: Text(
           _isFavorite
-              ? 'Added "${widget.book.title}" to your favorites'
-              : 'Removed "${widget.book.title}" from your favorites',
+              ? 'Added "${book.title}" to your favorites'
+              : 'Removed "${book.title}" from your favorites',
         ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -46,6 +82,62 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final book = _fetchedBook ?? widget.book;
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.book.title),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.book.title),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 64,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load book details',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Could not connect to GraphQL API server at ${Env.apiHost}/graphql',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _fetchBookDetails,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: CustomScrollView(
@@ -84,11 +176,11 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
-                tag: 'book_cover_${widget.book.id}',
+                tag: 'book_cover_${book.id}',
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: widget.book.gradientColors,
+                      colors: book.gradientColors,
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -99,9 +191,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                       children: [
                         const SizedBox(height: 40),
                         Icon(
-                          widget.book.coverIcon,
+                          book.coverIcon,
                           size: 90,
-                          color: widget.book.accentColor.withValues(
+                          color: book.accentColor.withValues(
                             alpha: 0.95,
                           ),
                         ),
@@ -116,9 +208,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            widget.book.genre,
+                            book.genre,
                             style: TextStyle(
-                              color: widget.book.accentColor,
+                              color: book.accentColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -141,14 +233,14 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                 children: [
                   // Title & Author
                   Text(
-                    widget.book.title,
+                    book.title,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'By ${widget.book.author}',
+                    'By ${book.author}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
@@ -165,21 +257,21 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                         icon: Icons.star_rounded,
                         iconColor: Colors.amber,
                         title: 'Rating',
-                        value: '${widget.book.rating} / 5.0',
+                        value: '${book.rating} / 5.0',
                       ),
                       _buildMetaChip(
                         theme,
                         icon: Icons.menu_book_rounded,
-                        iconColor: widget.book.accentColor,
+                        iconColor: book.accentColor,
                         title: 'Pages',
-                        value: '${widget.book.pages}',
+                        value: '${book.pages}',
                       ),
                       _buildMetaChip(
                         theme,
                         icon: Icons.calendar_today_rounded,
                         iconColor: theme.colorScheme.secondary,
                         title: 'Published',
-                        value: '${widget.book.publishYear}',
+                        value: '${book.publishYear}',
                       ),
                     ],
                   ),
@@ -194,7 +286,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.book.description,
+                    book.description,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.5,
@@ -212,7 +304,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.book.synopsis,
+                    book.synopsis,
                     style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                   ),
                   const SizedBox(height: 36),
@@ -225,13 +317,13 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Opening "${widget.book.title}"...'),
+                            content: Text('Opening "${book.title}"...'),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.book.accentColor,
+                        backgroundColor: book.accentColor,
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
