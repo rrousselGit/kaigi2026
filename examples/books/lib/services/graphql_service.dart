@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer' as developer;
+
 import 'package:api_schema/api_schema.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
@@ -17,7 +20,68 @@ class GraphQLService {
                 httpClient: LoggingHttpClient(),
               ),
               cache: GraphQLCache(store: InMemoryStore()),
+            ) {
+    _registerExtension();
+  }
+
+  void _registerExtension() {
+    try {
+      developer.registerExtension('ext.books.gql', (method, parameters) async {
+        final query = parameters['query'];
+        if (query == null || query.trim().isEmpty) {
+          return developer.ServiceExtensionResponse.error(
+            developer.ServiceExtensionResponse.invalidParams,
+            'Missing required parameter: query',
+          );
+        }
+
+        Map<String, dynamic>? variables;
+        if (parameters.containsKey('variables') && parameters['variables'] != null) {
+          try {
+            variables = jsonDecode(parameters['variables']!) as Map<String, dynamic>?;
+          } catch (e) {
+            return developer.ServiceExtensionResponse.error(
+              developer.ServiceExtensionResponse.invalidParams,
+              'Invalid JSON for variables: $e',
             );
+          }
+        }
+
+        try {
+          final options = QueryOptions(
+            document: gql(query),
+            variables: variables ?? const {},
+            fetchPolicy: FetchPolicy.networkOnly,
+          );
+          final result = await client.query(options);
+
+          if (result.hasException) {
+            final errors = result.exception?.graphqlErrors
+                    .map((e) => e.message)
+                    .toList() ??
+                [result.exception.toString()];
+            return developer.ServiceExtensionResponse.result(
+              jsonEncode({
+                'data': result.data,
+                'errors': errors,
+              }),
+            );
+          }
+
+          return developer.ServiceExtensionResponse.result(
+            jsonEncode({'data': result.data}),
+          );
+        } catch (e) {
+          return developer.ServiceExtensionResponse.error(
+            developer.ServiceExtensionResponse.extensionError,
+            'Error executing GraphQL query: $e',
+          );
+        }
+      });
+    } catch (_) {
+      // Ignore if extension is already registered
+    }
+  }
 
   Future<List<Book>> fetchBooks({String? name, String? genre}) async {
     final nameVar =

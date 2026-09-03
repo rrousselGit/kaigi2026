@@ -1,5 +1,5 @@
 name: mcp
-description: An example MCP server offering a simple hello world tool.
+description: An MCP server providing a tool to query logs from the books app via VM Service.
 version: 1.0.0
 publish_to: 'none'
 
@@ -10,6 +10,8 @@ resolution: workspace
 
 dependencies:
   dart_mcp: ^0.5.2
+  vm_service: ^15.3.0
 
 dev_dependencies:
   lints: ^6.0.0
+

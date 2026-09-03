@@ -57,7 +57,7 @@ Future<Response> _handleGraphQL(Request request) async {
   }
 
   final result = await _graphQL.parseAndExecute(query, variableValues: variables ?? const {});
-  return _jsonResponse(result);
+  return _jsonResponse({'data': result});
 }
 
 Response _handleGetBooks(Request request) {

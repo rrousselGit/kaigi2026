@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 
 enum LogType {
@@ -26,6 +28,18 @@ class LogEntry {
     this.stackTrace,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type.name,
+      'timestamp': timestamp.toIso8601String(),
+      'title': title,
+      'details': details,
+      if (error != null) 'error': error.toString(),
+      if (stackTrace != null) 'stackTrace': stackTrace.toString(),
+    };
+  }
+
   String get formattedTime {
     final h = timestamp.hour.toString().padLeft(2, '0');
     final m = timestamp.minute.toString().padLeft(2, '0');
@@ -38,7 +52,18 @@ class LogEntry {
 class AppLogger extends ChangeNotifier {
   static final AppLogger instance = AppLogger._internal();
 
-  AppLogger._internal();
+  AppLogger._internal() {
+    try {
+      developer.registerExtension('ext.books.logs', (method, parameters) async {
+        final logsJson = _logs.map((e) => e.toJson()).toList();
+        return developer.ServiceExtensionResponse.result(
+          jsonEncode({'logs': logsJson}),
+        );
+      });
+    } catch (_) {
+      // Ignore if extension is already registered
+    }
+  }
 
   final List<LogEntry> _logs = [];
 
@@ -144,6 +169,12 @@ class AppLogger extends ChangeNotifier {
     final message =
         '$prefix [${entry.formattedTime}] ${entry.title}\n${entry.details ?? ""}';
     debugPrint(message);
+    developer.log(
+      entry.title,
+      name: 'books.${entry.type.name}',
+      error: entry.error,
+      stackTrace: entry.stackTrace,
+    );
   }
 
   void clear() {
