@@ -45,33 +45,45 @@ final GraphQLSchema bookSchema = GraphQLSchema(
         'books',
         listOf(bookType.nonNullable()).nonNullable(),
         inputs: [
-          GraphQLFieldInput('name', nullableGraphQLString, defaultsToNull: true),
-          GraphQLFieldInput('genre', nullableGraphQLString, defaultsToNull: true),
+          GraphQLFieldInput(
+            'name',
+            nullableGraphQLString,
+            defaultsToNull: true,
+          ),
+          GraphQLFieldInput(
+            'genre',
+            nullableGraphQLString,
+            defaultsToNull: true,
+          ),
         ],
         resolve: (_, args) {
           final name = args['name'] as String?;
           final genre = args['genre'] as String?;
 
-          return sampleBooks.where((book) {
-            if (name != null && name.isNotEmpty) {
-              final query = name.toLowerCase();
-              final matchesTitle = book.title.toLowerCase().contains(query);
-              final matchesAuthor = book.author.toLowerCase().contains(query);
-              if (!matchesTitle && !matchesAuthor) return false;
-            }
-            if (genre != null && genre.isNotEmpty) {
-              if (book.genre.toLowerCase() != genre.toLowerCase()) return false;
-            }
-            return true;
-          }).map((b) => b.toJson()).toList();
+          return sampleBooks
+              .where((book) {
+                if (name != null && name.isNotEmpty) {
+                  final query = name.toLowerCase();
+                  final matchesTitle = book.title.toLowerCase().contains(query);
+                  final matchesAuthor = book.author.toLowerCase().contains(
+                    query,
+                  );
+                  if (!matchesTitle && !matchesAuthor) return false;
+                }
+                if (genre != null && genre.isNotEmpty) {
+                  if (book.genre.toLowerCase() != genre.toLowerCase())
+                    return false;
+                }
+                return true;
+              })
+              .map((b) => b.toJson())
+              .toList();
         },
       ),
       field(
         'book',
         bookType,
-        inputs: [
-          GraphQLFieldInput('id', graphQLString.nonNullable()),
-        ],
+        inputs: [GraphQLFieldInput('id', graphQLString.nonNullable())],
         resolve: (_, args) {
           final id = args['id'] as String;
           try {

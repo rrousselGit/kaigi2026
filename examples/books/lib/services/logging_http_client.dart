@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import 'logger_service.dart';
 
 class LoggingHttpClient extends http.BaseClient {

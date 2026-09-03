@@ -36,7 +36,8 @@ final List<Book> sampleBooks = [
     id: '1',
     title: 'The Cosmic Horizon',
     author: 'Elena Rostova',
-    description: 'A breathtaking journey through deep space and human consciousness.',
+    description:
+        'A breathtaking journey through deep space and human consciousness.',
     synopsis:
         'When humanity detects a harmonic signal emanating from the outer boundary of the solar system, commander Maya Vance leads an expedition into uncharted territory. What begins as a mission of discovery turns into a profound exploration of human destiny, time dilation, and the mysterious forces binding galaxies together.',
     rating: 4.9,
@@ -48,7 +49,8 @@ final List<Book> sampleBooks = [
     id: '2',
     title: 'Chronicles of Aethelgard',
     author: 'Marcus Vance',
-    description: 'An epic tale of magic, forgotten empires, and ancient secrets.',
+    description:
+        'An epic tale of magic, forgotten empires, and ancient secrets.',
     synopsis:
         'Deep beneath the mist-shrouded peaks of Aethelgard lies the Sunstone artifact, capable of altering the weave of time. Young scholar Kaelen stumbles upon an ancient codex detailing the downfall of the First Dynasty, unraveling a plot that threatens to plunge the realm into endless winter.',
     rating: 4.8,
@@ -60,7 +62,8 @@ final List<Book> sampleBooks = [
     id: '3',
     title: 'Architects of Mind',
     author: 'Dr. Sarah Lin',
-    description: 'Exploring neural interfaces and the future of human intelligence.',
+    description:
+        'Exploring neural interfaces and the future of human intelligence.',
     synopsis:
         'Synthesizing neuroscience, artificial intelligence, and cognitive philosophy, Dr. Lin provides an illuminating look at how synthetic neural networks and biological brains are merging. A groundbreaking work on the boundary between biological perception and digital consciousness.',
     rating: 4.7,
@@ -84,7 +87,8 @@ final List<Book> sampleBooks = [
     id: '5',
     title: 'Echoes of the Silent Forest',
     author: 'Clara Thorne',
-    description: 'A poetic novel of love, loss, and nature in remote Scandinavia.',
+    description:
+        'A poetic novel of love, loss, and nature in remote Scandinavia.',
     synopsis:
         'Nestled in a remote Scandinavian valley, Astrid tends to an ancient boreal forest that remembers generations of human sorrow. When a lost botanist arrives seeking rare flora, their shared solitude unveils forgotten truths about memory and forgiveness.',
     rating: 4.8,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../env/env.dart';
 import '../models/book.dart';
 import '../services/graphql_service.dart';
@@ -93,10 +94,8 @@ class _BookListScreenState extends State<BookListScreen> {
     final isFav = _favoriteBookIds.contains(book.id);
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => BookDetailScreen(
-          book: book,
-          initialFavorite: isFav,
-        ),
+        builder: (context) =>
+            BookDetailScreen(book: book, initialFavorite: isFav),
       ),
     );
 
@@ -283,8 +282,9 @@ class _BookListScreenState extends State<BookListScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: featured.gradientColors.last
-                                    .withValues(alpha: 0.3),
+                                color: featured.gradientColors.last.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
                               ),
@@ -307,8 +307,9 @@ class _BookListScreenState extends State<BookListScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.amber,
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: const Text(
                                           'TOP RATED',
@@ -334,8 +335,9 @@ class _BookListScreenState extends State<BookListScreen> {
                                       Text(
                                         'by ${featured.author}',
                                         style: TextStyle(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.8),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.8,
+                                          ),
                                           fontSize: 13,
                                         ),
                                       ),
@@ -345,8 +347,9 @@ class _BookListScreenState extends State<BookListScreen> {
                                 Icon(
                                   featured.coverIcon,
                                   size: 64,
-                                  color: featured.accentColor
-                                      .withValues(alpha: 0.9),
+                                  color: featured.accentColor.withValues(
+                                    alpha: 0.9,
+                                  ),
                                 ),
                               ],
                             ),
@@ -383,9 +386,7 @@ class _BookListScreenState extends State<BookListScreen> {
             if (_isLoading)
               const SliverFillRemaining(
                 hasScrollBody: false,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               )
             else if (_error != null)
               SliverFillRemaining(
@@ -460,33 +461,28 @@ class _BookListScreenState extends State<BookListScreen> {
                     crossAxisSpacing: 16,
                     childAspectRatio: 0.65,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final book = _books[index];
-                      final isFav = _favoriteBookIds.contains(book.id);
-                      return BookCard(
-                        book: book,
-                        isFavorite: isFav,
-                        onTap: () => _navigateToDetail(book),
-                        onFavoriteToggle: () {
-                          setState(() {
-                            if (isFav) {
-                              _favoriteBookIds.remove(book.id);
-                            } else {
-                              _favoriteBookIds.add(book.id);
-                            }
-                          });
-                        },
-                      );
-                    },
-                    childCount: _books.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final book = _books[index];
+                    final isFav = _favoriteBookIds.contains(book.id);
+                    return BookCard(
+                      book: book,
+                      isFavorite: isFav,
+                      onTap: () => _navigateToDetail(book),
+                      onFavoriteToggle: () {
+                        setState(() {
+                          if (isFav) {
+                            _favoriteBookIds.remove(book.id);
+                          } else {
+                            _favoriteBookIds.add(book.id);
+                          }
+                        });
+                      },
+                    );
+                  }, childCount: _books.length),
                 ),
               ),
 
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 32),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../services/logger_service.dart';
 
 class LogViewerModal extends StatefulWidget {
@@ -50,7 +51,9 @@ class _LogViewerModalState extends State<LogViewerModal> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.4,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -148,8 +151,9 @@ class _LogViewerModalState extends State<LogViewerModal> {
                           color: isSelected
                               ? theme.colorScheme.onPrimaryContainer
                               : theme.colorScheme.onSurface,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                           fontSize: 13,
                         ),
                       ),
@@ -260,25 +264,25 @@ class _LogViewerModalState extends State<LogViewerModal> {
   Widget _buildLogCard(ThemeData theme, LogEntry log, bool isExpanded) {
     final (badgeColor, badgeText, badgeTextColor) = switch (log.type) {
       LogType.networkRequest => (
-          Colors.blue.withValues(alpha: 0.2),
-          'REQ',
-          Colors.blueAccent
-        ),
+        Colors.blue.withValues(alpha: 0.2),
+        'REQ',
+        Colors.blueAccent,
+      ),
       LogType.networkResponse => (
-          Colors.green.withValues(alpha: 0.2),
-          'RES',
-          Colors.greenAccent
-        ),
+        Colors.green.withValues(alpha: 0.2),
+        'RES',
+        Colors.greenAccent,
+      ),
       LogType.networkError => (
-          Colors.orange.withValues(alpha: 0.2),
-          'ERR',
-          Colors.orangeAccent
-        ),
+        Colors.orange.withValues(alpha: 0.2),
+        'ERR',
+        Colors.orangeAccent,
+      ),
       LogType.exception => (
-          Colors.red.withValues(alpha: 0.2),
-          'EXC',
-          Colors.redAccent
-        ),
+        Colors.red.withValues(alpha: 0.2),
+        'EXC',
+        Colors.redAccent,
+      ),
     };
 
     return Card(
@@ -363,7 +367,9 @@ class _LogViewerModalState extends State<LogViewerModal> {
               ),
 
               // Expanded details
-              if (isExpanded && log.details != null && log.details!.isNotEmpty) ...[
+              if (isExpanded &&
+                  log.details != null &&
+                  log.details!.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 const Divider(height: 1),
                 const SizedBox(height: 8),
@@ -402,7 +408,10 @@ class _LogViewerModalState extends State<LogViewerModal> {
                       );
                     },
                     icon: const Icon(Icons.copy_rounded, size: 14),
-                    label: const Text('Copy Log', style: TextStyle(fontSize: 12)),
+                    label: const Text(
+                      'Copy Log',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
                 ),
               ],

@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 
-enum LogType {
-  networkRequest,
-  networkResponse,
-  networkError,
-  exception,
-}
+enum LogType { networkRequest, networkResponse, networkError, exception }
 
 class LogEntry {
   final String id;

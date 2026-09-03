@@ -23,15 +23,11 @@ class AvoidHardcodedStringRule extends AnalysisRule {
   static const _code = LintCode(
     'avoid_hardcoded_string',
     'Avoid hardcoded strings inside Widget subclasses.',
-    correctionMessage:
-        'Try extracting the string literal to a constant or localized resource.',
+    correctionMessage: 'Try extracting the string literal to a constant or localized resource.',
   );
 
   AvoidHardcodedStringRule()
-      : super(
-          name: _code.lowerCaseName,
-          description: _code.problemMessage,
-        );
+    : super(name: _code.lowerCaseName, description: _code.problemMessage);
 
   @override
   DiagnosticCode get diagnosticCode => _code;

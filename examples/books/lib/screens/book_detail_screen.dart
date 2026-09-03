@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/book.dart';
 
 class BookDetailScreen extends StatefulWidget {
@@ -100,7 +101,9 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                         Icon(
                           widget.book.coverIcon,
                           size: 90,
-                          color: widget.book.accentColor.withValues(alpha: 0.95),
+                          color: widget.book.accentColor.withValues(
+                            alpha: 0.95,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -210,9 +213,7 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     widget.book.synopsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                   ),
                   const SizedBox(height: 36),
 

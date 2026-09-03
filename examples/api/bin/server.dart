@@ -25,11 +25,14 @@ Response _jsonResponse(Object? body, {int statusCode = 200}) {
 
 Future<Response> _handleGraphQL(Request request) async {
   if (request.method == 'OPTIONS') {
-    return Response.ok('', headers: {
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, POST, OPTIONS',
-      'access-control-allow-headers': 'Origin, Content-Type, Accept',
-    });
+    return Response.ok(
+      '',
+      headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, POST, OPTIONS',
+        'access-control-allow-headers': 'Origin, Content-Type, Accept',
+      },
+    );
   }
 
   String? query;
@@ -53,10 +56,17 @@ Future<Response> _handleGraphQL(Request request) async {
   }
 
   if (query == null || query.isEmpty) {
-    return _jsonResponse({'errors': [{'message': 'Missing query parameter'}]}, statusCode: 400);
+    return _jsonResponse({
+      'errors': [
+        {'message': 'Missing query parameter'},
+      ],
+    }, statusCode: 400);
   }
 
-  final result = await _graphQL.parseAndExecute(query, variableValues: variables ?? const {});
+  final result = await _graphQL.parseAndExecute(
+    query,
+    variableValues: variables ?? const {},
+  );
   return _jsonResponse({'data': result});
 }
 

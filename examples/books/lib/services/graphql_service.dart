@@ -13,14 +13,15 @@ class GraphQLService {
   final GraphQLClient client;
 
   GraphQLService({GraphQLClient? client})
-      : client = client ??
-            GraphQLClient(
-              link: HttpLink(
-                '${Env.apiHost}/graphql',
-                httpClient: LoggingHttpClient(),
-              ),
-              cache: GraphQLCache(store: InMemoryStore()),
-            ) {
+    : client =
+          client ??
+          GraphQLClient(
+            link: HttpLink(
+              '${Env.apiHost}/graphql',
+              httpClient: LoggingHttpClient(),
+            ),
+            cache: GraphQLCache(store: InMemoryStore()),
+          ) {
     _registerExtension();
   }
 
@@ -36,9 +37,11 @@ class GraphQLService {
         }
 
         Map<String, dynamic>? variables;
-        if (parameters.containsKey('variables') && parameters['variables'] != null) {
+        if (parameters.containsKey('variables') &&
+            parameters['variables'] != null) {
           try {
-            variables = jsonDecode(parameters['variables']!) as Map<String, dynamic>?;
+            variables =
+                jsonDecode(parameters['variables']!) as Map<String, dynamic>?;
           } catch (e) {
             return developer.ServiceExtensionResponse.error(
               developer.ServiceExtensionResponse.invalidParams,
@@ -56,15 +59,13 @@ class GraphQLService {
           final result = await client.query(options);
 
           if (result.hasException) {
-            final errors = result.exception?.graphqlErrors
+            final errors =
+                result.exception?.graphqlErrors
                     .map((e) => e.message)
                     .toList() ??
                 [result.exception.toString()];
             return developer.ServiceExtensionResponse.result(
-              jsonEncode({
-                'data': result.data,
-                'errors': errors,
-              }),
+              jsonEncode({'data': result.data, 'errors': errors}),
             );
           }
 
@@ -84,12 +85,13 @@ class GraphQLService {
   }
 
   Future<List<Book>> fetchBooks({String? name, String? genre}) async {
-    final nameVar =
-        (name != null && name.trim().isNotEmpty) ? name.trim() : null;
+    final nameVar = (name != null && name.trim().isNotEmpty)
+        ? name.trim()
+        : null;
     final genreVar =
         (genre != null && genre.trim().isNotEmpty && genre != 'All')
-            ? genre.trim()
-            : null;
+        ? genre.trim()
+        : null;
 
     final options = Options$Query$GetBooks(
       variables: Variables$Query$GetBooks(name: nameVar, genre: genreVar),
@@ -130,4 +132,3 @@ class GraphQLService {
     return result.parsedData?.book;
   }
 }
-

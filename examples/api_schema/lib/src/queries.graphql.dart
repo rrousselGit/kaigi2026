@@ -395,10 +395,8 @@ const documentNodeQueryGetBooks = DocumentNode(
 );
 Query$GetBooks _parserFn$Query$GetBooks(Map<String, dynamic> data) =>
     Query$GetBooks.fromJson(data);
-typedef OnQueryComplete$Query$GetBooks = FutureOr<void> Function(
-  Map<String, dynamic>?,
-  Query$GetBooks?,
-);
+typedef OnQueryComplete$Query$GetBooks =
+    FutureOr<void> Function(Map<String, dynamic>?, Query$GetBooks?);
 
 class Options$Query$GetBooks extends graphql.QueryOptions<Query$GetBooks> {
   Options$Query$GetBooks({
@@ -1139,10 +1137,8 @@ const documentNodeQueryGetBook = DocumentNode(
 );
 Query$GetBook _parserFn$Query$GetBook(Map<String, dynamic> data) =>
     Query$GetBook.fromJson(data);
-typedef OnQueryComplete$Query$GetBook = FutureOr<void> Function(
-  Map<String, dynamic>?,
-  Query$GetBook?,
-);
+typedef OnQueryComplete$Query$GetBook =
+    FutureOr<void> Function(Map<String, dynamic>?, Query$GetBook?);
 
 class Options$Query$GetBook extends graphql.QueryOptions<Query$GetBook> {
   Options$Query$GetBook({

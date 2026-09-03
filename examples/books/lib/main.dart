@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
 import 'screens/book_list_screen.dart';
 import 'services/logger_service.dart';
 
@@ -16,11 +17,7 @@ void main() {
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    AppLogger.instance.logException(
-      error,
-      stack,
-      'Uncaught Async Error',
-    );
+    AppLogger.instance.logException(error, stack, 'Uncaught Async Error');
     return true;
   };
 
@@ -65,4 +62,3 @@ class BookApp extends StatelessWidget {
     );
   }
 }
-
