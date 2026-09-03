@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/translations.dart';
 import '../models/book.dart';
 
 class BookCard extends StatelessWidget {
@@ -43,7 +44,7 @@ class BookCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Hero(
-                    tag: 'book_cover_${book.id}',
+                    tag: Translations.heroCoverTagPrefix + book.id,
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(

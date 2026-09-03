@@ -11,3 +11,7 @@ resolution: workspace
 dependencies:
   analysis_server_plugin: ^0.3.0
   analyzer: any
+  riverpod_analyzer_utils: any
+
+dependency_overrides:
+  analyzer: ^14.0.0

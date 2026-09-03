@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'constants/translations.dart';
 import 'screens/book_list_screen.dart';
 import 'services/logger_service.dart';
 
@@ -21,7 +23,7 @@ void main() {
     return true;
   };
 
-  runApp(const BookApp());
+  runApp(const ProviderScope(child: BookApp()));
 }
 
 class BookApp extends StatelessWidget {
@@ -30,7 +32,7 @@ class BookApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BookNook',
+      title: Translations.appTitle,
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData(

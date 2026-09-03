@@ -6,6 +6,7 @@ import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/error/error.dart';
+import 'package:riverpod_analyzer_utils/riverpod_analyzer_utils.dart';
 
 final plugin = LintsPlugin();
 
@@ -16,6 +17,7 @@ class LintsPlugin extends Plugin {
   @override
   void register(PluginRegistry registry) {
     registry.registerWarningRule(AvoidHardcodedStringRule());
+    registry.registerWarningRule(MustSpecifyProviderNameRule());
   }
 }
 
@@ -23,7 +25,8 @@ class AvoidHardcodedStringRule extends AnalysisRule {
   static const _code = LintCode(
     'avoid_hardcoded_string',
     'Avoid hardcoded strings inside Widget subclasses.',
-    correctionMessage: 'Try extracting the string literal to a constant or localized resource.',
+    correctionMessage:
+        'Try extracting the string literal to a constant or localized resource.',
   );
 
   AvoidHardcodedStringRule()
@@ -89,5 +92,52 @@ class _Visitor extends SimpleAstVisitor<void> {
       }
     }
     return false;
+  }
+}
+
+class MustSpecifyProviderNameRule extends AnalysisRule {
+  static const _code = LintCode(
+    'must_specify_provider_name',
+    'Providers must specify a name parameter.',
+    correctionMessage:
+        'Try specifying a "name" parameter when declaring a provider.',
+  );
+
+  MustSpecifyProviderNameRule()
+    : super(name: _code.lowerCaseName, description: _code.problemMessage);
+
+  @override
+  DiagnosticCode get diagnosticCode => _code;
+
+  @override
+  void registerNodeProcessors(
+    RuleVisitorRegistry registry,
+    RuleContext context,
+  ) {
+    final visitor = _MustSpecifyProviderNameVisitor(this);
+    registry.addVariableDeclaration(this, visitor);
+  }
+}
+
+class _MustSpecifyProviderNameVisitor extends SimpleAstVisitor<void> {
+  final MustSpecifyProviderNameRule rule;
+
+  _MustSpecifyProviderNameVisitor(this.rule);
+
+  @override
+  void visitVariableDeclaration(VariableDeclaration node) {
+    final provider = node.provider;
+    if (provider is ManualProviderDeclaration) {
+      final hasNameArg = provider.argumentList.arguments.any((arg) {
+        if (arg is NamedArgument) {
+          return arg.name.lexeme == 'name';
+        }
+        return false;
+      });
+
+      if (!hasNameArg) {
+        rule.reportAtNode(node);
+      }
+    }
   }
 }
