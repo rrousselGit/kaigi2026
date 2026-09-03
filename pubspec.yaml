@@ -10,3 +10,7 @@ workspace:
   - examples/books
   - examples/lints
   - examples/api_schema
+
+dependency_overrides:
+  connectivity_plus: 6.1.3
+

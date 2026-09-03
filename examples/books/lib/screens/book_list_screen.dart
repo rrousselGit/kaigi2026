@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../env/env.dart';
 import '../models/book.dart';
 import '../services/graphql_service.dart';
+import '../services/logger_service.dart';
 import '../widgets/book_card.dart';
+import '../widgets/log_viewer_modal.dart';
 import 'book_detail_screen.dart';
 
 class BookListScreen extends StatefulWidget {
@@ -75,7 +78,8 @@ class _BookListScreenState extends State<BookListScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.instance.logException(e, st, 'Fetch Books Exception');
       if (mounted) {
         setState(() {
           _error = e;
@@ -144,6 +148,11 @@ class _BookListScreenState extends State<BookListScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report_rounded),
+            tooltip: 'Debug Logs',
+            onPressed: () => LogViewerModal.show(context),
+          ),
           IconButton(
             icon: const Icon(Icons.bookmark_border_rounded),
             onPressed: () {
@@ -401,7 +410,7 @@ class _BookListScreenState extends State<BookListScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Could not connect to GraphQL API server at ${GraphQLService().client.link}',
+                          'Could not connect to GraphQL API server at ${Env.apiHost}/graphql',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,

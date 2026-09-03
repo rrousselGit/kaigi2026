@@ -1,6 +1,26 @@
 import 'package:graphql_schema2/graphql_schema2.dart';
 import 'models/book.dart';
 
+class NullableGraphQLStringType extends GraphQLStringType {
+  NullableGraphQLStringType() : super();
+
+  @override
+  ValidationResult<String> validate(String key, dynamic input) {
+    if (input == null) {
+      return super.validate(key, '');
+    }
+    return super.validate(key, input);
+  }
+
+  @override
+  String deserialize(dynamic serialized) {
+    if (serialized == null) return '';
+    return super.deserialize(serialized as String);
+  }
+}
+
+final nullableGraphQLString = NullableGraphQLStringType();
+
 final GraphQLObjectType bookType = objectType(
   'Book',
   description: 'A book entity',
@@ -25,8 +45,8 @@ final GraphQLSchema bookSchema = GraphQLSchema(
         'books',
         listOf(bookType.nonNullable()).nonNullable(),
         inputs: [
-          GraphQLFieldInput('name', graphQLString),
-          GraphQLFieldInput('genre', graphQLString),
+          GraphQLFieldInput('name', nullableGraphQLString, defaultsToNull: true),
+          GraphQLFieldInput('genre', nullableGraphQLString, defaultsToNull: true),
         ],
         resolve: (_, args) {
           final name = args['name'] as String?;

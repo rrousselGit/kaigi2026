@@ -3,6 +3,8 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 import '../env/env.dart';
 import '../models/book.dart';
+import 'logger_service.dart';
+import 'logging_http_client.dart';
 
 class GraphQLService {
   final GraphQLClient client;
@@ -10,7 +12,10 @@ class GraphQLService {
   GraphQLService({GraphQLClient? client})
       : client = client ??
             GraphQLClient(
-              link: HttpLink('${Env.apiHost}/graphql'),
+              link: HttpLink(
+                '${Env.apiHost}/graphql',
+                httpClient: LoggingHttpClient(),
+              ),
               cache: GraphQLCache(store: InMemoryStore()),
             );
 
@@ -30,6 +35,11 @@ class GraphQLService {
     final result = await client.query$GetBooks(options);
 
     if (result.hasException) {
+      AppLogger.instance.logException(
+        result.exception!,
+        null,
+        'GraphQL GetBooks Exception',
+      );
       throw result.exception!;
     }
 
@@ -45,9 +55,15 @@ class GraphQLService {
     final result = await client.query$GetBook(options);
 
     if (result.hasException) {
+      AppLogger.instance.logException(
+        result.exception!,
+        null,
+        'GraphQL GetBook Exception',
+      );
       throw result.exception!;
     }
 
     return result.parsedData?.book;
   }
 }
+
