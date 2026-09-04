@@ -1,1334 +1,1895 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Build devtools for your app</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-gradient-1: #0f172a;
-      --bg-gradient-2: #1e1b4b;
-      --bg-gradient-3: #090d16;
-      --card-bg: rgba(30, 41, 59, 0.75);
-      --card-border: rgba(255, 255, 255, 0.12);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --accent-primary: #38bdf8;
-      --accent-secondary: #a855f7;
-      --accent-emerald: #10b981;
-      --accent-amber: #f59e0b;
-      --accent-rose: #f43f5e;
-      --font-heading: 'Outfit', sans-serif;
-      --font-body: 'Inter', sans-serif;
-      --font-code: 'Fira Code', monospace;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Build devtools for your app</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-gradient-1: #090d16;
+        --bg-gradient-2: #111827;
+        --bg-gradient-3: #090d16;
+        --card-bg: rgba(17, 24, 39, 0.7);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --text-dim: #64748b;
+        --accent-primary: #38bdf8;
+        --accent-secondary: #38bdf8;
+        --accent-emerald: #38bdf8;
+        --accent-amber: #38bdf8;
+        --accent-rose: #38bdf8;
+        --font-heading: "Outfit", sans-serif;
+        --font-body: "Inter", sans-serif;
+        --font-code: "Fira Code", monospace;
+      }
 
-    [data-theme="neon"] {
-      --bg-gradient-1: #050515;
-      --bg-gradient-2: #15002a;
-      --bg-gradient-3: #000c1d;
-      --card-bg: rgba(20, 10, 40, 0.8);
-      --card-border: rgba(168, 85, 247, 0.3);
-      --accent-primary: #00f0ff;
-      --accent-secondary: #ff007f;
-      --accent-emerald: #00ffaa;
-    }
+      [data-theme="neon"] {
+        --bg-gradient-1: #050515;
+        --bg-gradient-2: #0f172a;
+        --bg-gradient-3: #000c1d;
+        --card-bg: rgba(15, 23, 42, 0.8);
+        --card-border: rgba(56, 189, 248, 0.2);
+        --accent-primary: #38bdf8;
+        --accent-secondary: #38bdf8;
+        --accent-emerald: #38bdf8;
+      }
 
-    [data-theme="light"] {
-      --bg-gradient-1: #f8fafc;
-      --bg-gradient-2: #e2e8f0;
-      --bg-gradient-3: #f1f5f9;
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --card-border: rgba(0, 0, 0, 0.1);
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --text-dim: #94a3b8;
-      --accent-primary: #0284c7;
-      --accent-secondary: #7c3aed;
-      --accent-emerald: #059669;
-    }
+      [data-theme="light"] {
+        --bg-gradient-1: #f8fafc;
+        --bg-gradient-2: #e2e8f0;
+        --bg-gradient-3: #f1f5f9;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --card-border: rgba(0, 0, 0, 0.1);
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --text-dim: #94a3b8;
+        --accent-primary: #0284c7;
+        --accent-secondary: #0284c7;
+        --accent-emerald: #0284c7;
+      }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      font-family: var(--font-body);
-      background: radial-gradient(circle at 20% 20%, var(--bg-gradient-2) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 80%, var(--bg-gradient-3) 0%, transparent 50%),
-                  var(--bg-gradient-1);
-      color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+      body {
+        font-family: var(--font-body);
+        background:
+          radial-gradient(
+            circle at 50% 0%,
+            var(--bg-gradient-2) 0%,
+            transparent 70%
+          ),
+          var(--bg-gradient-1);
+        color: var(--text-main);
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
 
-    /* Top Progress Bar */
-    .progress-bar-container {
-      width: 100%;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.05);
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 100;
-    }
+      /* Top Progress Bar */
+      .progress-bar-container {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+      }
 
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-      transition: width 0.3s ease;
-      box-shadow: 0 0 10px var(--accent-primary);
-    }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: var(--accent-primary);
+        transition: width 0.3s ease;
+        box-shadow: 0 0 8px var(--accent-primary);
+      }
 
-    /* Deck Viewport */
-    .deck-container {
-      flex: 1;
-      position: relative;
-      width: 100%;
-      height: calc(100vh - 60px);
-      overflow: hidden;
-    }
+      /* Deck Viewport */
+      .deck-container {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 60px);
+        overflow: hidden;
+      }
 
-    .slide {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      padding: 2.5rem 4.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.96) translateY(20px);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 1;
-    }
+      .slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 2.5rem 4.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.96) translateY(20px);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1;
+      }
 
-    .slide.active {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1) translateY(0);
-      z-index: 2;
-    }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1) translateY(0);
+        z-index: 2;
+      }
 
-    /* Header & Badges */
-    .slide-header {
-      margin-bottom: 1.5rem;
-    }
+      /* Header & Badges */
+      .slide-header {
+        margin-bottom: 1.5rem;
+      }
 
-    .slide-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--accent-primary);
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
-    }
+      .slide-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        background: rgba(56, 189, 248, 0.08);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: var(--accent-primary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
 
-    h1 {
-      font-family: var(--font-heading);
-      font-size: 3.5rem;
-      font-weight: 800;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #ffffff 30%, var(--accent-primary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-    }
+      h1 {
+        font-family: var(--font-heading);
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: #ffffff;
+        margin-bottom: 1rem;
+      }
 
-    h2 {
-      font-family: var(--font-heading);
-      font-size: 2.2rem;
-      font-weight: 700;
-      line-height: 1.2;
-      color: #ffffff;
-      margin-bottom: 1rem;
-    }
+      h2 {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.2;
+        color: #ffffff;
+        margin-bottom: 1rem;
+      }
 
-    h3 {
-      font-family: var(--font-heading);
-      font-size: 1.35rem;
-      font-weight: 600;
-      color: var(--accent-primary);
-      margin-bottom: 0.5rem;
-    }
+      h3 {
+        font-family: var(--font-heading);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--accent-primary);
+        margin-bottom: 0.5rem;
+      }
 
-    p {
-      font-size: 1.1rem;
-      line-height: 1.5;
-      color: var(--text-muted);
-      margin-bottom: 0.75rem;
-    }
+      p {
+        font-size: 1.1rem;
+        line-height: 1.5;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+      }
 
-    /* Grids & Cards */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.75rem;
-      align-items: stretch;
-    }
+      /* Grids & Cards */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.75rem;
+        align-items: stretch;
+      }
 
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
-    }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+      }
 
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 0.85rem;
-      padding: 1.5rem;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 0.85rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
 
-    .card.accent-glow::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
-    }
+      .card.accent-glow::before,
+      .card.emerald-glow::before,
+      .card.rose-glow::before,
+      .card.amber-glow::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--accent-primary);
+      }
 
-    .card.emerald-glow::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--accent-emerald);
-    }
+      /* Lists */
+      ul.feature-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
 
-    .card.rose-glow::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--accent-rose);
-    }
+      ul.feature-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        font-size: 1.05rem;
+        color: var(--text-main);
+        line-height: 1.45;
+      }
 
-    .card.amber-glow::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--accent-amber);
-    }
+      ul.feature-list li::before {
+        content: "✦";
+        position: absolute;
+        left: 0;
+        color: var(--accent-primary);
+        font-size: 0.9rem;
+      }
 
-    /* Lists */
-    ul.feature-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-    }
+      ul.feature-list li strong {
+        color: #ffffff;
+      }
 
-    ul.feature-list li {
-      position: relative;
-      padding-left: 1.5rem;
-      font-size: 1.05rem;
-      color: var(--text-main);
-      line-height: 1.45;
-    }
+      /* Callout & Quotes */
+      .callout,
+      .callout.quote,
+      .callout.warning,
+      .callout.tip {
+        background: rgba(56, 189, 248, 0.05);
+        border-left: 3px solid var(--accent-primary);
+        padding: 1rem 1.25rem;
+        border-radius: 0 0.6rem 0.6rem 0;
+        margin: 0.75rem 0;
+        font-size: 1.05rem;
+        color: #e2e8f0;
+      }
 
-    ul.feature-list li::before {
-      content: "✦";
-      position: absolute;
-      left: 0;
-      color: var(--accent-primary);
-      font-size: 0.9rem;
-    }
+      /* Code Blocks */
+      pre.code-block {
+        background: #090d16;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.6rem;
+        padding: 1rem 1.25rem;
+        font-family: var(--font-code);
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: #e2e8f0;
+        overflow-x: auto;
+        margin: 0.75rem 0;
+      }
 
-    ul.feature-list li strong {
-      color: #ffffff;
-    }
+      .code-keyword {
+        color: #f43f5e;
+        font-weight: 600;
+      }
+      .code-string {
+        color: #10b981;
+      }
+      .code-comment {
+        color: #64748b;
+        font-style: italic;
+      }
+      .code-func {
+        color: #38bdf8;
+      }
+      .code-type {
+        color: #a855f7;
+      }
 
-    /* Callout & Quotes */
-    .callout {
-      background: rgba(56, 189, 248, 0.08);
-      border-left: 4px solid var(--accent-primary);
-      padding: 1rem 1.25rem;
-      border-radius: 0 0.6rem 0.6rem 0;
-      margin: 0.75rem 0;
-      font-size: 1.05rem;
-      color: #e2e8f0;
-    }
+      /* ROI Calculator Widget */
+      .calc-container {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid var(--card-border);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
 
-    .callout.quote {
-      font-style: italic;
-      background: rgba(168, 85, 247, 0.08);
-      border-left-color: var(--accent-secondary);
-    }
+      .calc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-    .callout.warning {
-      background: rgba(244, 63, 94, 0.08);
-      border-left-color: var(--accent-rose);
-    }
+      .calc-row label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
 
-    .callout.tip {
-      background: rgba(16, 185, 129, 0.08);
-      border-left-color: var(--accent-emerald);
-    }
+      .calc-row input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        color: #fff;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.4rem;
+        width: 90px;
+        font-family: var(--font-code);
+        text-align: right;
+      }
 
-    /* Code Blocks */
-    pre.code-block {
-      background: #090d16;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 0.6rem;
-      padding: 1rem 1.25rem;
-      font-family: var(--font-code);
-      font-size: 0.9rem;
-      line-height: 1.45;
-      color: #e2e8f0;
-      overflow-x: auto;
-      margin: 0.75rem 0;
-    }
+      .calc-result {
+        background: rgba(56, 189, 248, 0.08);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        text-align: center;
+      }
 
-    .code-keyword { color: #f43f5e; font-weight: 600; }
-    .code-string { color: #10b981; }
-    .code-comment { color: #64748b; font-style: italic; }
-    .code-func { color: #38bdf8; }
-    .code-type { color: #a855f7; }
+      .calc-result-number {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--accent-primary);
+        font-family: var(--font-heading);
+      }
 
-    /* ROI Calculator Widget */
-    .calc-container {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid var(--card-border);
-      border-radius: 0.75rem;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
+      /* Bottom Navigation Bar */
+      .nav-bar {
+        height: 60px;
+        background: rgba(15, 23, 42, 0.95);
+        border-top: 1px solid var(--card-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+        z-index: 50;
+        backdrop-filter: blur(10px);
+      }
 
-    .calc-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      .nav-left,
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
 
-    .calc-row label {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
+      .nav-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        padding: 0.45rem 0.9rem;
+        border-radius: 0.45rem;
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
 
-    .calc-row input {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      color: #fff;
-      padding: 0.35rem 0.75rem;
-      border-radius: 0.4rem;
-      width: 90px;
-      font-family: var(--font-code);
-      text-align: right;
-    }
+      .nav-btn:hover {
+        background: rgba(56, 189, 248, 0.15);
+        border-color: var(--accent-primary);
+        color: #fff;
+      }
 
-    .calc-result {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(56, 189, 248, 0.15));
-      border: 1px solid var(--accent-emerald);
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      text-align: center;
-    }
+      .slide-counter {
+        font-family: var(--font-code);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
 
-    .calc-result-number {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--accent-emerald);
-      font-family: var(--font-heading);
-    }
+      /* Speaker Notes Box */
+      .notes-panel {
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        width: 100%;
+        background: rgba(9, 13, 22, 0.96);
+        border-top: 2px solid var(--accent-secondary);
+        padding: 1rem 2rem;
+        z-index: 45;
+        display: none;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+      }
 
-    /* Bottom Navigation Bar */
-    .nav-bar {
-      height: 60px;
-      background: rgba(15, 23, 42, 0.95);
-      border-top: 1px solid var(--card-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 2rem;
-      z-index: 50;
-      backdrop-filter: blur(10px);
-    }
+      .notes-panel.visible {
+        display: block;
+      }
 
-    .nav-left, .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+      .notes-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--accent-secondary);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4rem;
+      }
 
-    .nav-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      padding: 0.45rem 0.9rem;
-      border-radius: 0.45rem;
-      cursor: pointer;
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
+      .notes-content {
+        font-size: 0.95rem;
+        color: #cbd5e1;
+        line-height: 1.45;
+      }
 
-    .nav-btn:hover {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: var(--accent-primary);
-      color: #fff;
-    }
+      /* Overview Modal Grid */
+      .overview-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(9, 13, 22, 0.96);
+        backdrop-filter: blur(20px);
+        z-index: 200;
+        display: none;
+        padding: 2.5rem;
+        overflow-y: auto;
+      }
 
-    .slide-counter {
-      font-family: var(--font-code);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+      .overview-modal.visible {
+        display: block;
+      }
 
-    /* Speaker Notes Box */
-    .notes-panel {
-      position: fixed;
-      bottom: 60px;
-      left: 0;
-      width: 100%;
-      background: rgba(9, 13, 22, 0.96);
-      border-top: 2px solid var(--accent-secondary);
-      padding: 1rem 2rem;
-      z-index: 45;
-      display: none;
-      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-    }
+      .overview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
 
-    .notes-panel.visible {
-      display: block;
-    }
+      .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.25rem;
+      }
 
-    .notes-title {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--accent-secondary);
-      letter-spacing: 0.05em;
-      margin-bottom: 0.4rem;
-    }
+      .overview-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 0.6rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
 
-    .notes-content {
-      font-size: 0.95rem;
-      color: #cbd5e1;
-      line-height: 1.45;
-    }
+      .overview-card:hover,
+      .overview-card.active {
+        border-color: var(--accent-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+      }
 
-    /* Overview Modal Grid */
-    .overview-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(9, 13, 22, 0.96);
-      backdrop-filter: blur(20px);
-      z-index: 200;
-      display: none;
-      padding: 2.5rem;
-      overflow-y: auto;
-    }
+      .overview-num {
+        font-family: var(--font-code);
+        font-size: 0.8rem;
+        color: var(--accent-primary);
+      }
 
-    .overview-modal.visible {
-      display: block;
-    }
+      .overview-card-title {
+        font-family: var(--font-heading);
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #fff;
+        line-height: 1.3;
+      }
 
-    .overview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
+      /* Title Slide Specifics */
+      .title-slide {
+        text-align: center;
+        align-items: center;
+      }
 
-    .overview-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1.25rem;
-    }
+      .speaker-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 0.6rem 1.25rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        border-radius: 9999px;
+      }
 
-    .overview-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 0.6rem;
-      padding: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      height: 140px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+      .speaker-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--accent-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #0f172a;
+      }
 
-    .overview-card:hover, .overview-card.active {
-      border-color: var(--accent-primary);
-      transform: translateY(-2px);
-      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-    }
+      /* Tip Slide Specifics */
+      .tip-slide {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
 
-    .overview-num {
-      font-family: var(--font-code);
-      font-size: 0.8rem;
-      color: var(--accent-primary);
-    }
+      .tip-card {
+        background: rgba(56, 189, 248, 0.05);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 1.25rem;
+        padding: 3rem 4rem;
+        max-width: 900px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+      }
 
-    .overview-card-title {
-      font-family: var(--font-heading);
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.3;
-    }
+      .tip-card::before {
+        content: "💡 PRO TIP";
+        position: absolute;
+        top: -1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent-primary);
+        color: #0f172a;
+        font-family: var(--font-heading);
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.3rem 1.2rem;
+        border-radius: 9999px;
+        letter-spacing: 0.08em;
+      }
 
-    /* Title Slide Specifics */
-    .title-slide {
-      text-align: center;
-      align-items: center;
-    }
+      .tip-text {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+      }
 
-    .speaker-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 1rem;
-      margin-top: 2rem;
-      padding: 0.6rem 1.25rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      border-radius: 9999px;
-    }
+      .tip-subtext {
+        font-size: 1.15rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
 
-    .speaker-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: #fff;
-    }
-  </style>
-</head>
-<body>
+      /* Danger Slide Specifics */
+      .danger-slide {
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+      }
 
-  <!-- Top Progress Bar -->
-  <div class="progress-bar-container">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
+      .danger-card {
+        background: rgba(244, 63, 94, 0.06);
+        border: 1px solid rgba(244, 63, 94, 0.3);
+        border-radius: 1.25rem;
+        padding: 3rem 4rem;
+        max-width: 900px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+      }
 
-  <!-- Deck Viewport -->
-  <div class="deck-container" id="deck">
+      .danger-card::before {
+        content: "⚠️ DANGER";
+        position: absolute;
+        top: -1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f43f5e;
+        color: #ffffff;
+        font-family: var(--font-heading);
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.3rem 1.2rem;
+        border-radius: 9999px;
+        letter-spacing: 0.08em;
+      }
 
-    <!-- SLIDE 1: Title Slide -->
-    <div class="slide title-slide active" data-title="Title Slide">
-      <div class="slide-tag">Flutter Conference Talk</div>
-      <h1 style="font-size: 4rem; margin: 2rem 0;">Build devtools for your app</h1>
-      <div class="speaker-badge">
-        <div class="speaker-avatar">RR</div>
-        <div style="text-align: left;">
-          <div style="font-weight: 700; color: #fff; font-size: 1.05rem;">Rémi Rousselet</div>
-          <div style="font-size: 0.85rem; color: var(--text-muted);">Creator of Riverpod, Freezed, & Flutter DevTools</div>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        When I wrote the description for this talk, originally I planned on just talking about how to write Flutter DevTool extensions like the Riverpod extension with time travel. But the more I use AI, the more I realize: lots of developers are deferring programming to AI now.
-      </div>
+      .danger-text {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.35;
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+      }
+
+      .danger-subtext {
+        font-size: 1.15rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      /* Image Grid Slide Specifics */
+      .image-grid-slide {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .image-grid-slide .slide-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .image-grid-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        max-width: 950px;
+        margin: 0.5rem auto 0 auto;
+      }
+
+      .image-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+
+      .image-item-label {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--accent-primary);
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.02em;
+        text-align: center;
+      }
+
+      .image-item img {
+        max-width: 100%;
+        max-height: 440px;
+        object-fit: contain;
+        border-radius: 0.75rem;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      .image-item img:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 40px rgba(56, 189, 248, 0.2);
+        border-color: rgba(56, 189, 248, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Progress Bar -->
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
     </div>
 
-    <!-- SLIDE 2: I Love Building Tools -->
-    <div class="slide" data-title="I Love Building Tools">
-      <div class="slide-header">
-        <div class="slide-tag">Background & Passion</div>
-        <h2>I Love Building Tools</h2>
-      </div>
-      <div class="grid-2" style="align-items: center; justify-items: center;">
-        <img src="img/provider_generator.png" alt="Provider Generator" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 0.5rem;" />
-        <img src="img/riverpod_projects.png" alt="Riverpod Projects" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: 0.5rem;" />
-      </div>
-      <div class="notes" style="display:none;">
-        I've always been passionate about building tools that empower developers, from code generators to ecosystem tooling across Riverpod and Provider projects.
-      </div>
-    </div>
-
-    <!-- SLIDE 3: The Original Plan vs AI Reality -->
-    <div class="slide" data-title="Original Plan vs AI Reality">
-      <div class="slide-header">
-        <div class="slide-tag">Personal Context & Shift</div>
-        <h2>The Original Plan vs. The AI Reality</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card rose-glow">
-          <h3>The Original Proposal</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>Explain how to code Flutter DevTool extensions by hand.</li>
-            <li>Share lessons from building Riverpod tools (time travel, state inspection).</li>
-            <li>Broaden into writing custom shell scripts, lints, and devtools tailored to your apps.</li>
-          </ul>
-        </div>
-        <div class="card emerald-glow">
-          <h3>The Awkward Reality of Coding in AI Era</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>If you code through AI, <strong>you are not running tools yourself anymore</strong> — AI does.</li>
-            <li>Even if you want a devtool extension, <strong>you'd probably ask AI to write it for you</strong>.</li>
-            <li>So we'll still talk about custom tools, but contextualized in the modern AI era!</li>
-          </ul>
-        </div>
-      </div>
-      <div class="callout quote" style="margin-top: 1rem;">
-        "Why explain how to code a devtool extension by hand when developers defer their programming and tool execution to AI?"
-      </div>
-      <div class="notes" style="display:none;">
-        So we'll still talk about tooling for your own personal apps. But I'll contextualize it in the modern AI era: Why create tools, When to/not to, Which tool to create, and How to create them.
-      </div>
-    </div>
-
-    <!-- SLIDE 3: Core Tenets for Modern Tools -->
-    <div class="slide" data-title="Core Tenets for Tools">
-      <div class="slide-header">
-        <div class="slide-tag">Foundation</div>
-        <h2>The 3 Core Tenets of AI-Era Developer Tools</h2>
-      </div>
-      <div class="grid-3">
-        <div class="card accent-glow">
-          <h3>1. Machine Readable</h3>
-          <p style="font-size: 0.95rem;">Structure outputs (e.g., <code>--machine=json</code>) so AI agents and scripts can parse results unambiguously without regex or guessing.</p>
-        </div>
-        <div class="card emerald-glow">
-          <h3>2. Human Operable</h3>
-          <p style="font-size: 0.95rem;">Ensure human developers can still run, inspect, and invoke the tool manually via terminal or IDE when reviewing work.</p>
-        </div>
-        <div class="card amber-glow">
-          <h3>3. Simple to Test</h3>
-          <p style="font-size: 0.95rem;">Design integration tests using plain <code>.dart</code> files or <code>Process.run</code> so tools remain rock-solid across updates.</p>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        These three guidelines apply to every single tool we build: Lints, CLIs, Code Generators, MCP servers, and DevTools.
-      </div>
-    </div>
-
-    <!-- SLIDE 4: Why Create Tools? (Skills vs Lints) -->
-    <div class="slide" data-title="Why Create Tools?">
-      <div class="slide-header">
-        <div class="slide-tag">Core Trade-off</div>
-        <h2>Why Create Tools? (Tools vs. Skills)</h2>
-      </div>
-      <p>Consider enforcing style guides: <em>"Do not hardcode text inside Widgets"</em>. We could write an AI Skill, or a custom Lint rule plugin.</p>
-      <div class="grid-2" style="margin-top: 0.5rem;">
-        <div class="card rose-glow">
-          <h3>Approach A: Writing an AI Skill</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li><strong>Dead easy to write</strong> in markdown.</li>
-            <li><strong>Non-deterministic</strong>: AI ignores rules sometimes; mistakes slip by and accumulate. Model updates change skill effectiveness.</li>
-            <li><strong>Context Bloat</strong>: Overwhelms agent context, inflating costs and missing steps.</li>
-            <li><strong>Pricy long term</strong>: Agents are expensive to run.</li>
-          </ul>
-        </div>
-        <div class="card emerald-glow">
-          <h3>Approach B: Custom Lint Rule Plugin</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li><strong>Sounds scary to do</strong>: No previous experience writing analyzer plugins.</li>
-            <li><strong>Deterministic</strong>: Always produces predictable, exact results. Bugs can exist in lint, but behavior is predictable.</li>
-            <li><strong>Zero runtime token cost</strong>: Millisecond execution via <code>dart analyze</code>.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        Skills are dead easy but non-deterministic and pricy long-term. Lints sound scary but are 100% deterministic.
-      </div>
-    </div>
-
-    <!-- SLIDE 5: The Prompt Trap & Skill Costs -->
-    <div class="slide" data-title="The Prompt Trap">
-      <div class="slide-header">
-        <div class="slide-tag">Economics & Reliability</div>
-        <h2>The Prompt Trap & AI Price Ramp-Up</h2>
-      </div>
-      <div class="callout tip">
-        💡 <strong>Core Philosophy:</strong> Instead of using AI to do a task manually every time, <strong>use AI to write a tool that will do said task!</strong><br>
-        <span style="font-size: 0.9rem; color: #cbd5e1;"><em>"Hey Gemini, create a new lint rule using dart_analysis_server_plugin. This rule should disallow ' and \" inside Widgets."</em></span>
-      </div>
-      <div class="grid-2" style="margin-top: 0.75rem;">
-        <div class="card rose-glow">
-          <h3>AI Price Ramp-Up with Bad Skills</h3>
-          <p style="font-size: 0.95rem;">A skill running on every PR saying <em>"Scan codebase for hardcoded text"</em> costs huge money over time due to tons of file reads on every PR.</p>
-        </div>
-        <div class="card amber-glow">
-          <h3>English Prompt Subtleties</h3>
-          <p style="font-size: 0.95rem;">Saying <em>"scan only modified files"</em> sounds simple, but English is subtle. AIs will still read way more files than intended without you noticing.</p>
-        </div>
-      </div>
-      <div class="callout quote" style="margin-top: 0.75rem;">
-        🎬 <strong>Demo Note:</strong> [Insert video comparing speed & cost of prompt-based skill vs. native lint rule side-by-side].
-      </div>
-      <div class="notes" style="display:none;">
-        Initial cost of creating a lint rule is slightly higher than writing a skill, but long-term economy and reliability win by a landslide.
-      </div>
-    </div>
-
-    <!-- SLIDE 6: When to / Not to Build a Tool (ROI Math) -->
-    <div class="slide" data-title="ROI & Decision Math">
-      <div class="slide-header">
-        <div class="slide-tag">Decision Framework</div>
-        <h2>When to (and NOT to) Build a Tool</h2>
-      </div>
-      <p>Don't spend 10 days and millions of tokens creating a tool that runs once and saves 30 minutes. Calculate time gained:</p>
-      <div class="grid-2" style="margin-top: 0.5rem;">
-        <div>
-          <ul class="feature-list">
-            <li><strong>10-min weekly task</strong> by hand in team of 10 = $10 \times 10 \times 56 = 5600$ mins/yr = <strong>93 hours/year</strong>.</li>
-            <li><strong>With tool (takes 1 min)</strong> = $9 \times 10 \times 56 = 5040$ mins/yr = <strong>84 hours/year saved!</strong></li>
-            <li>If tool takes 1 dev 10 days (40h) $\rightarrow$ break even after ~1 year (probably not worth it).</li>
-            <li>If it takes <strong>half a day (4h) with AI</strong> $\rightarrow$ <strong>3 weeks to break even!</strong></li>
-          </ul>
-          <div class="callout warning" style="margin-top: 0.5rem; font-size: 0.9rem;">
-            ⚠️ <strong>Token Expense:</strong> Running a tool for 30s 1,000 times/yr costs electricity. Running an agent for that costs thousands of dollars on tokens.
+    <!-- Deck Viewport -->
+    <div class="deck-container" id="deck">
+      <!-- SLIDE 1: Title Slide -->
+      <div class="slide title-slide active" data-title="Title Slide">
+        <h1 style="font-size: 4rem; margin: 2rem 0">
+          Build devtools for your app
+        </h1>
+        <div class="speaker-badge">
+          <div class="speaker-avatar">RR</div>
+          <div style="text-align: left">
+            <div style="font-weight: 700; color: #fff; font-size: 1.05rem">
+              Rémi Rousselet
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted)">
+              Creator of Riverpod, Freezed, & Flutter DevTools
+            </div>
           </div>
         </div>
-        <div class="calc-container">
-          <h3 style="color: var(--accent-emerald); font-size: 1.1rem;">Interactive ROI Calculator</h3>
-          <div class="calc-row">
-            <label>Team Size (Devs):</label>
-            <input type="number" id="calcDevs" value="10" min="1">
+        <div class="notes" style="display: none">
+          When I wrote the description for this talk, originally I planned on
+          just talking about how to write Flutter DevTool extensions like the
+          Riverpod extension with time travel. But the more I use AI, the more I
+          realize: lots of developers are deferring programming to AI now.
+        </div>
+      </div>
+
+      <!-- SLIDE 2: I Love Building Tools -->
+      <div class="slide image-grid-slide" data-title="I Love Building Tools">
+        <div class="slide-header">
+          <h2>I Love Building Tools</h2>
+        </div>
+        <div class="image-grid-container">
+          <div class="image-item">
+            <img src="img/provider_generator.png" alt="Provider Generator" />
           </div>
-          <div class="calc-row">
-            <label>Task Time Saved (mins):</label>
-            <input type="number" id="calcMins" value="9" min="1">
-          </div>
-          <div class="calc-row">
-            <label>Frequency (per dev/wk):</label>
-            <input type="number" id="calcFreq" value="1" min="1">
-          </div>
-          <div class="calc-result">
-            <div style="font-size: 0.8rem; color: var(--text-muted);">ESTIMATED ANNUAL TEAM SAVINGS</div>
-            <div class="calc-result-number" id="calcResult">84 Hours</div>
+          <div class="image-item">
+            <img src="img/riverpod_projects.png" alt="Riverpod Projects" />
           </div>
         </div>
+        <div class="notes" style="display: none">
+          I've always been passionate about building tools that empower
+          developers, from code generators to ecosystem tooling across Riverpod
+          and Provider projects.
+        </div>
       </div>
-      <div class="notes" style="display:none;">
-        This ignores maintenance cost or bug reduction, but helps detect cases where gain is too small compared to investment.
-      </div>
-    </div>
 
-    <!-- SLIDE 7: The Tooling Taxonomy Overview -->
-    <div class="slide" data-title="Tooling Taxonomy">
-      <div class="slide-header">
-        <div class="slide-tag">Landscape</div>
-        <h2>Which Tool Should You Create?</h2>
+      <!-- SLIDE 3: The Original Plan vs AI Reality -->
+      <div
+        class="slide image-grid-slide"
+        data-title="Original Plan vs AI Reality"
+      >
+        <div class="slide-header">
+          <h2>The Original Plan vs. The AI Reality</h2>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0.5rem;
+          "
+        >
+          <img
+            src="img/elephant.png"
+            alt="Original Plan vs AI Reality Elephant"
+            style="
+              max-width: 100%;
+              max-height: 480px;
+              object-fit: contain;
+              border-radius: 0.75rem;
+              box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+            "
+          />
+        </div>
+        <div class="notes" style="display: none">
+          So we'll still talk about tooling for your own personal apps. But I'll
+          contextualize it in the modern AI era: Why create tools, When to/not
+          to, Which tool to create, and How to create them.
+        </div>
       </div>
-      <p>There are many different kinds of developer tools available in Dart/Flutter:</p>
-      <div class="grid-3" style="gap: 1rem; margin-top: 0.5rem;">
-        <div class="card accent-glow">
-          <h3>Custom Lints</h3>
-          <p style="font-size: 0.85rem;">Enforce code conventions & prevent bugs via analyzer plugins.</p>
-        </div>
-        <div class="card accent-glow">
-          <h3>Code Generators</h3>
-          <p style="font-size: 0.85rem;">Ensure consistency & deterministic updates across data models.</p>
-        </div>
-        <div class="card accent-glow">
-          <h3>CLIs & Scripts</h3>
-          <p style="font-size: 0.85rem;">Universal scripting interface for Humans, CI, and AI agents.</p>
-        </div>
-        <div class="card accent-glow">
-          <h3>MCP Servers</h3>
-          <p style="font-size: 0.85rem;">Stateful Machine Context Protocol servers for AI agents.</p>
-        </div>
-        <div class="card accent-glow">
-          <h3>DevTools Extensions</h3>
-          <p style="font-size: 0.85rem;">Visual GUIs & inspectors for human developers and QA.</p>
-        </div>
-        <div class="card accent-glow">
-          <h3>Codemods & Docs</h3>
-          <p style="font-size: 0.85rem;">Automated API refactoring, architecture graphs, & docs.</p>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        Let's look at each tool category in detail: Pros, Cons, Personal Recommendations, and Testing Tips!
-      </div>
-    </div>
 
-    <!-- SLIDE 8: Tool 1: Custom Lints -->
-    <div class="slide" data-title="Tool: Custom Lints">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 1</div>
-        <h2>Custom Lints (analysis_server_plugin)</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card emerald-glow">
-          <h3>Pros</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li><strong>Cheap to build</strong>: Once project is set up, adding rules takes half an hour including tests.</li>
-            <li><strong>Naturally visible</strong> to Humans, AIs, and CI via <code>dart analyze</code>.</li>
-            <li><strong>AI fixes code automatically</strong>: Deterministic output catches mistakes, and AI keeps running until diagnostics pass.</li>
-          </ul>
+      <!-- SLIDE 4: Why Create Tools? (Skills vs Lints) -->
+      <div class="slide" data-title="Why Create Tools?">
+        <div class="slide-header">
+          <h2>Why Create Tools? (Tools vs. Skills)</h2>
         </div>
-        <div class="card rose-glow">
-          <h3>Cons</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li><strong>RAM cost</strong>: Low-end machines can struggle with analyzer plugin RAM usage.</li>
-            <li>Slows down <code>dart analyze</code> slightly to spawn plugins.</li>
-            <li>Not everything in styleguides can be implemented as a lint.</li>
-          </ul>
+        <div class="callout">
+          Consider enforcing style guides:
+          <em>"Do not hardcode text inside Widgets"</em>. We could write an AI
+          Skill, or a custom Lint rule plugin.
         </div>
-      </div>
-      <div class="callout tip" style="margin-top: 0.75rem;">
-        🧪 <strong>Exact Testing Tip:</strong> Enable the rule in a test project and create <code>.dart</code> files with examples. Add <code>// ignore: my_rule</code> on warning cases. Enable <code>unnecessary_ignore</code> to highlight ignores that do nothing. Run <code>dart analyze</code>!
-      </div>
-      <div class="notes" style="display:none;">
-        Personal note: I highly recommend every project implement custom lint rules. You can automate a significant part of your styleguide in a few hours.
-      </div>
-    </div>
-
-    <!-- SLIDE 9: Tool 2: Quick Fixes -->
-    <div class="slide" data-title="Tool: Quick Fixes">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 2</div>
-        <h2>Quick Fixes & Automated Refactors</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card accent-glow">
-          <h3>The Reality of Quick Fixes</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>They accompany lint rules to provide automated fixes.</li>
-            <li><strong>Pros</strong>: Cheap to build.</li>
-            <li><strong>Cons</strong>: A lot less useful (requires making a mistake first); writing automated fixes isn't always possible.</li>
-            <li><strong>AI Trait</strong>: AIs are currently a bit bad at using quick-fixes — they'll often edit code themselves instead of invoking the quick-fix.</li>
-          </ul>
-        </div>
-        <div class="card emerald-glow">
-          <h3>Personal Recommendation</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li><strong>For internal styleguides: Skip writing quick fixes!</strong> We don't care about deterministic output for fixes. AI will fix it for you.</li>
-            <li><strong>For Open Source packages</strong>: Writing a quick fix is worth it because it reaches thousands of developers!</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        Skip quick fixes for internal team lints, but definitely write them if you maintain a public open source package.
-      </div>
-    </div>
-
-    <!-- SLIDE 10: Tool 3: Code Generators (Rethinking Value) -->
-    <div class="slide" data-title="Tool: Code Generators">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 3</div>
-        <h2>Code Generators: Rethinking the Main Value</h2>
-      </div>
-      <p>Common Argument: <em>"Codegen reduces boilerplate."</em> $\rightarrow$ <strong>I couldn't care less, especially with AI!</strong></p>
-      <div class="grid-2" style="margin-top: 0.5rem;">
-        <div class="card emerald-glow">
-          <h3>What Codegen is ACTUALLY About</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li><strong>Removes PR Code Review</strong>: You don't read how <code>copyWith</code> is implemented every time a class is added (e.g. Freezed).</li>
-            <li><strong>Ensures Consistency</strong>: Generators are deterministic, so data classes behave identically.</li>
-            <li><strong>Makes Updates Simple</strong>: Adding/removing fields auto-updates <code>==</code>, <code>hashCode</code>, <code>copyWith</code>, <code>toString</code> without forgetting a field.</li>
-          </ul>
-        </div>
-        <div class="card accent-glow">
-          <h3>Static Analyzability</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li>Annotations make code statically analyzable.</li>
-            <li>This compounds with creating other tools down the road.</li>
-            <li>Significant bug reduction across the application.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        Codegen is about zero PR review on boilerplate, uniform behavior, and deterministic updates when fields change.
-      </div>
-    </div>
-
-    <!-- SLIDE 11: Codegen: What to Automate vs Avoid -->
-    <div class="slide" data-title="Codegen Decisions">
-      <div class="slide-header">
-        <div class="slide-tag">Codegen Strategy</div>
-        <h2>What to Automate with Codegen (and What to Avoid)</h2>
-      </div>
-      <div class="grid-3">
-        <div class="card emerald-glow">
-          <h3>Definitely Automate</h3>
-          <ul class="feature-list" style="font-size: 0.9rem; margin-top: 0.4rem;">
-            <li><strong>Backend Data Layer</strong>: GraphQL / Swagger / gRPC schemas to Dart models.</li>
-            <li><strong>On-Device DB</strong>: Table schemas.</li>
-            <li><strong>Assets</strong>: <code>FontAwesome.check</code> instead of <code>'fa check'</code>.</li>
-            <li><strong>Translations</strong>: <code>L10n.of(context).homePageTitle</code>.</li>
-          </ul>
-        </div>
-        <div class="card amber-glow">
-          <h3>Maybe Automate</h3>
-          <ul class="feature-list" style="font-size: 0.9rem; margin-top: 0.4rem;">
-            <li><strong>Routing</strong>: Type safety on route parameters & static route list.</li>
-            <li><strong>Widget List</strong>: Auto-generated widget browser via <code>build_runner</code>.</li>
-            <li><strong>Error-Prone Tasks</strong>: Auto-generated <code>toString</code> to prevent stale fields.</li>
-          </ul>
-        </div>
-        <div class="card rose-glow">
-          <h3>Do NOT Automate</h3>
-          <ul class="feature-list" style="font-size: 0.9rem; margin-top: 0.4rem;">
-            <li><strong>Minor Boilerplate Gains</strong> that aren't error prone (e.g. my old <code>functional_widget</code> saving 2-3 lines on StatelessWidgets).</li>
-          </ul>
-        </div>
-      </div>
-      <div class="callout tip" style="margin-top: 0.75rem; font-size: 0.95rem;">
-        💡 <strong>Pro Tips:</strong> Commit generated files and let CI auto-commit codegen updates. Codegen can be a basic Dart script reading JSON and outputting a file — it doesn't have to be complex <code>build_runner</code> logic!<br>
-        🧪 <strong>Testing Tip:</strong> Avoid brittle tests checking string content (<code>generated code contains void foo()</code>). Write plain <code>.dart</code> files in <code>test/integration/*</code> using `@data class Foo {}`, run generator, and test runtime behavior!
-      </div>
-      <div class="notes" style="display:none;">
-        Many data layer codegen tools have existing open source packages. Simple Dart scripts that read JSON and output files count as codegen too!
-      </div>
-    </div>
-
-    <!-- SLIDE 12: Tool 4: CLI Tools -->
-    <div class="slide" data-title="Tool: CLIs">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 4</div>
-        <h2>Command Line Interfaces (CLIs)</h2>
-      </div>
-      <div class="grid-2">
-        <div>
-          <p>Think bash scripts, but in <strong>Dart land</strong>! Dart is a very good scripting language. Write Dart scripts!</p>
-          <div class="card accent-glow" style="margin-top: 0.5rem;">
-            <h3>Must-Have Commands for All Projects</h3>
-            <ul class="feature-list" style="font-size: 0.95rem;">
-              <li><code>./install</code>: Check Flutter/Dart versions, missing tools (Docker, CLIs), set up hidden <code>.env</code> & codegen. Link solutions for missing tools!</li>
-              <li><code>./run</code>: Start emulators, Docker, local servers.</li>
-              <li><code>./test</code>: Unit & integration tests on browser/simulators.</li>
-              <li><code>./deploy</code>: Update changelogs, bump versions, release flags, publish to stores.</li>
+        <div class="grid-2" style="margin-top: 0.5rem">
+          <div class="card rose-glow">
+            <h3>Approach A: Writing an AI Skill</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li><strong>Dead easy to write</strong> in markdown.</li>
+              <li>
+                <strong>Non-deterministic</strong>
+              </li>
+              <li>
+                <strong>Context Bloat</strong>
+              </li>
+              <li>
+                <strong>Pricy long term</strong>
+              </li>
             </ul>
           </div>
-        </div>
-        <div>
-          <div class="card card-bg emerald-glow">
-            <h3>CLI Architecture & Testing</h3>
-            <ul class="feature-list" style="font-size: 0.95rem;">
-              <li><strong>CLI as Abstraction Layer</strong>: GUIs should work by invoking your CLI under the hood.</li>
-              <li><strong>Low Value</strong>: Module templates (e.g. <code>./create_module</code> — AI does it easily, costly to maintain).</li>
-              <li><strong>Testing Tip</strong>: Integration tests are super easy! Offer a <code>--machine=json</code> flag and test via:
-                <code style="display:block; margin-top:0.4rem; font-size:0.85rem;">Process.run('dart', ['path/to/bin.dart', '--my-flag'])</code>
+          <div class="card emerald-glow">
+            <h3>Approach B: Custom Lint Rule Plugin</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>
+                <strong>Sounds scary to do</strong>
+              </li>
+              <li>
+                <strong>Deterministic</strong>
+              </li>
+              <li>
+                <strong>Zero runtime token cost</strong>
               </li>
             </ul>
           </div>
         </div>
+        <div class="notes" style="display: none">
+          Skills are dead easy but non-deterministic and pricy long-term. Lints
+          sound scary but are 100% deterministic.
+        </div>
       </div>
-      <div class="notes" style="display:none;">
-        Bash can be daunting on Windows. Write Dart scripts instead! CLIs are universally usable by humans, AIs, and CI pipelines.
+
+      <!-- SLIDE: Danger - Token Consumption Spikes -->
+      <div
+        class="slide danger-slide"
+        data-title="Danger: Token Consumption Spikes"
+      >
+        <div class="danger-card">
+          <div class="danger-text">
+            Bad skills can cause token consumption spikes.
+          </div>
+          <div class="danger-subtext">
+            <em>"Scan the codebase for hardcoded text"</em> vs.
+            <em>"Scan only the files modified in the PR"</em>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Danger: Broad or poorly scoped skills (like scanning an entire
+          repository on every PR) cause massive context bloat and token
+          consumption spikes over time.
+        </div>
+      </div>
+
+      <!-- SLIDE: Pro Tip - Write Tools with AI -->
+      <div class="slide tip-slide" data-title="Pro Tip: Write Tools with AI">
+        <div class="tip-card">
+          <div class="tip-text">
+            Instead of using AI to do a task, use AI to write a tool that will
+            do said task.
+          </div>
+          <div class="tip-subtext">
+            <em
+              >"Hey Gemini, create a new lint rule using
+              dart_analysis_server_plugin. This lint rule should disallow using
+              ' and &quot; inside Widgets."</em
+            >
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Key takeaway: Shift from using AI to perform repetitive manual tasks
+          to using AI to generate deterministic tools (lints, scripts, codegen)
+          that perform those tasks for you.
+        </div>
+      </div>
+
+      <div class="slide" data-title="ROI & Decision Math">
+        <div class="slide-header">
+          <h2>When to (and NOT to) Build a Tool</h2>
+        </div>
+        <p>
+          Don't spend 10 days and millions of tokens creating a tool that runs
+          once and saves 30 minutes. Calculate time gained:
+        </p>
+        <div class="grid-2" style="margin-top: 0.5rem">
+          <div>
+            <ul class="feature-list">
+              <li>
+                <strong>Team Compounding:</strong> Small weekly time savings per
+                dev compound into major annual team gains.
+              </li>
+              <li>
+                <strong>AI Shifts the Equation:</strong> Building a tool with AI
+                in 4 hours instead of 40 hours makes ROI break-even almost
+                immediate.
+              </li>
+            </ul>
+            <div
+              class="callout warning"
+              style="margin-top: 0.5rem; font-size: 0.9rem"
+            >
+              ⚠️ <strong>Token Expense:</strong> Running a tool for 30s 1,000
+              times/yr costs electricity. Running an agent for that costs
+              thousands of dollars on tokens.
+            </div>
+          </div>
+          <div class="calc-container">
+            <h3 style="color: var(--accent-emerald); font-size: 1.1rem">
+              Interactive ROI Calculator
+            </h3>
+            <div class="calc-row">
+              <label>Team Size (Devs):</label>
+              <input type="number" id="calcDevs" value="10" min="1" />
+            </div>
+            <div class="calc-row">
+              <label>Task Time Saved (mins):</label>
+              <input type="number" id="calcMins" value="9" min="1" />
+            </div>
+            <div class="calc-row">
+              <label>Frequency (per dev/wk):</label>
+              <input type="number" id="calcFreq" value="1" min="1" />
+            </div>
+            <div class="calc-result">
+              <div style="font-size: 0.8rem; color: var(--text-muted)">
+                ESTIMATED ANNUAL TEAM SAVINGS
+              </div>
+              <div class="calc-result-number" id="calcResult">84 Hours</div>
+            </div>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          This ignores maintenance cost or bug reduction, but helps detect cases
+          where gain is too small compared to investment.
+        </div>
+      </div>
+
+      <!-- SLIDE 7: The Tooling Taxonomy Overview -->
+      <div class="slide" data-title="Tooling Taxonomy">
+        <div class="slide-header">
+          <h2>Which Tool Should You Create?</h2>
+        </div>
+        <p>
+          There are many different kinds of developer tools available in
+          Dart/Flutter:
+        </p>
+        <div class="grid-3" style="gap: 1rem; margin-top: 0.5rem">
+          <div class="card accent-glow">
+            <h3>Custom Lints</h3>
+            <p style="font-size: 0.85rem">
+              Enforce code conventions & prevent bugs via analyzer plugins.
+            </p>
+          </div>
+          <div class="card accent-glow">
+            <h3>Code Generators</h3>
+            <p style="font-size: 0.85rem">
+              Ensure consistency & deterministic updates across data models.
+            </p>
+          </div>
+          <div class="card accent-glow">
+            <h3>CLIs & Scripts</h3>
+            <p style="font-size: 0.85rem">
+              Universal scripting interface for Humans, CI, and AI agents.
+            </p>
+          </div>
+          <div class="card accent-glow">
+            <h3>MCP Servers</h3>
+            <p style="font-size: 0.85rem">
+              Stateful Machine Context Protocol servers for AI agents.
+            </p>
+          </div>
+          <div class="card accent-glow">
+            <h3>DevTools Extensions</h3>
+            <p style="font-size: 0.85rem">
+              Visual GUIs & inspectors for human developers and QA.
+            </p>
+          </div>
+          <div class="card accent-glow">
+            <h3>Codemods & Docs</h3>
+            <p style="font-size: 0.85rem">
+              Automated API refactoring, architecture graphs, & docs.
+            </p>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Let's look at each tool category in detail: Pros, Cons, Personal
+          Recommendations, and Testing Tips!
+        </div>
+      </div>
+
+      <!-- SLIDE 8: Tool 1: Custom Lints -->
+      <div class="slide" data-title="Tool: Custom Lints">
+        <div class="slide-header">
+          <h2>Custom Lints (analysis_server_plugin)</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card emerald-glow">
+            <h3>Pros</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                <strong>Cheap to build</strong>
+              </li>
+              <li>
+                <strong>Naturally visible</strong> to Humans, AIs, and CI via
+                <code>dart analyze</code>.
+              </li>
+              <li>
+                <strong>Empowers AI by design</strong>
+              </li>
+            </ul>
+          </div>
+          <div class="card rose-glow">
+            <h3>Cons</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                <strong>RAM cost</strong>
+              </li>
+              <li>
+                Slows down <code>dart analyze</code> slightly to spawn plugins.
+              </li>
+              <li>
+                Not everything in styleguides can be implemented as a lint.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Personal note: I highly recommend every project implement custom lint
+          rules. You can automate a significant part of your styleguide in a few
+          hours.
+        </div>
+      </div>
+
+      <!-- SLIDE: Testing Tip - Custom Lints -->
+      <div class="slide tip-slide" data-title="Testing Tip: Custom Lints">
+        <div class="tip-card" style="max-width: 1000px; width: 90%">
+          <div class="tip-text" style="margin-bottom: 1rem">
+            Testing Tip: Custom Lints
+          </div>
+          <div
+            class="grid-2"
+            style="text-align: left; gap: 1.5rem; margin-top: 1rem"
+          >
+            <div class="card rose-glow" style="padding: 1.25rem">
+              <h3
+                style="
+                  color: var(--rose-400);
+                  margin-bottom: 0.5rem;
+                  font-size: 1.1rem;
+                "
+              >
+                ❌ DON'T
+              </h3>
+              <pre
+                style="
+                  margin: 0;
+                  background: rgba(0, 0, 0, 0.4);
+                  padding: 0.75rem;
+                  border-radius: 0.5rem;
+                  overflow-x: auto;
+                "
+              ><code class="language-dart" style="font-size: 0.85rem; font-family: var(--font-code); color: #cbd5e1;"><span style="color: #64748b;">// test/lint_test.dart</span>
+<span style="color: #38bdf8;">test</span>(() <span style="color: #f43f5e;">async</span> {
+  <span style="color: #f43f5e;">final</span> result = analyze(<span style="color: #a3e635;">'''
+class GoodCase {}
+
+class BadCase {}
+'''</span>);
+});</code></pre>
+            </div>
+            <div class="card emerald-glow" style="padding: 1.25rem">
+              <h3
+                style="
+                  color: var(--emerald-400);
+                  margin-bottom: 0.5rem;
+                  font-size: 1.1rem;
+                "
+              >
+                ✅ DO
+              </h3>
+              <pre
+                style="
+                  margin: 0;
+                  background: rgba(0, 0, 0, 0.4);
+                  padding: 0.75rem;
+                  border-radius: 0.5rem;
+                  overflow-x: auto;
+                "
+              ><code class="language-dart" style="font-size: 0.85rem; font-family: var(--font-code); color: #cbd5e1;"><span style="color: #64748b;">// test/lint.dart</span>
+<span style="color: #f43f5e;">class</span> <span style="color: #38bdf8;">GoodCase</span> {}
+
+<span style="color: #64748b;">// ignore: my_lint/code</span>
+<span style="color: #f43f5e;">class</span> <span style="color: #38bdf8;">BadCase</span> {}</code></pre>
+              <p
+                style="
+                  margin-top: 0.75rem;
+                  font-size: 0.9rem;
+                  color: var(--text-muted);
+                "
+              >
+                And enable the lint on your project, alongside
+                <a
+                  href="https://dart.dev/tools/linter-rules/unnecessary_ignore"
+                  target="_blank"
+                  style="
+                    color: var(--accent-primary);
+                    text-decoration: underline;
+                  "
+                  ><code>unnecessary_ignore</code></a
+                >
+              </p>
+            </div>
+          </div>
+          <p style="margin-top: 1rem; font-size: 0.9rem; text-align: center">
+            <a
+              href="https://github.com/rrousselGit/riverpod/blob/master/packages/riverpod_lint_flutter_test/test/lints/avoid_build_context_in_providers.dart"
+              target="_blank"
+              style="color: var(--accent-primary); text-decoration: underline"
+              >Example from riverpod_lint</a
+            >
+          </p>
+        </div>
+        <div class="notes" style="display: none">
+          Testing tip for custom lints.
+        </div>
+      </div>
+
+      <!-- SLIDE 9: Tool 2: Quick Fixes -->
+      <div class="slide" data-title="Tool: Quick Fixes">
+        <div class="slide-header">
+          <h2>Quick Fixes & Automated Refactors</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card emerald-glow">
+            <h3>Pros</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>Cheap to build.</li>
+              <li>Good at scale for batch fixes</li>
+            </ul>
+          </div>
+          <div class="card rose-glow">
+            <h3>Cons</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>
+                <strong>A lot less useful</strong>: Requires making a mistake
+                first.
+              </li>
+              <li>Writing automated fixes is often a lot more complex.</li>
+              <li>AIs are currently a bit bad at using quick-fixes</li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Quick fixes accompany lint rules, but AI often edits code directly
+          instead of using quick fixes.
+        </div>
+      </div>
+
+      <!-- SLIDE: Danger - Skip Quick Fixes -->
+      <div class="slide danger-slide" data-title="Danger: Skip Quick Fixes">
+        <div class="danger-card">
+          <div class="danger-text">
+            Don't bother writing fixes. AI takes care of it.
+          </div>
+          <div class="danger-subtext">
+            We don't care about deterministic output for fixes — AI handles them
+            effectively. Save effort unless maintaining open-source packages for
+            thousands of developers.
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Skip writing quick fixes for internal team lints. AI handles code
+          fixes reliably.
+        </div>
+      </div>
+
+      <!-- SLIDE 10: Tool 3: Code Generators (Rethinking Value) -->
+      <div class="slide" data-title="Tool: Code Generators">
+        <div class="slide-header">
+          <h2>Code Generators: Rethinking the Main Value</h2>
+        </div>
+        <p>
+          Common Argument: <em>"Codegen reduces boilerplate."</em> &rarr;
+          <strong>I couldn't care less, especially with AI!</strong>
+        </p>
+        <div class="grid-2" style="margin-top: 0.5rem">
+          <div class="card emerald-glow">
+            <h3>What Codegen is ACTUALLY About</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                <strong>Removes PR Code Review</strong>: You don't read how
+                <code>copyWith</code> is implemented every time a class is added
+                (e.g. Freezed).
+              </li>
+              <li>
+                <strong>Ensures Consistency</strong>: Generators are
+                deterministic, so data classes behave identically.
+              </li>
+              <li>
+                <strong>Makes Updates Simple</strong>: Adding/removing fields
+                auto-updates <code>==</code>, <code>hashCode</code>,
+                <code>copyWith</code>, <code>toString</code> without forgetting
+                a field.
+              </li>
+            </ul>
+          </div>
+          <div class="card accent-glow">
+            <h3>Static Analyzability</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>Annotations make code statically analyzable.</li>
+              <li>This compounds with creating other tools down the road.</li>
+              <li>Significant bug reduction across the application.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Codegen is about zero PR review on boilerplate, uniform behavior, and
+          deterministic updates when fields change.
+        </div>
+      </div>
+
+      <!-- SLIDE 11: Codegen: What to Automate vs Avoid -->
+      <div class="slide" data-title="Codegen Decisions">
+        <div class="slide-header">
+          <h2>What to Automate with Codegen (and What to Avoid)</h2>
+        </div>
+        <div class="grid-3">
+          <div class="card emerald-glow">
+            <h3>Definitely Automate</h3>
+            <ul
+              class="feature-list"
+              style="font-size: 0.9rem; margin-top: 0.4rem"
+            >
+              <li>
+                <strong>Backend Data Layer</strong>: GraphQL / Swagger / gRPC
+                schemas to Dart models.
+              </li>
+              <li><strong>On-Device DB</strong>: Table schemas.</li>
+              <li>
+                <strong>Assets</strong>: <code>FontAwesome.check</code> instead
+                of <code>'fa check'</code>.
+              </li>
+              <li>
+                <strong>Translations</strong>:
+                <code>L10n.of(context).homePageTitle</code>.
+              </li>
+            </ul>
+          </div>
+          <div class="card amber-glow">
+            <h3>Maybe Automate</h3>
+            <ul
+              class="feature-list"
+              style="font-size: 0.9rem; margin-top: 0.4rem"
+            >
+              <li>
+                <strong>Routing</strong>: Type safety on route parameters &
+                static route list.
+              </li>
+              <li>
+                <strong>Widget List</strong>: Auto-generated widget browser via
+                <code>build_runner</code>.
+              </li>
+              <li>
+                <strong>Error-Prone Tasks</strong>: Auto-generated
+                <code>toString</code> to prevent stale fields.
+              </li>
+            </ul>
+          </div>
+          <div class="card rose-glow">
+            <h3>Do NOT Automate</h3>
+            <ul
+              class="feature-list"
+              style="font-size: 0.9rem; margin-top: 0.4rem"
+            >
+              <li>
+                <strong>Minor Boilerplate Gains</strong> that aren't error prone
+                (e.g. my old <code>functional_widget</code> saving 2-3 lines on
+                StatelessWidgets).
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="callout tip"
+          style="margin-top: 0.75rem; font-size: 0.95rem"
+        >
+          💡 <strong>Pro Tips:</strong> Commit generated files and let CI
+          auto-commit codegen updates. Codegen can be a basic Dart script
+          reading JSON and outputting a file — it doesn't have to be complex
+          <code>build_runner</code> logic!
+        </div>
+        <div class="notes" style="display: none">
+          Many data layer codegen tools have existing open source packages.
+          Simple Dart scripts that read JSON and output files count as codegen
+          too!
+        </div>
+      </div>
+
+      <!-- SLIDE: Testing Tip - Code Generators -->
+      <div class="slide tip-slide" data-title="Testing Tip: Code Generators">
+        <div class="tip-card">
+          <div class="tip-text">Testing Tip: Code Generators</div>
+          <div class="tip-subtext">
+            Avoid brittle tests checking string content (e.g.
+            <code>generated code contains void foo()</code>). <br /><br />
+            Write plain <code>.dart</code> files in
+            <code>test/integration/*</code> using
+            <code>@data class Foo {}</code>, run generator, and test runtime
+            behavior!
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Testing tip for code generators.
+        </div>
+      </div>
+
+      <!-- SLIDE 12: Tool 4: CLI Tools -->
+      <div class="slide" data-title="Tool: CLIs">
+        <div class="slide-header">
+          <h2>Command Line Interfaces (CLIs)</h2>
+        </div>
+        <div class="grid-2">
+          <div>
+            <p>
+              Think bash scripts, but in <strong>Dart land</strong>! Dart is a
+              very good scripting language. Write Dart scripts!
+            </p>
+            <div class="card accent-glow" style="margin-top: 0.5rem">
+              <h3>Must-Have Commands for All Projects</h3>
+              <ul class="feature-list" style="font-size: 0.95rem">
+                <li>
+                  <code>./install</code>: Check Flutter/Dart versions, missing
+                  tools (Docker, CLIs), set up hidden <code>.env</code> &
+                  codegen. Link solutions for missing tools!
+                </li>
+                <li>
+                  <code>./run</code>: Start emulators, Docker, local servers.
+                </li>
+                <li>
+                  <code>./test</code>: Unit & integration tests on
+                  browser/simulators.
+                </li>
+                <li>
+                  <code>./deploy</code>: Update changelogs, bump versions,
+                  release flags, publish to stores.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="card card-bg emerald-glow">
+              <h3>CLI Architecture</h3>
+              <ul class="feature-list" style="font-size: 0.95rem">
+                <li>
+                  <strong>CLI as Abstraction Layer</strong>: GUIs should work by
+                  invoking your CLI under the hood.
+                </li>
+                <li>
+                  <strong>Low Value</strong>: Module templates (e.g.
+                  <code>./create_module</code> — AI does it easily, costly to
+                  maintain).
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Bash can be daunting on Windows. Write Dart scripts instead! CLIs are
+          universally usable by humans, AIs, and CI pipelines.
+        </div>
+      </div>
+
+      <!-- SLIDE: Testing Tip - CLI Tools -->
+      <div class="slide tip-slide" data-title="Testing Tip: CLI Tools">
+        <div class="tip-card">
+          <div class="tip-text">Testing Tip: CLI Tools</div>
+          <div class="tip-subtext">
+            Integration tests are super easy!
+            <br /><br />
+            Offer a <code>--machine=json</code> flag and test via:
+            <code style="display: block; margin-top: 0.75rem; font-size: 1rem"
+              >Process.run('dart', ['path/to/bin.dart', '--my-flag'])</code
+            >
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Testing tip for CLI tools.
+        </div>
+      </div>
+
+      <!-- SLIDE 13: Tool 5: MCP Servers -->
+      <div class="slide" data-title="Tool: MCP Servers">
+        <div class="slide-header">
+          <h2>MCP Servers (Machine Protocol)</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card accent-glow">
+            <h3>What is an MCP Server?</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                Server running locally or remotely using a protocol designed for
+                AI agents (WebSocket + JSON object).
+              </li>
+              <li>
+                Official Dart package available: <code>package:mcp</code>.
+              </li>
+              <li>
+                <strong>When to use over CLI</strong>: Need a long-lived server
+                to save startup costs or persist state, where humans and CI have
+                no business interacting with it.
+              </li>
+            </ul>
+          </div>
+          <div class="card emerald-glow">
+            <h3>Practical Tool Ideas for LLMs</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                <strong>API Probe</strong>: Allow AI to make API calls using the
+                current user token to debug live endpoints.
+              </li>
+              <li>
+                <strong>Test User Directory</strong>: Debug endpoint listing
+                test users & metadata.
+              </li>
+              <li>
+                <strong>App Control</strong>: Teach AI how to login/logout and
+                navigate routes to find specific widgets on screen.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout quote" style="margin-top: 0.75rem">
+          "Enables agent prompts like: 'Find a user capable of displaying X in
+          page Y' where the agent repeatedly logs in/out and navigates
+          autonomously."
+        </div>
+        <div class="notes" style="display: none">
+          MCPs are the perfect abstraction when allowing LLMs to perform tasks
+          that humans would generally do in a GUI.
+        </div>
+      </div>
+
+      <!-- SLIDE 14: Tool 6: DevTools Extensions -->
+      <div class="slide" data-title="Tool: DevTools">
+        <div class="slide-header">
+          <h2>DevTools Extensions: Human & AI Dual Interface</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card rose-glow">
+            <h3>Human DevTools</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                Destined for Humans (state inspector, routing tree viewer with
+                GUI).
+              </li>
+              <li>
+                <strong>In-App DevTools</strong>: Usable after app build when QA
+                is testing on device.
+              </li>
+              <li>
+                <strong>External DevTools Extensions</strong>: Relies on
+                Debugger API, static analysis, or source files.
+              </li>
+            </ul>
+          </div>
+          <div class="card emerald-glow">
+            <h3>The Modern AI Era Rule</h3>
+            <ul class="feature-list" style="margin-top: 0.4rem">
+              <li>
+                <strong>Don't write JUST a devtool!</strong> Make it usable by
+                AIs too.
+              </li>
+              <li>
+                If you build an in-app log viewer, expose an
+                <strong>MCP server endpoint</strong> alongside it so LLMs can
+                access logs while the debugger is running.
+              </li>
+              <li>
+                Tool Ideas: List of all logs & network requests, live theme
+                switchers.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Devtools are the other side of the MCP coin. Expose MCP endpoints so
+          both human developers and AI agents can query application state.
+        </div>
+      </div>
+
+      <!-- SLIDE 15: How to Make Tools -->
+      <div class="slide" data-title="How to Make Tools">
+        <div class="slide-header">
+          <h2>How to Make Tools: Static vs. Runtime Analysis</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card accent-glow">
+            <h3>Static Analysis (package:analyzer)</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 0.5rem">
+              <strong
+                >Don't rely on greps/regex and string code parsing!</strong
+              >
+              Analyzer is a must for precise code views.
+            </p>
+            <ul class="feature-list">
+              <li>List all classes across workspace.</li>
+              <li>Find everywhere a class is used.</li>
+              <li>
+                Inspect methods, doc comments, annotations, and AST fields.
+              </li>
+            </ul>
+          </div>
+          <div class="card accent-glow">
+            <h3>Runtime Analysis (package:vm_service)</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 0.5rem">
+              Inspect live application memory via VM Service URI (from logs or
+              VS Code clipboard).
+            </p>
+            <ul class="feature-list">
+              <li>
+                Arbitrary code execution (<code>eval(code)</code> like VS Code
+                Debugger Expression Evaluator).
+              </li>
+              <li>Inspect full application memory.</li>
+              <li>List all object instances and read field values live.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          A large chunk of tools fall into static analysis (analyzer) or runtime
+          tools (vm_service).
+        </div>
+      </div>
+
+      <!-- SLIDE 16: Practical Case Study: Riverpod -->
+      <div class="slide" data-title="Case Study: Riverpod">
+        <div class="slide-header">
+          <h2>Practical Architecture: The Riverpod Tooling Suite</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card card-bg accent-glow">
+            <h3>riverpod_lint & riverpod_generator</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>
+                <strong>Shared Implementation</strong>: All provider metadata
+                parsing logic is extracted into
+                <code>riverpod_analyzer_utils</code> library and used by both
+                tools.
+              </li>
+              <li>
+                Technically allows anyone to build custom Riverpod lint rules or
+                documentation tools.
+              </li>
+            </ul>
+          </div>
+          <div class="card card-bg emerald-glow">
+            <h3>Riverpod DevTool & MCP Refactor</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>
+                Uses <code>vm_service</code> to inspect running app & display
+                all providers and their states.
+              </li>
+              <li>
+                Supports <strong>time travel</strong> state history & live
+                provider modification.
+              </li>
+              <li>
+                <strong>Current Refactor</strong>: Extracting logic so a
+                <strong>Riverpod MCP Server</strong> can be created for AI
+                agents!
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          By sharing analyzer utilities and vm_service logic, we can easily
+          power lints, codegen, devtools, and MCP servers simultaneously.
+        </div>
+      </div>
+
+      <!-- SLIDE 17: Role of AI Skills: Discoverability -->
+      <div class="slide" data-title="Role of AI Skills">
+        <div class="slide-header">
+          <h2>So, When DO We Use Skills Then?</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card emerald-glow">
+            <h3>Skills ARE for Discoverability</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>Installing a tool doesn't mean the AI knows it exists.</li>
+              <li>
+                A simple prompt:
+                <em
+                  >"You can inspect memory of the debugged app using MyState
+                  MCP"</em
+                >
+                is enough for AIs to use it.
+              </li>
+            </ul>
+          </div>
+          <div class="card rose-glow">
+            <h3>DON'T Write Tool Manuals in Skills</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
+              <li>Tools have natural discovery mechanisms!</li>
+              <li>
+                CLIs have <code>--help</code> (agents check this natively).
+              </li>
+              <li>MCP servers list tools with descriptions.</li>
+              <li>Generators have READMEs and Dart doc comments.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout warning" style="margin-top: 0.75rem">
+          🚫 <strong>Avoid Context Pollution:</strong> Don't pollute prompt
+          context with manuals the AI needs once in a blue moon. Using skills to
+          solve coding problems directly is a last resort!
+        </div>
+        <div class="notes" style="display: none">
+          Skills are for discoverability. Let tools document themselves through
+          --help flags, MCP tool schemas, and Dart docs.
+        </div>
+      </div>
+
+      <!-- SLIDE 18: The AI Tooling Philosophy (Conclusion) -->
+      <div class="slide title-slide" data-title="Conclusion">
+        <h1 style="font-size: 3rem; margin: 0.75rem 0">
+          The AI Tooling Philosophy
+        </h1>
+        <div
+          class="card accent-glow"
+          style="
+            max-width: 850px;
+            text-align: left;
+            margin: 1.25rem auto;
+            padding: 1.75rem;
+          "
+        >
+          <ul class="feature-list" style="gap: 1rem">
+            <li style="font-size: 1.2rem">
+              <strong>Don't replace tools with prompts.</strong> Use prompts to
+              create your tools.
+            </li>
+            <li style="font-size: 1.2rem">
+              <strong>Avoid using Skills to solve problems.</strong> Use them to
+              make an agent discover the tools to solve said problem.
+            </li>
+            <li style="font-size: 1.2rem">
+              <strong>Improve code quality</strong> thanks to determinism,
+              reduce execution time, and lower token costs paid to LLM
+              providers.
+            </li>
+          </ul>
+        </div>
+        <div
+          style="
+            font-size: 1.3rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-top: 0.75rem;
+          "
+        >
+          Thank You! Q & A
+        </div>
+        <div class="notes" style="display: none">
+          Thank you! Remember: Don't replace tools with prompts, use prompts to
+          create your tools.
+        </div>
       </div>
     </div>
 
-    <!-- SLIDE 13: Tool 5: MCP Servers -->
-    <div class="slide" data-title="Tool: MCP Servers">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 5</div>
-        <h2>MCP Servers (Machine Protocol)</h2>
+    <!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+      <div class="nav-left">
+        <button
+          class="nav-btn"
+          id="prevBtn"
+          title="Previous Slide (Left Arrow / PageUp)"
+        >
+          ← Prev
+        </button>
+        <button
+          class="nav-btn"
+          id="nextBtn"
+          title="Next Slide (Right Arrow / Space / PageDown)"
+        >
+          Next →
+        </button>
+        <span class="slide-counter" id="slideCounter">Slide 1 / 18</span>
       </div>
-      <div class="grid-2">
-        <div class="card accent-glow">
-          <h3>What is an MCP Server?</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li>Server running locally or remotely using a protocol designed for AI agents (WebSocket + JSON object).</li>
-            <li>Official Dart package available: <code>package:mcp</code>.</li>
-            <li><strong>When to use over CLI</strong>: Need a long-lived server to save startup costs or persist state, where humans and CI have no business interacting with it.</li>
-          </ul>
-        </div>
-        <div class="card emerald-glow">
-          <h3>Practical Tool Ideas for LLMs</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li><strong>API Probe</strong>: Allow AI to make API calls using the current user token to debug live endpoints.</li>
-            <li><strong>Test User Directory</strong>: Debug endpoint listing test users & metadata.</li>
-            <li><strong>App Control</strong>: Teach AI how to login/logout and navigate routes to find specific widgets on screen.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="callout quote" style="margin-top: 0.75rem;">
-        "Enables agent prompts like: 'Find a user capable of displaying X in page Y' where the agent repeatedly logs in/out and navigates autonomously."
-      </div>
-      <div class="notes" style="display:none;">
-        MCPs are the perfect abstraction when allowing LLMs to perform tasks that humans would generally do in a GUI.
-      </div>
-    </div>
-
-    <!-- SLIDE 14: Tool 6: DevTools Extensions -->
-    <div class="slide" data-title="Tool: DevTools">
-      <div class="slide-header">
-        <div class="slide-tag">Tool Category 6</div>
-        <h2>DevTools Extensions: Human & AI Dual Interface</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card rose-glow">
-          <h3>Human DevTools</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li>Destined for Humans (state inspector, routing tree viewer with GUI).</li>
-            <li><strong>In-App DevTools</strong>: Usable after app build when QA is testing on device.</li>
-            <li><strong>External DevTools Extensions</strong>: Relies on Debugger API, static analysis, or source files.</li>
-          </ul>
-        </div>
-        <div class="card emerald-glow">
-          <h3>The Modern AI Era Rule</h3>
-          <ul class="feature-list" style="margin-top: 0.4rem;">
-            <li><strong>Don't write JUST a devtool!</strong> Make it usable by AIs too.</li>
-            <li>If you build an in-app log viewer, expose an <strong>MCP server endpoint</strong> alongside it so LLMs can access logs while the debugger is running.</li>
-            <li>Tool Ideas: List of all logs & network requests, live theme switchers.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        Devtools are the other side of the MCP coin. Expose MCP endpoints so both human developers and AI agents can query application state.
+      <div class="nav-right">
+        <button class="nav-btn" id="overviewBtn" title="Toggle Overview (M)">
+          Grid Overview
+        </button>
+        <button class="nav-btn" id="notesBtn" title="Toggle Speaker Notes (N)">
+          Speaker Notes
+        </button>
+        <button class="nav-btn" id="themeBtn" title="Toggle Theme">
+          Theme
+        </button>
+        <button
+          class="nav-btn"
+          id="fullscreenBtn"
+          title="Toggle Fullscreen (F)"
+        >
+          Fullscreen
+        </button>
       </div>
     </div>
 
-    <!-- SLIDE 15: How to Make Tools -->
-    <div class="slide" data-title="How to Make Tools">
-      <div class="slide-header">
-        <div class="slide-tag">Implementation</div>
-        <h2>How to Make Tools: Static vs. Runtime Analysis</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card accent-glow">
-          <h3>Static Analysis (package:analyzer)</h3>
-          <p style="font-size: 0.95rem; margin-bottom: 0.5rem;"><strong>Don't rely on greps/regex and string code parsing!</strong> Analyzer is a must for precise code views.</p>
-          <ul class="feature-list">
-            <li>List all classes across workspace.</li>
-            <li>Find everywhere a class is used.</li>
-            <li>Inspect methods, doc comments, annotations, and AST fields.</li>
-          </ul>
-        </div>
-        <div class="card accent-glow">
-          <h3>Runtime Analysis (package:vm_service)</h3>
-          <p style="font-size: 0.95rem; margin-bottom: 0.5rem;">Inspect live application memory via VM Service URI (from logs or VS Code clipboard).</p>
-          <ul class="feature-list">
-            <li>Arbitrary code execution (<code>eval(code)</code> like VS Code Debugger Expression Evaluator).</li>
-            <li>Inspect full application memory.</li>
-            <li>List all object instances and read field values live.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        A large chunk of tools fall into static analysis (analyzer) or runtime tools (vm_service).
+    <!-- Speaker Notes Panel -->
+    <div class="notes-panel" id="notesPanel">
+      <div class="notes-title">SPEAKER NOTES</div>
+      <div class="notes-content" id="notesContent">
+        Speaker notes will appear here...
       </div>
     </div>
 
-    <!-- SLIDE 16: Practical Case Study: Riverpod -->
-    <div class="slide" data-title="Case Study: Riverpod">
-      <div class="slide-header">
-        <div class="slide-tag">Real-World Example</div>
-        <h2>Practical Architecture: The Riverpod Tooling Suite</h2>
+    <!-- Grid Overview Modal -->
+    <div class="overview-modal" id="overviewModal">
+      <div class="overview-header">
+        <h2>Slide Deck Navigation Overview</h2>
+        <button class="nav-btn" id="closeOverviewBtn">Close (Esc)</button>
       </div>
-      <div class="grid-2">
-        <div class="card card-bg accent-glow">
-          <h3>riverpod_lint & riverpod_generator</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li><strong>Shared Implementation</strong>: All provider metadata parsing logic is extracted into <code>riverpod_analyzer_utils</code> library and used by both tools.</li>
-            <li>Technically allows anyone to build custom Riverpod lint rules or documentation tools.</li>
-          </ul>
-        </div>
-        <div class="card card-bg emerald-glow">
-          <h3>Riverpod DevTool & MCP Refactor</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>Uses <code>vm_service</code> to inspect running app & display all providers and their states.</li>
-            <li>Supports <strong>time travel</strong> state history & live provider modification.</li>
-            <li><strong>Current Refactor</strong>: Extracting logic so a <strong>Riverpod MCP Server</strong> can be created for AI agents!</li>
-          </ul>
-        </div>
-      </div>
-      <div class="notes" style="display:none;">
-        By sharing analyzer utilities and vm_service logic, we can easily power lints, codegen, devtools, and MCP servers simultaneously.
-      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
     </div>
 
-    <!-- SLIDE 17: Role of AI Skills: Discoverability -->
-    <div class="slide" data-title="Role of AI Skills">
-      <div class="slide-header">
-        <div class="slide-tag">Workflow Integration</div>
-        <h2>So, When DO We Use Skills Then?</h2>
-      </div>
-      <div class="grid-2">
-        <div class="card emerald-glow">
-          <h3>Skills ARE for Discoverability</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>Installing a tool doesn't mean the AI knows it exists.</li>
-            <li>A simple prompt: <em>"You can inspect memory of the debugged app using MyState MCP"</em> is enough for AIs to use it.</li>
-          </ul>
-        </div>
-        <div class="card rose-glow">
-          <h3>DON'T Write Tool Manuals in Skills</h3>
-          <ul class="feature-list" style="margin-top: 0.5rem;">
-            <li>Tools have natural discovery mechanisms!</li>
-            <li>CLIs have <code>--help</code> (agents check this natively).</li>
-            <li>MCP servers list tools with descriptions.</li>
-            <li>Generators have READMEs and Dart doc comments.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="callout warning" style="margin-top: 0.75rem;">
-        🚫 <strong>Avoid Context Pollution:</strong> Don't pollute prompt context with manuals the AI needs once in a blue moon. Using skills to solve coding problems directly is a last resort!
-      </div>
-      <div class="notes" style="display:none;">
-        Skills are for discoverability. Let tools document themselves through --help flags, MCP tool schemas, and Dart docs.
-      </div>
-    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const slides = document.querySelectorAll(".slide");
+        const progressBar = document.getElementById("progressBar");
+        const slideCounter = document.getElementById("slideCounter");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const notesBtn = document.getElementById("notesBtn");
+        const notesPanel = document.getElementById("notesPanel");
+        const notesContent = document.getElementById("notesContent");
+        const overviewBtn = document.getElementById("overviewBtn");
+        const overviewModal = document.getElementById("overviewModal");
+        const overviewGrid = document.getElementById("overviewGrid");
+        const closeOverviewBtn = document.getElementById("closeOverviewBtn");
+        const themeBtn = document.getElementById("themeBtn");
+        const fullscreenBtn = document.getElementById("fullscreenBtn");
 
-    <!-- SLIDE 18: The AI Tooling Philosophy (Conclusion) -->
-    <div class="slide title-slide" data-title="Conclusion">
-      <div class="slide-tag">Takeaway & Philosophy</div>
-      <h1 style="font-size: 3rem; margin: 0.75rem 0;">The AI Tooling Philosophy</h1>
-      <div class="card accent-glow" style="max-width: 850px; text-align: left; margin: 1.25rem auto; padding: 1.75rem;">
-        <ul class="feature-list" style="gap: 1rem;">
-          <li style="font-size: 1.2rem;"><strong>Don't replace tools with prompts.</strong> Use prompts to create your tools.</li>
-          <li style="font-size: 1.2rem;"><strong>Avoid using Skills to solve problems.</strong> Use them to make an agent discover the tools to solve said problem.</li>
-          <li style="font-size: 1.2rem;"><strong>Improve code quality</strong> thanks to determinism, reduce execution time, and lower token costs paid to LLM providers.</li>
-        </ul>
-      </div>
-      <div style="font-size: 1.3rem; color: var(--accent-primary); font-weight: 600; margin-top: 0.75rem;">
-        Thank You! Q & A
-      </div>
-      <div class="notes" style="display:none;">
-        Thank you! Remember: Don't replace tools with prompts, use prompts to create your tools.
-      </div>
-    </div>
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        const themes = ["dark", "neon", "light"];
+        let currentThemeIdx = 0;
 
-  </div>
-
-  <!-- Bottom Navigation Bar -->
-  <div class="nav-bar">
-    <div class="nav-left">
-      <button class="nav-btn" id="prevBtn" title="Previous Slide (Left Arrow / PageUp)">← Prev</button>
-      <button class="nav-btn" id="nextBtn" title="Next Slide (Right Arrow / Space / PageDown)">Next →</button>
-      <span class="slide-counter" id="slideCounter">Slide 1 / 18</span>
-    </div>
-    <div class="nav-right">
-      <button class="nav-btn" id="overviewBtn" title="Toggle Overview (M)">Grid Overview</button>
-      <button class="nav-btn" id="notesBtn" title="Toggle Speaker Notes (N)">Speaker Notes</button>
-      <button class="nav-btn" id="themeBtn" title="Toggle Theme">Theme</button>
-      <button class="nav-btn" id="fullscreenBtn" title="Toggle Fullscreen (F)">Fullscreen</button>
-    </div>
-  </div>
-
-  <!-- Speaker Notes Panel -->
-  <div class="notes-panel" id="notesPanel">
-    <div class="notes-title">SPEAKER NOTES</div>
-    <div class="notes-content" id="notesContent">Speaker notes will appear here...</div>
-  </div>
-
-  <!-- Grid Overview Modal -->
-  <div class="overview-modal" id="overviewModal">
-    <div class="overview-header">
-      <h2>Slide Deck Navigation Overview</h2>
-      <button class="nav-btn" id="closeOverviewBtn">Close (Esc)</button>
-    </div>
-    <div class="overview-grid" id="overviewGrid"></div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const slides = document.querySelectorAll('.slide');
-      const progressBar = document.getElementById('progressBar');
-      const slideCounter = document.getElementById('slideCounter');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      const notesBtn = document.getElementById('notesBtn');
-      const notesPanel = document.getElementById('notesPanel');
-      const notesContent = document.getElementById('notesContent');
-      const overviewBtn = document.getElementById('overviewBtn');
-      const overviewModal = document.getElementById('overviewModal');
-      const overviewGrid = document.getElementById('overviewGrid');
-      const closeOverviewBtn = document.getElementById('closeOverviewBtn');
-      const themeBtn = document.getElementById('themeBtn');
-      const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-      let currentSlide = 0;
-      const totalSlides = slides.length;
-      const themes = ['dark', 'neon', 'light'];
-      let currentThemeIdx = 0;
-
-      // Populate Overview Grid
-      slides.forEach((slide, index) => {
-        const title = slide.getAttribute('data-title') || `Slide ${index + 1}`;
-        const card = document.createElement('div');
-        card.className = `overview-card ${index === currentSlide ? 'active' : ''}`;
-        card.innerHTML = `
+        // Populate Overview Grid
+        slides.forEach((slide, index) => {
+          const title =
+            slide.getAttribute("data-title") || `Slide ${index + 1}`;
+          const card = document.createElement("div");
+          card.className = `overview-card ${index === currentSlide ? "active" : ""}`;
+          card.innerHTML = `
           <div class="overview-num">SLIDE ${index + 1}</div>
           <div class="overview-card-title">${title}</div>
         `;
-        card.addEventListener('click', () => {
-          goToSlide(index);
-          toggleOverview(false);
+          card.addEventListener("click", () => {
+            goToSlide(index);
+            toggleOverview(false);
+          });
+          overviewGrid.appendChild(card);
         });
-        overviewGrid.appendChild(card);
-      });
 
-      function updateDeck() {
-        slides.forEach((slide, idx) => {
-          if (idx === currentSlide) {
-            slide.classList.add('active');
+        function updateDeck() {
+          slides.forEach((slide, idx) => {
+            if (idx === currentSlide) {
+              slide.classList.add("active");
+            } else {
+              slide.classList.remove("active");
+            }
+          });
+
+          // Progress bar
+          const progress = ((currentSlide + 1) / totalSlides) * 100;
+          progressBar.style.width = `${progress}%`;
+
+          // Counter
+          slideCounter.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+
+          // Speaker notes
+          const activeSlide = slides[currentSlide];
+          const notes = activeSlide.querySelector(".notes");
+          notesContent.textContent = notes
+            ? notes.textContent.trim()
+            : "No speaker notes for this slide.";
+
+          // Overview grid highlights
+          const cards = overviewGrid.querySelectorAll(".overview-card");
+          cards.forEach((card, idx) => {
+            if (idx === currentSlide) {
+              card.classList.add("active");
+            } else {
+              card.classList.remove("active");
+            }
+          });
+        }
+
+        function goToSlide(index) {
+          if (index < 0) currentSlide = 0;
+          else if (index >= totalSlides) currentSlide = totalSlides - 1;
+          else currentSlide = index;
+          updateDeck();
+        }
+
+        function nextSlide() {
+          if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+          if (currentSlide > 0) goToSlide(currentSlide - 1);
+        }
+
+        function toggleNotes() {
+          notesPanel.classList.toggle("visible");
+        }
+
+        function toggleOverview(show) {
+          if (show === undefined) {
+            overviewModal.classList.toggle("visible");
+          } else if (show) {
+            overviewModal.classList.add("visible");
           } else {
-            slide.classList.remove('active');
+            overviewModal.classList.remove("visible");
+          }
+        }
+
+        function toggleTheme() {
+          currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+          const newTheme = themes[currentThemeIdx];
+          if (newTheme === "dark") {
+            document.body.removeAttribute("data-theme");
+          } else {
+            document.body.setAttribute("data-theme", newTheme);
+          }
+        }
+
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement
+              .requestFullscreen()
+              .catch((err) => console.log(err));
+          } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+          }
+        }
+
+        // ROI Calculator Logic
+        function calculateROI() {
+          const devs =
+            parseFloat(document.getElementById("calcDevs").value) || 0;
+          const mins =
+            parseFloat(document.getElementById("calcMins").value) || 0;
+          const freq =
+            parseFloat(document.getElementById("calcFreq").value) || 0;
+
+          const hoursSaved = Math.round((devs * mins * freq * 56) / 60);
+          document.getElementById("calcResult").textContent =
+            `${hoursSaved} Hours`;
+        }
+
+        ["calcDevs", "calcMins", "calcFreq"].forEach((id) => {
+          const input = document.getElementById(id);
+          if (input) input.addEventListener("input", calculateROI);
+        });
+
+        // Event Listeners
+        prevBtn.addEventListener("click", prevSlide);
+        nextBtn.addEventListener("click", nextSlide);
+        notesBtn.addEventListener("click", toggleNotes);
+        overviewBtn.addEventListener("click", () => toggleOverview());
+        closeOverviewBtn.addEventListener("click", () => toggleOverview(false));
+        themeBtn.addEventListener("click", toggleTheme);
+        fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+        // Keyboard Navigation
+        document.addEventListener("keydown", (e) => {
+          if (overviewModal.classList.contains("visible")) {
+            if (e.key === "Escape") toggleOverview(false);
+            return;
+          }
+
+          switch (e.key) {
+            case "ArrowRight":
+            case "PageDown":
+            case " ":
+              nextSlide();
+              break;
+            case "ArrowLeft":
+            case "PageUp":
+              prevSlide();
+              break;
+            case "Home":
+              goToSlide(0);
+              break;
+            case "End":
+              goToSlide(totalSlides - 1);
+              break;
+            case "n":
+            case "N":
+              toggleNotes();
+              break;
+            case "m":
+            case "M":
+              toggleOverview();
+              break;
+            case "f":
+            case "F":
+              toggleFullscreen();
+              break;
           }
         });
 
-        // Progress bar
-        const progress = ((currentSlide + 1) / totalSlides) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        // Counter
-        slideCounter.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
-
-        // Speaker notes
-        const activeSlide = slides[currentSlide];
-        const notes = activeSlide.querySelector('.notes');
-        notesContent.textContent = notes ? notes.textContent.trim() : 'No speaker notes for this slide.';
-
-        // Overview grid highlights
-        const cards = overviewGrid.querySelectorAll('.overview-card');
-        cards.forEach((card, idx) => {
-          if (idx === currentSlide) {
-            card.classList.add('active');
-          } else {
-            card.classList.remove('active');
-          }
-        });
-      }
-
-      function goToSlide(index) {
-        if (index < 0) currentSlide = 0;
-        else if (index >= totalSlides) currentSlide = totalSlides - 1;
-        else currentSlide = index;
+        // Initial Call
         updateDeck();
-      }
-
-      function nextSlide() {
-        if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
-      }
-
-      function prevSlide() {
-        if (currentSlide > 0) goToSlide(currentSlide - 1);
-      }
-
-      function toggleNotes() {
-        notesPanel.classList.toggle('visible');
-      }
-
-      function toggleOverview(show) {
-        if (show === undefined) {
-          overviewModal.classList.toggle('visible');
-        } else if (show) {
-          overviewModal.classList.add('visible');
-        } else {
-          overviewModal.classList.remove('visible');
-        }
-      }
-
-      function toggleTheme() {
-        currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-        const newTheme = themes[currentThemeIdx];
-        if (newTheme === 'dark') {
-          document.body.removeAttribute('data-theme');
-        } else {
-          document.body.setAttribute('data-theme', newTheme);
-        }
-      }
-
-      function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(err => console.log(err));
-        } else {
-          if (document.exitFullscreen) document.exitFullscreen();
-        }
-      }
-
-      // ROI Calculator Logic
-      function calculateROI() {
-        const devs = parseFloat(document.getElementById('calcDevs').value) || 0;
-        const mins = parseFloat(document.getElementById('calcMins').value) || 0;
-        const freq = parseFloat(document.getElementById('calcFreq').value) || 0;
-        
-        const hoursSaved = Math.round((devs * mins * freq * 56) / 60);
-        document.getElementById('calcResult').textContent = `${hoursSaved} Hours`;
-      }
-
-      ['calcDevs', 'calcMins', 'calcFreq'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) input.addEventListener('input', calculateROI);
       });
-
-      // Event Listeners
-      prevBtn.addEventListener('click', prevSlide);
-      nextBtn.addEventListener('click', nextSlide);
-      notesBtn.addEventListener('click', toggleNotes);
-      overviewBtn.addEventListener('click', () => toggleOverview());
-      closeOverviewBtn.addEventListener('click', () => toggleOverview(false));
-      themeBtn.addEventListener('click', toggleTheme);
-      fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-      // Keyboard Navigation
-      document.addEventListener('keydown', (e) => {
-        if (overviewModal.classList.contains('visible')) {
-          if (e.key === 'Escape') toggleOverview(false);
-          return;
-        }
-
-        switch (e.key) {
-          case 'ArrowRight':
-          case 'PageDown':
-          case ' ':
-            nextSlide();
-            break;
-          case 'ArrowLeft':
-          case 'PageUp':
-            prevSlide();
-            break;
-          case 'Home':
-            goToSlide(0);
-            break;
-          case 'End':
-            goToSlide(totalSlides - 1);
-            break;
-          case 'n':
-          case 'N':
-            toggleNotes();
-            break;
-          case 'm':
-          case 'M':
-            toggleOverview();
-            break;
-          case 'f':
-          case 'F':
-            toggleFullscreen();
-            break;
-        }
-      });
-
-      // Initial Call
-      updateDeck();
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

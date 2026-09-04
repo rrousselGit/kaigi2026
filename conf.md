@@ -47,7 +47,7 @@ Custom lint rule:
 > 'Hey gemini, create a new lint rule using dart_analysis_server_plugin. This lint rule should disallow using ' and " inside Widgets'.
 > Initial cost slightly higher than skill, long term economy and reliability win (within reasons)
 
-> [!NOTE]
+> [!DANGER]
 > AI price can ramp up with bad skills.
 > A skill that runs on every PR saying 'Scan the codebase for hardcoded text' will cost a lot of money over time, due to doing tons of file reads on every PR.
 > You could reduce the cost by saying 'scan only the files modified in the PR', but english is subtle. AIs may still read way more files than you intended. And you're probably not checking exactly what your AI is doing at all times.
