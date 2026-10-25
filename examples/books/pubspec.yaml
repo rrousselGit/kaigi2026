@@ -39,6 +39,7 @@ dependencies:
   flutter_riverpod: ^3.4.2
   graphql_flutter: ^5.1.2
   http: ^1.2.0
+  material_ui: ^1.8.0
 
 dev_dependencies:
   flutter_test:

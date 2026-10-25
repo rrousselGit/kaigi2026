@@ -14,6 +14,13 @@
       "type": "dart",
       "program": "${workspaceFolder}/examples/books/lib/main.dart",
       "cwd": "${workspaceFolder}/examples/books"
+    },
+    {
+      "name": "slides",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/slides/lib/main.dart",
+      "cwd": "${workspaceFolder}/slides"
     }
   ],
   "compounds": [

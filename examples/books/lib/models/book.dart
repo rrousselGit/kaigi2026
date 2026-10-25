@@ -1,5 +1,5 @@
 import 'package:api_schema/api_schema.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 typedef Book = Query$GetBooks$books;
 

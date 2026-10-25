@@ -208,41 +208,122 @@ class _DeckState extends State<Deck> {
   }
 }
 
-class _SlideViewport extends StatelessWidget {
+/// How visible a slide is: [opacity], and [progress] of its scale/slide-up
+/// motion, where 0 is the hidden pose and 1 the resting pose.
+typedef _SlidePose = ({double opacity, double progress});
+
+const _SlidePose _hidden = (opacity: 0, progress: 0);
+
+/// Cross-fades between the previous and current slide.
+///
+/// Every transition starts from what is currently on screen, so changing slide
+/// mid-transition (including going back) never makes a slide jump or blink.
+class _SlideViewport extends StatefulWidget {
   const _SlideViewport({required this.index});
 
   final int index;
 
   @override
+  State<_SlideViewport> createState() => _SlideViewportState();
+}
+
+class _SlideViewportState extends State<_SlideViewport>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+    value: 1,
+  );
+
+  int? _outgoing;
+  _SlidePose _outgoingFrom = _hidden;
+  _SlidePose _incomingFrom = _hidden;
+
+  @override
+  void didUpdateWidget(_SlideViewport oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index == oldWidget.index) return;
+
+    final current = _incomingPose;
+    // Going back to the slide that is still leaving resumes it from where it
+    // is, instead of restarting it from hidden.
+    _incomingFrom = widget.index == _outgoing ? _outgoingPose : _hidden;
+    _outgoing = oldWidget.index;
+    _outgoingFrom = current;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // Slides are mostly translucent cards, so two slides visible at once read
+  // like a double exposure. The leaving slide is therefore faded out within the
+  // first 20% of the transition, and the incoming one only starts fading in
+  // once the leaving one is mostly gone.
+  static const _fadeIn = Interval(0.1, 1, curve: _transitionCurve);
+  static const _fadeOut = Interval(0, 0.2, curve: Curves.easeOut);
+
+  _SlidePose get _incomingPose {
+    final fade = _fadeIn.transform(_controller.value);
+    final t = _transitionCurve.transform(_controller.value);
+    return (
+      opacity: lerpDouble(_incomingFrom.opacity, 1, fade)!,
+      progress: lerpDouble(_incomingFrom.progress, 1, t)!,
+    );
+  }
+
+  _SlidePose get _outgoingPose {
+    final fade = _fadeOut.transform(_controller.value);
+    final t = _transitionCurve.transform(_controller.value);
+    return (
+      opacity: lerpDouble(_outgoingFrom.opacity, 0, fade)!,
+      progress: lerpDouble(_outgoingFrom.progress, 0, t)!,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 400),
-      switchInCurve: _transitionCurve,
-      switchOutCurve: _transitionCurve,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: AnimatedBuilder(
-            animation: animation,
-            child: child,
-            builder: (context, child) {
-              final t = animation.value;
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - t)),
-                child: Transform.scale(scale: 0.96 + 0.04 * t, child: child),
-              );
-            },
-          ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final outgoing = _outgoing;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            if (outgoing != null && !_controller.isCompleted)
+              _slide(outgoing, _outgoingPose),
+            _slide(widget.index, _incomingPose),
+          ],
         );
       },
-      child: KeyedSubtree(
-        key: ValueKey(index),
-        child: FittedBox(
-          child: SizedBox.fromSize(
-            size: _canvas,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 40),
-              child: slides[index].child,
+    );
+  }
+
+  Widget _slide(int index, _SlidePose pose) {
+    return KeyedSubtree(
+      // Keyed so that a slide keeps its state (e.g. text fields) when it moves
+      // between the incoming and outgoing positions.
+      key: ValueKey(index),
+      child: Opacity(
+        opacity: pose.opacity.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, 20 * (1 - pose.progress)),
+          child: Transform.scale(
+            scale: 0.96 + 0.04 * pose.progress,
+            child: FittedBox(
+              child: SizedBox.fromSize(
+                size: _canvas,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 72,
+                    vertical: 40,
+                  ),
+                  child: slides[index].child,
+                ),
+              ),
             ),
           ),
         ),
