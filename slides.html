@@ -10,6 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
       :root {
         --bg-gradient-1: #090d16;
@@ -75,6 +76,58 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        transition: background 0.6s ease-in-out;
+      }
+
+      body[data-topic="intro"] {
+        background:
+          radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 70%),
+          #0b0f19;
+      }
+      body[data-topic="why"] {
+        background:
+          radial-gradient(circle at 50% 0%, #311b92 0%, transparent 70%),
+          #090a16;
+      }
+      body[data-topic="lints"] {
+        background:
+          radial-gradient(circle at 50% 0%, #064e3b 0%, transparent 70%),
+          #051210;
+      }
+      body[data-topic="fixes"] {
+        background:
+          radial-gradient(circle at 50% 0%, #78350f 0%, transparent 70%),
+          #140d06;
+      }
+      body[data-topic="codegen"] {
+        background:
+          radial-gradient(circle at 50% 0%, #0c4a6e 0%, transparent 70%),
+          #061019;
+      }
+      body[data-topic="cli"] {
+        background:
+          radial-gradient(circle at 50% 0%, #134e4a 0%, transparent 70%),
+          #051314;
+      }
+      body[data-topic="mcp"] {
+        background:
+          radial-gradient(circle at 50% 0%, #4c1d95 0%, transparent 70%),
+          #0c0717;
+      }
+      body[data-topic="devtools"] {
+        background:
+          radial-gradient(circle at 50% 0%, #881337 0%, transparent 70%),
+          #15060b;
+      }
+      body[data-topic="creation"] {
+        background:
+          radial-gradient(circle at 50% 0%, #1e1b4b 0%, transparent 70%),
+          #090a17;
+      }
+      body[data-topic="conclusion"] {
+        background:
+          radial-gradient(circle at 50% 0%, #0e7490 0%, transparent 70%),
+          #060d14;
       }
 
       /* Top Progress Bar */
@@ -619,6 +672,34 @@
         text-align: center;
       }
 
+      /* Conclusion Slide Specifics */
+      .conclusion-slide {
+        text-align: center;
+        align-items: center;
+        background: transparent !important;
+      }
+
+      .conclusion-slide h1 {
+        background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: none;
+      }
+
+      .conclusion-card {
+        background: rgba(15, 23, 42, 0.85) !important;
+        border: 1px solid rgba(56, 189, 248, 0.4) !important;
+        box-shadow:
+          0 10px 40px rgba(6, 182, 212, 0.25),
+          0 0 60px rgba(56, 189, 248, 0.15) !important;
+        border-radius: 1.25rem !important;
+      }
+
+      .conclusion-card::before {
+        background: linear-gradient(to bottom, #38bdf8, #06b6d4) !important;
+        width: 4px !important;
+      }
+
       .image-grid-slide .slide-header {
         display: flex;
         flex-direction: column;
@@ -681,7 +762,11 @@
     <!-- Deck Viewport -->
     <div class="deck-container" id="deck">
       <!-- SLIDE 1: Title Slide -->
-      <div class="slide title-slide active" data-title="Title Slide">
+      <div
+        class="slide title-slide active"
+        data-title="Title Slide"
+        data-topic="intro"
+      >
         <h1 style="font-size: 4rem; margin: 2rem 0">
           Build devtools for your app
         </h1>
@@ -705,7 +790,11 @@
       </div>
 
       <!-- SLIDE 2: I Love Building Tools -->
-      <div class="slide image-grid-slide" data-title="I Love Building Tools">
+      <div
+        class="slide image-grid-slide"
+        data-title="I Love Building Tools"
+        data-topic="intro"
+      >
         <div class="slide-header">
           <h2>I Love Building Tools</h2>
         </div>
@@ -728,6 +817,7 @@
       <div
         class="slide image-grid-slide"
         data-title="Original Plan vs AI Reality"
+        data-topic="intro"
       >
         <div class="slide-header">
           <h2>The Original Plan vs. The AI Reality</h2>
@@ -761,7 +851,7 @@
       </div>
 
       <!-- SLIDE 4: Why Create Tools? (Skills vs Lints) -->
-      <div class="slide" data-title="Why Create Tools?">
+      <div class="slide" data-title="Why Create Tools?" data-topic="why">
         <div class="slide-header">
           <h2>Why Create Tools? (Tools vs. Skills)</h2>
         </div>
@@ -811,6 +901,7 @@
       <div
         class="slide danger-slide"
         data-title="Danger: Token Consumption Spikes"
+        data-topic="why"
       >
         <div class="danger-card">
           <div class="danger-text">
@@ -829,7 +920,11 @@
       </div>
 
       <!-- SLIDE: Pro Tip - Write Tools with AI -->
-      <div class="slide tip-slide" data-title="Pro Tip: Write Tools with AI">
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: Write Tools with AI"
+        data-topic="why"
+      >
         <div class="tip-card">
           <div class="tip-text">
             Instead of using AI to do a task, use AI to write a tool that will
@@ -850,7 +945,7 @@
         </div>
       </div>
 
-      <div class="slide" data-title="ROI & Decision Math">
+      <div class="slide" data-title="ROI & Decision Math" data-topic="why">
         <div class="slide-header">
           <h2>When to (and NOT to) Build a Tool</h2>
         </div>
@@ -911,7 +1006,7 @@
       </div>
 
       <!-- SLIDE 7: The Tooling Taxonomy Overview -->
-      <div class="slide" data-title="Tooling Taxonomy">
+      <div class="slide" data-title="Tooling Taxonomy" data-topic="why">
         <div class="slide-header">
           <h2>Which Tool Should You Create?</h2>
         </div>
@@ -964,7 +1059,7 @@
       </div>
 
       <!-- SLIDE 8: Tool 1: Custom Lints -->
-      <div class="slide" data-title="Tool: Custom Lints">
+      <div class="slide" data-title="Tool: Custom Lints" data-topic="lints">
         <div class="slide-header">
           <h2>Custom Lints (analysis_server_plugin)</h2>
         </div>
@@ -1007,7 +1102,11 @@
       </div>
 
       <!-- SLIDE: Testing Tip - Custom Lints -->
-      <div class="slide tip-slide" data-title="Testing Tip: Custom Lints">
+      <div
+        class="slide tip-slide"
+        data-title="Testing Tip: Custom Lints"
+        data-topic="lints"
+      >
         <div class="tip-card" style="max-width: 1000px; width: 90%">
           <div class="tip-text" style="margin-bottom: 1rem">
             Testing Tip: Custom Lints
@@ -1101,7 +1200,7 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 9: Tool 2: Quick Fixes -->
-      <div class="slide" data-title="Tool: Quick Fixes">
+      <div class="slide" data-title="Tool: Quick Fixes" data-topic="lints">
         <div class="slide-header">
           <h2>Quick Fixes & Automated Refactors</h2>
         </div>
@@ -1132,7 +1231,11 @@ class BadCase {}
       </div>
 
       <!-- SLIDE: Danger - Skip Quick Fixes -->
-      <div class="slide danger-slide" data-title="Danger: Skip Quick Fixes">
+      <div
+        class="slide danger-slide"
+        data-title="Danger: Skip Quick Fixes"
+        data-topic="lints"
+      >
         <div class="danger-card">
           <div class="danger-text">
             Don't bother writing fixes. AI takes care of it.
@@ -1150,7 +1253,11 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 10: Tool 3: Code Generators (Rethinking Value) -->
-      <div class="slide" data-title="Tool: Code Generators">
+      <div
+        class="slide"
+        data-title="Tool: Code Generators"
+        data-topic="codegen"
+      >
         <div class="slide-header">
           <h2>Code Generators: Rethinking the Main Value</h2>
         </div>
@@ -1158,35 +1265,19 @@ class BadCase {}
           Common Argument: <em>"Codegen reduces boilerplate."</em> &rarr;
           <strong>I couldn't care less, especially with AI!</strong>
         </p>
-        <div class="grid-2" style="margin-top: 0.5rem">
-          <div class="card emerald-glow">
-            <h3>What Codegen is ACTUALLY About</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
-              <li>
-                <strong>Removes PR Code Review</strong>: You don't read how
-                <code>copyWith</code> is implemented every time a class is added
-                (e.g. Freezed).
-              </li>
-              <li>
-                <strong>Ensures Consistency</strong>: Generators are
-                deterministic, so data classes behave identically.
-              </li>
-              <li>
-                <strong>Makes Updates Simple</strong>: Adding/removing fields
-                auto-updates <code>==</code>, <code>hashCode</code>,
-                <code>copyWith</code>, <code>toString</code> without forgetting
-                a field.
-              </li>
-            </ul>
-          </div>
-          <div class="card accent-glow">
-            <h3>Static Analyzability</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
-              <li>Annotations make code statically analyzable.</li>
-              <li>This compounds with creating other tools down the road.</li>
-              <li>Significant bug reduction across the application.</li>
-            </ul>
-          </div>
+        <div class="card emerald-glow" style="margin-top: 1rem">
+          <h3>What Codegen is ACTUALLY About</h3>
+          <ul class="feature-list" style="margin-top: 0.5rem">
+            <li>
+              <strong>Reduce code to Review</strong>
+            </li>
+            <li>
+              <strong>Ensures Consistency</strong>
+            </li>
+            <li>
+              <strong>Update generated code is simple</strong>
+            </li>
+          </ul>
         </div>
         <div class="notes" style="display: none">
           Codegen is about zero PR review on boilerplate, uniform behavior, and
@@ -1194,8 +1285,54 @@ class BadCase {}
         </div>
       </div>
 
+      <!-- SLIDE: Pro Tip - Static Analyzability -->
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: Static Analyzability"
+        data-topic="codegen"
+      >
+        <div class="tip-card">
+          <div class="tip-text">Codegen makes code statically analyzable.</div>
+          <div class="tip-subtext" style="font-size: 1.1rem; line-height: 1.7">
+            It's hard to know if
+            <code
+              style="
+                background: rgba(0, 0, 0, 0.4);
+                padding: 0.2rem 0.5rem;
+                border-radius: 0.4rem;
+                font-family: var(--font-code);
+              "
+              ><span style="color: #38bdf8">Translation</span>.of().<span
+                style="color: #38bdf8"
+                >translate</span
+              >(<span style="color: #a3e635">'settings_title'</span>)</code
+            >
+            is unused.<br />
+            It's easy to know if
+            <code
+              style="
+                background: rgba(0, 0, 0, 0.4);
+                padding: 0.2rem 0.5rem;
+                border-radius: 0.4rem;
+                font-family: var(--font-code);
+              "
+              ><span style="color: #38bdf8">Translation</span>.of().<span
+                style="color: #38bdf8"
+                >settingsTitle</span
+              ></code
+            >
+            is unused.<br /><br />
+            Delete the translation and you'll get a compilation error, ha!
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Annotations make code statically analyzable, compounding the power of
+          downstream custom tools.
+        </div>
+      </div>
+
       <!-- SLIDE 11: Codegen: What to Automate vs Avoid -->
-      <div class="slide" data-title="Codegen Decisions">
+      <div class="slide" data-title="Codegen Decisions" data-topic="codegen">
         <div class="slide-header">
           <h2>What to Automate with Codegen (and What to Avoid)</h2>
         </div>
@@ -1212,12 +1349,25 @@ class BadCase {}
               </li>
               <li><strong>On-Device DB</strong>: Table schemas.</li>
               <li>
-                <strong>Assets</strong>: <code>FontAwesome.check</code> instead
-                of <code>'fa check'</code>.
+                <strong>Assets</strong>:
+                <code
+                  ><span style="color: #38bdf8">FontAwesome</span>.<span
+                    style="color: #38bdf8"
+                    >check</span
+                  ></code
+                >
+                instead of
+                <code><span style="color: #a3e635">'fa check'</span></code
+                >.
               </li>
               <li>
                 <strong>Translations</strong>:
-                <code>L10n.of(context).homePageTitle</code>.
+                <code
+                  ><span style="color: #38bdf8">L10n</span>.of(context).<span
+                    style="color: #38bdf8"
+                    >homePageTitle</span
+                  ></code
+                >.
               </li>
             </ul>
           </div>
@@ -1232,12 +1382,13 @@ class BadCase {}
                 static route list.
               </li>
               <li>
-                <strong>Widget List</strong>: Auto-generated widget browser via
-                <code>build_runner</code>.
+                <strong>Design system browser</strong>: Auto-generated widget
+                browser via <code>build_runner</code>.
               </li>
               <li>
                 <strong>Error-Prone Tasks</strong>: Auto-generated
-                <code>toString</code> to prevent stale fields.
+                <code><span style="color: #38bdf8">toString</span></code> to
+                prevent stale fields.
               </li>
             </ul>
           </div>
@@ -1255,15 +1406,6 @@ class BadCase {}
             </ul>
           </div>
         </div>
-        <div
-          class="callout tip"
-          style="margin-top: 0.75rem; font-size: 0.95rem"
-        >
-          💡 <strong>Pro Tips:</strong> Commit generated files and let CI
-          auto-commit codegen updates. Codegen can be a basic Dart script
-          reading JSON and outputting a file — it doesn't have to be complex
-          <code>build_runner</code> logic!
-        </div>
         <div class="notes" style="display: none">
           Many data layer codegen tools have existing open source packages.
           Simple Dart scripts that read JSON and output files count as codegen
@@ -1271,91 +1413,410 @@ class BadCase {}
         </div>
       </div>
 
-      <!-- SLIDE: Testing Tip - Code Generators -->
-      <div class="slide tip-slide" data-title="Testing Tip: Code Generators">
+      <!-- SLIDE: Pro Tip - Commit Generated Files -->
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: Commit Generated Files"
+        data-topic="codegen"
+      >
         <div class="tip-card">
-          <div class="tip-text">Testing Tip: Code Generators</div>
-          <div class="tip-subtext">
-            Avoid brittle tests checking string content (e.g.
-            <code>generated code contains void foo()</code>). <br /><br />
-            Write plain <code>.dart</code> files in
-            <code>test/integration/*</code> using
-            <code>@data class Foo {}</code>, run generator, and test runtime
-            behavior!
+          <div class="tip-text">
+            Commit generated files & let CI auto-update them
+          </div>
+          <div class="tip-subtext" style="font-size: 1.1rem; line-height: 1.7">
+            Always commit generated files into source control.<br />
+            Configure your CI pipeline to auto-run codegen and commit updates
+            when schemas change!
           </div>
         </div>
         <div class="notes" style="display: none">
-          Testing tip for code generators.
+          Commit generated files and let CI auto-commit codegen updates.
+        </div>
+      </div>
+
+      <!-- SLIDE: Pro Tip - Simple Scripts over build_runner -->
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: Simple Scripts over build_runner"
+        data-topic="codegen"
+      >
+        <div class="tip-card">
+          <div class="tip-text">Codegen can be a basic Dart script</div>
+          <div class="tip-subtext" style="font-size: 1.1rem; line-height: 1.7">
+            Codegen can be a basic Dart script reading JSON and outputting a
+            file.<br />
+            It doesn't have to be complex <code>build_runner</code> logic!
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Simple Dart scripts that read JSON and output files count as codegen
+          too!
+        </div>
+      </div>
+
+      <!-- SLIDE: Testing Tip - Code Generators -->
+      <div
+        class="slide tip-slide"
+        data-title="Testing Tip: Code Generators"
+        data-topic="codegen"
+      >
+        <div class="tip-card" style="max-width: 1000px; width: 90%">
+          <div class="tip-text" style="margin-bottom: 1rem">
+            Testing Tip: Code Generators
+          </div>
+          <div
+            class="grid-2"
+            style="text-align: left; gap: 1.5rem; margin-top: 1rem"
+          >
+            <div class="card rose-glow" style="padding: 1.25rem">
+              <h3
+                style="
+                  color: var(--rose-400);
+                  margin-bottom: 0.5rem;
+                  font-size: 1.1rem;
+                "
+              >
+                ❌ DON'T
+              </h3>
+              <pre
+                style="
+                  margin: 0;
+                  background: rgba(0, 0, 0, 0.4);
+                  padding: 0.75rem;
+                  border-radius: 0.5rem;
+                  overflow-x: auto;
+                "
+              ><code class="language-dart" style="font-size: 0.85rem; font-family: var(--font-code); color: #cbd5e1;"><span style="color: #64748b;">// test/generator_test.dart</span>
+<span style="color: #38bdf8;">test</span>(<span style="color: #a3e635;">'test generator string output'</span>, () {
+  <span style="color: #f43f5e;">final</span> output = generate(<span style="color: #a3e635;">'class Foo {}'</span>);
+  expect(
+    output,
+    contains(<span style="color: #a3e635;">'void foo() {}'</span>),
+  );
+});</code></pre>
+            </div>
+            <div class="card emerald-glow" style="padding: 1.25rem">
+              <h3
+                style="
+                  color: var(--emerald-400);
+                  margin-bottom: 0.5rem;
+                  font-size: 1.1rem;
+                "
+              >
+                ✅ DO
+              </h3>
+              <pre
+                style="
+                  margin: 0;
+                  background: rgba(0, 0, 0, 0.4);
+                  padding: 0.75rem;
+                  border-radius: 0.5rem;
+                  overflow-x: auto;
+                "
+              ><code class="language-dart" style="font-size: 0.85rem; font-family: var(--font-code); color: #cbd5e1;"><span style="color: #64748b;">// test/integration/foo_test.dart</span>
+<span style="color: #64748b;">// Write target code, run generator & test runtime:</span>
+<span style="color: #38bdf8;">@data</span>
+<span style="color: #f43f5e;">class</span> <span style="color: #38bdf8;">Foo</span> {}
+
+<span style="color: #38bdf8;">test</span>(<span style="color: #a3e635;">'test runtime behavior'</span>, () {
+  expect(<span style="color: #38bdf8;">Foo</span>().toString(), <span style="color: #a3e635;">'Foo()'</span>);
+});</code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Testing tip for code generators: avoid brittle string checks, test
+          runtime behavior of generated files instead.
         </div>
       </div>
 
       <!-- SLIDE 12: Tool 4: CLI Tools -->
-      <div class="slide" data-title="Tool: CLIs">
+      <div class="slide" data-title="Tool: CLIs" data-topic="cli">
         <div class="slide-header">
           <h2>Command Line Interfaces (CLIs)</h2>
         </div>
-        <div class="grid-2">
-          <div>
-            <p>
-              Think bash scripts, but in <strong>Dart land</strong>! Dart is a
-              very good scripting language. Write Dart scripts!
-            </p>
-            <div class="card accent-glow" style="margin-top: 0.5rem">
-              <h3>Must-Have Commands for All Projects</h3>
-              <ul class="feature-list" style="font-size: 0.95rem">
-                <li>
-                  <code>./install</code>: Check Flutter/Dart versions, missing
-                  tools (Docker, CLIs), set up hidden <code>.env</code> &
-                  codegen. Link solutions for missing tools!
-                </li>
-                <li>
-                  <code>./run</code>: Start emulators, Docker, local servers.
-                </li>
-                <li>
-                  <code>./test</code>: Unit & integration tests on
-                  browser/simulators.
-                </li>
-                <li>
-                  <code>./deploy</code>: Update changelogs, bump versions,
-                  release flags, publish to stores.
-                </li>
-              </ul>
+
+        <!-- CLI Architecture Diagram Card -->
+        <div class="card card-bg emerald-glow" style="padding: 1.5rem">
+          <h3 style="margin-bottom: 1.25rem; text-align: center">
+            CLI as Universal Interface Layer
+          </h3>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 0.75rem;
+              width: 100%;
+            "
+          >
+            <!-- Top Row: Consumers -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+                width: 100%;
+                max-width: 800px;
+              "
+            >
+              <div
+                style="
+                  background: rgba(56, 189, 248, 0.1);
+                  border: 1px solid rgba(56, 189, 248, 0.3);
+                  border-radius: 0.6rem;
+                  padding: 0.75rem 1rem;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 1.5rem; margin-bottom: 0.2rem">👨‍💻</div>
+                <strong style="color: #38bdf8; font-size: 1rem">Humans</strong>
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    margin-top: 0.2rem;
+                  "
+                >
+                  Terminal / Scripts
+                </div>
+              </div>
+              <div
+                style="
+                  background: rgba(168, 85, 247, 0.1);
+                  border: 1px solid rgba(168, 85, 247, 0.3);
+                  border-radius: 0.6rem;
+                  padding: 0.75rem 1rem;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 1.5rem; margin-bottom: 0.2rem">🤖</div>
+                <strong style="color: #c084fc; font-size: 1rem"
+                  >AI Agents</strong
+                >
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    margin-top: 0.2rem;
+                  "
+                >
+                  Tool Calling / Exec
+                </div>
+              </div>
+              <div
+                style="
+                  background: rgba(16, 185, 129, 0.1);
+                  border: 1px solid rgba(16, 185, 129, 0.3);
+                  border-radius: 0.6rem;
+                  padding: 0.75rem 1rem;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 1.5rem; margin-bottom: 0.2rem">⚙️</div>
+                <strong style="color: #34d399; font-size: 1rem"
+                  >Tools & GUIs</strong
+                >
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    margin-top: 0.2rem;
+                  "
+                >
+                  CI Pipelines / IDEs
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div class="card card-bg emerald-glow">
-              <h3>CLI Architecture</h3>
-              <ul class="feature-list" style="font-size: 0.95rem">
-                <li>
-                  <strong>CLI as Abstraction Layer</strong>: GUIs should work by
-                  invoking your CLI under the hood.
-                </li>
-                <li>
-                  <strong>Low Value</strong>: Module templates (e.g.
-                  <code>./create_module</code> — AI does it easily, costly to
-                  maintain).
-                </li>
-              </ul>
+
+            <!-- Downward Flow Indicators -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+                color: var(--accent-primary);
+                font-size: 1.25rem;
+                font-weight: 700;
+              "
+            >
+              <div>↓</div>
+              <div>↓</div>
+              <div>↓</div>
+            </div>
+
+            <!-- Middle Row: CLI Layer -->
+            <div
+              style="
+                background: linear-gradient(
+                  135deg,
+                  rgba(56, 189, 248, 0.15),
+                  rgba(16, 185, 129, 0.15)
+                );
+                border: 2px solid var(--accent-primary);
+                border-radius: 0.75rem;
+                padding: 0.85rem 1.5rem;
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+              "
+            >
+              <div
+                style="
+                  font-family: var(--font-code);
+                  font-weight: 700;
+                  font-size: 1.1rem;
+                  color: #ffffff;
+                "
+              >
+                💻 CLI Abstraction Layer
+                <span
+                  style="
+                    color: var(--accent-primary);
+                    font-size: 0.9rem;
+                    font-weight: normal;
+                  "
+                >
+                  (Dart Scripts / Executables)
+                </span>
+              </div>
+            </div>
+
+            <!-- Connector Arrow -->
+            <div
+              style="
+                color: var(--accent-primary);
+                font-size: 1.25rem;
+                font-weight: 700;
+              "
+            >
+              ↓
+            </div>
+
+            <!-- Bottom Row: Underlying System -->
+            <div
+              style="
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px dashed var(--card-border);
+                border-radius: 0.6rem;
+                padding: 0.65rem 1.5rem;
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+              "
+            >
+              <strong style="color: #e2e8f0; font-size: 0.95rem">
+                Underlying Project Actions
+              </strong>
+              <div
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-dim);
+                  margin-top: 0.15rem;
+                "
+              >
+                Environment Setup • Emulators & Docker • Tests • Codegen •
+                Deployments
+              </div>
             </div>
           </div>
         </div>
+
+        <div class="callout quote" style="margin-top: 0.75rem">
+          👍 Skip bash. Dart is a scripting language, write Dart scripts!
+        </div>
+
         <div class="notes" style="display: none">
           Bash can be daunting on Windows. Write Dart scripts instead! CLIs are
           universally usable by humans, AIs, and CI pipelines.
         </div>
       </div>
 
+      <!-- SLIDE: Pro Tip - Must-Have CLI Commands -->
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: Must-Have CLI Commands"
+        data-topic="cli"
+      >
+        <div class="tip-card" style="max-width: 950px; width: 90%">
+          <div class="tip-text" style="margin-bottom: 1rem">
+            Must-Have Commands for All Projects
+          </div>
+          <ul
+            class="feature-list"
+            style="
+              text-align: left;
+              font-size: 1.05rem;
+              gap: 0.8rem;
+              margin-top: 1rem;
+            "
+          >
+            <li>
+              <code>./install</code>: Check Flutter/Dart versions, missing tools
+              (Docker, CLIs), set up hidden <code>.env</code> & codegen. Link
+              solutions for missing tools!
+            </li>
+            <li><code>./run</code>: Start emulators, Docker, local servers.</li>
+            <li>
+              <code>./test</code>: Unit & integration tests on
+              browser/simulators.
+            </li>
+            <li>
+              <code>./deploy</code>: Update changelogs, bump versions, release
+              flags, publish to stores.
+            </li>
+          </ul>
+        </div>
+        <div class="notes" style="display: none">
+          Essential CLI commands to standardize setup, running, testing, and
+          deploying across projects.
+        </div>
+      </div>
+
+      <!-- SLIDE: Danger - Avoid Module Templates -->
+      <div
+        class="slide danger-slide"
+        data-title="Danger: Avoid Module Templates"
+        data-topic="cli"
+      >
+        <div class="danger-card">
+          <div class="danger-text">Skip Templates (Mason, etc)</div>
+          <div class="danger-subtext">
+            High maintenance cost. Low usage rate. And AI is really good at this
+            sort of task.
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          Avoid writing CLI module templates. AI handles module creation easily,
+          and keeping templates updated is costly.
+        </div>
+      </div>
+
       <!-- SLIDE: Testing Tip - CLI Tools -->
-      <div class="slide tip-slide" data-title="Testing Tip: CLI Tools">
+      <div
+        class="slide tip-slide"
+        data-title="Testing Tip: CLI Tools"
+        data-topic="cli"
+      >
         <div class="tip-card">
           <div class="tip-text">Testing Tip: CLI Tools</div>
           <div class="tip-subtext">
-            Integration tests are super easy!
+            Integration tests are super easy with Process.run!
             <br /><br />
-            Offer a <code>--machine=json</code> flag and test via:
-            <code style="display: block; margin-top: 0.75rem; font-size: 1rem"
-              >Process.run('dart', ['path/to/bin.dart', '--my-flag'])</code
-            >
+            <pre
+              style="
+                margin: 1rem auto 0;
+                background: rgba(0, 0, 0, 0.4);
+                padding: 0.75rem 1.25rem;
+                border-radius: 0.5rem;
+                display: inline-block;
+                text-align: left;
+              "
+            ><code class="language-dart" style="font-size: 0.95rem; font-family: var(--font-code); color: #cbd5e1;"><span style="color: #38bdf8;">Process</span>.<span style="color: #38bdf8;">run</span>(<span style="color: #a3e635;">'dart'</span>, [<span style="color: #a3e635;">'path/to/bin.dart'</span>, <span style="color: #a3e635;">'--machine'</span>]);</code></pre>
           </div>
         </div>
         <div class="notes" style="display: none">
@@ -1364,51 +1825,202 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 13: Tool 5: MCP Servers -->
-      <div class="slide" data-title="Tool: MCP Servers">
+      <div class="slide" data-title="Tool: MCP Servers" data-topic="mcp">
         <div class="slide-header">
-          <h2>MCP Servers (Machine Protocol)</h2>
+          <h2>MCP Servers (Machine Context Protocol)</h2>
         </div>
-        <div class="grid-2">
-          <div class="card accent-glow">
-            <h3>What is an MCP Server?</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
-              <li>
-                Server running locally or remotely using a protocol designed for
-                AI agents (WebSocket + JSON object).
-              </li>
-              <li>
-                Official Dart package available: <code>package:mcp</code>.
-              </li>
-              <li>
-                <strong>When to use over CLI</strong>: Need a long-lived server
-                to save startup costs or persist state, where humans and CI have
-                no business interacting with it.
-              </li>
-            </ul>
+
+        <!-- MCP Architecture Diagram Card -->
+        <div class="card card-bg accent-glow" style="padding: 1.25rem">
+          <h3 style="margin-bottom: 1rem; text-align: center">
+            MCP Architecture: Connecting AI Agents to App State
+          </h3>
+
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 0.6rem;
+              width: 100%;
+            "
+          >
+            <!-- Top Row: Client / Agent -->
+            <div
+              style="
+                background: rgba(168, 85, 247, 0.1);
+                border: 1px solid rgba(168, 85, 247, 0.3);
+                border-radius: 0.6rem;
+                padding: 0.6rem 1.5rem;
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+              "
+            >
+              <div style="font-size: 1.3rem; margin-bottom: 0.1rem">🤖</div>
+              <strong style="color: #c084fc; font-size: 0.95rem">
+                AI Agent (LLM Client / Cursor / Claude Desktop / Custom Agent)
+              </strong>
+              <div
+                style="
+                  font-size: 0.78rem;
+                  color: var(--text-muted);
+                  margin-top: 0.15rem;
+                "
+              >
+                Discovers tool schemas & invokes actions autonomously
+              </div>
+            </div>
+
+            <!-- Downward Arrow with Transport Protocol -->
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                color: var(--accent-primary);
+                font-size: 0.85rem;
+                font-family: var(--font-code);
+                font-weight: 600;
+              "
+            >
+              ↓
+              <span
+                style="
+                  background: rgba(56, 189, 248, 0.1);
+                  padding: 0.15rem 0.5rem;
+                  border-radius: 0.3rem;
+                  border: 1px solid rgba(56, 189, 248, 0.25);
+                "
+                >JSON-RPC over Stdio / WebSockets</span
+              >
+              ↓
+            </div>
+
+            <!-- Middle Row: MCP Server -->
+            <div
+              style="
+                background: linear-gradient(
+                  135deg,
+                  rgba(56, 189, 248, 0.15),
+                  rgba(168, 85, 247, 0.15)
+                );
+                border: 2px solid var(--accent-primary);
+                border-radius: 0.75rem;
+                padding: 0.75rem 1.5rem;
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+                box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+              "
+            >
+              <div
+                style="
+                  font-family: var(--font-code);
+                  font-weight: 700;
+                  font-size: 1.05rem;
+                  color: #ffffff;
+                "
+              >
+                ⚡ MCP Server
+                <span
+                  style="
+                    color: var(--accent-primary);
+                    font-size: 0.85rem;
+                    font-weight: normal;
+                  "
+                >
+                  (package:dart_mcp — Stateful / Long-Lived Server)
+                </span>
+              </div>
+            </div>
+
+            <!-- Connector Arrows -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                width: 100%;
+                max-width: 800px;
+                text-align: center;
+                color: var(--accent-primary);
+                font-size: 1.1rem;
+                font-weight: 700;
+              "
+            >
+              <div>↓</div>
+              <div>↓</div>
+            </div>
+
+            <!-- Bottom Row: MCP Primitives (Tools & Files/Resources) -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                width: 100%;
+                max-width: 800px;
+              "
+            >
+              <div
+                style="
+                  background: rgba(15, 23, 42, 0.6);
+                  border: 1px solid var(--card-border);
+                  border-radius: 0.6rem;
+                  padding: 0.65rem 1rem;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 1.25rem; margin-bottom: 0.15rem">🛠️</div>
+                <strong style="color: #38bdf8; font-size: 0.95rem"
+                  >Tools</strong
+                >
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    margin-top: 0.15rem;
+                  "
+                >
+                  Executable actions, API probes, app control, & state mutation
+                </div>
+              </div>
+              <div
+                style="
+                  background: rgba(15, 23, 42, 0.6);
+                  border: 1px solid var(--card-border);
+                  border-radius: 0.6rem;
+                  padding: 0.65rem 1rem;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 1.25rem; margin-bottom: 0.15rem">📁</div>
+                <strong style="color: #34d399; font-size: 0.95rem"
+                  >Files & Resources</strong
+                >
+                <div
+                  style="
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                    margin-top: 0.15rem;
+                  "
+                >
+                  Workspace files, logs, URIs, test fixtures, & documentation
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="card emerald-glow">
-            <h3>Practical Tool Ideas for LLMs</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
-              <li>
-                <strong>API Probe</strong>: Allow AI to make API calls using the
-                current user token to debug live endpoints.
-              </li>
-              <li>
-                <strong>Test User Directory</strong>: Debug endpoint listing
-                test users & metadata.
-              </li>
-              <li>
-                <strong>App Control</strong>: Teach AI how to login/logout and
-                navigate routes to find specific widgets on screen.
-              </li>
-            </ul>
-          </div>
         </div>
-        <div class="callout quote" style="margin-top: 0.75rem">
-          "Enables agent prompts like: 'Find a user capable of displaying X in
-          page Y' where the agent repeatedly logs in/out and navigates
-          autonomously."
+
+        <div
+          class="callout quote"
+          style="margin-top: 0.6rem; font-size: 0.95rem"
+        >
+          💡 <strong>When to use MCP over CLI:</strong> Long-lived servers save
+          startup costs & persist state when human/CI CLI interaction isn't
+          required.
         </div>
+
         <div class="notes" style="display: none">
           MCPs are the perfect abstraction when allowing LLMs to perform tasks
           that humans would generally do in a GUI.
@@ -1416,55 +2028,272 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 14: Tool 6: DevTools Extensions -->
-      <div class="slide" data-title="Tool: DevTools">
+      <div class="slide" data-title="Tool: DevTools" data-topic="devtools">
         <div class="slide-header">
-          <h2>DevTools Extensions: Human & AI Dual Interface</h2>
+          <h2>DevTools Extensions: For Humans Only</h2>
         </div>
         <div class="grid-2">
-          <div class="card rose-glow">
-            <h3>Human DevTools</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
+          <div class="card accent-glow">
+            <h3>📱 In-App DevTools</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
               <li>
-                Destined for Humans (state inspector, routing tree viewer with
-                GUI).
+                <strong>On-Device Inspection</strong>: Embedded directly inside
+                the app build for QA and devs.
               </li>
               <li>
-                <strong>In-App DevTools</strong>: Usable after app build when QA
-                is testing on device.
+                <strong>No Debugger Required</strong>: Test feature flags,
+                inspect logs, & trigger state overrides on real hardware.
               </li>
               <li>
-                <strong>External DevTools Extensions</strong>: Relies on
-                Debugger API, static analysis, or source files.
+                <strong>Ideal For</strong>: Manual QA testing, quick runtime
+                tweaks, & staging builds.
               </li>
             </ul>
           </div>
           <div class="card emerald-glow">
-            <h3>The Modern AI Era Rule</h3>
-            <ul class="feature-list" style="margin-top: 0.4rem">
+            <h3>🖥️ External DevTools Extensions</h3>
+            <ul class="feature-list" style="margin-top: 0.5rem">
               <li>
-                <strong>Don't write JUST a devtool!</strong> Make it usable by
-                AIs too.
+                <strong>Flutter DevTools Suite Integration</strong>: Embedded
+                extension tab inside standard DevTools.
               </li>
               <li>
-                If you build an in-app log viewer, expose an
-                <strong>MCP server endpoint</strong> alongside it so LLMs can
-                access logs while the debugger is running.
+                <strong>Debugger API & Analyzer</strong>: Powered by
+                <code>vm_service</code> & static AST analysis.
               </li>
               <li>
-                Tool Ideas: List of all logs & network requests, live theme
-                switchers.
+                <strong>Ideal For</strong>: Rich state tree inspectors, visual
+                debuggers, & time-travel state tracking.
               </li>
             </ul>
           </div>
         </div>
         <div class="notes" style="display: none">
-          Devtools are the other side of the MCP coin. Expose MCP endpoints so
-          both human developers and AI agents can query application state.
+          DevTools are built primarily for human developers, splitting into
+          in-app inspectors for QA and external DevTools extensions for IDE
+          debugging.
+        </div>
+      </div>
+
+      <!-- SLIDE: Pro Tip - DevTools in the AI Era -->
+      <div
+        class="slide tip-slide"
+        data-title="Pro Tip: DevTools in the AI Era"
+        data-topic="devtools"
+      >
+        <div
+          class="tip-card"
+          style="max-width: 950px; width: 92%; padding: 2rem 2.5rem"
+        >
+          <div
+            class="tip-text"
+            style="margin-bottom: 0.75rem; font-size: 1.9rem"
+          >
+            Don't write JUST a DevTool! Make it usable by AIs too.
+          </div>
+          <p
+            style="
+              font-size: 1.05rem;
+              color: var(--text-muted);
+              margin-bottom: 1.25rem;
+            "
+          >
+            Extract state inspection logic into a shared Dart package so both
+            humans and AI agents benefit!
+          </p>
+
+          <!-- Architecture Diagram: Shared Dart Package -> DevTools GUI & MCP Server -->
+          <div
+            style="
+              background: rgba(9, 13, 22, 0.7);
+              border: 1px solid rgba(56, 189, 248, 0.25);
+              border-radius: 0.85rem;
+              padding: 1.25rem 1.5rem;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 0.75rem;
+              width: 100%;
+            "
+          >
+            <!-- Top Box: Shared Core Package -->
+            <div
+              style="
+                background: linear-gradient(
+                  135deg,
+                  rgba(56, 189, 248, 0.2),
+                  rgba(168, 85, 247, 0.2)
+                );
+                border: 2px solid var(--accent-primary);
+                border-radius: 0.75rem;
+                padding: 0.75rem 1.75rem;
+                width: 100%;
+                max-width: 750px;
+                text-align: center;
+                box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
+              "
+            >
+              <div
+                style="
+                  font-family: var(--font-heading);
+                  font-weight: 700;
+                  font-size: 1.15rem;
+                  color: #ffffff;
+                "
+              >
+                📦 Shared Core Dart Package
+              </div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: center;
+                  gap: 0.75rem;
+                  margin-top: 0.4rem;
+                  font-family: var(--font-code);
+                  font-size: 0.8rem;
+                "
+              >
+                <span
+                  style="
+                    background: rgba(0, 0, 0, 0.4);
+                    padding: 0.2rem 0.6rem;
+                    border-radius: 0.4rem;
+                    color: #38bdf8;
+                    border: 1px solid rgba(56, 189, 248, 0.3);
+                  "
+                  >package:vm_service</span
+                >
+                <span
+                  style="
+                    background: rgba(0, 0, 0, 0.4);
+                    padding: 0.2rem 0.6rem;
+                    border-radius: 0.4rem;
+                    color: #c084fc;
+                    border: 1px solid rgba(168, 85, 247, 0.3);
+                  "
+                  >package:analyzer</span
+                >
+                <span
+                  style="
+                    background: rgba(0, 0, 0, 0.4);
+                    padding: 0.2rem 0.6rem;
+                    border-radius: 0.4rem;
+                    color: #34d399;
+                    border: 1px solid rgba(52, 211, 153, 0.3);
+                  "
+                  >shared state logic</span
+                >
+              </div>
+            </div>
+
+            <!-- Downward Split Connectors -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                width: 100%;
+                max-width: 750px;
+                text-align: center;
+                color: var(--accent-primary);
+                font-size: 1.25rem;
+                font-weight: 700;
+              "
+            >
+              <div>↙</div>
+              <div>↘</div>
+            </div>
+
+            <!-- Bottom Row: Dual Interfaces -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.25rem;
+                width: 100%;
+                max-width: 750px;
+              "
+            >
+              <!-- DevTools GUI -->
+              <div
+                style="
+                  background: rgba(15, 23, 42, 0.85);
+                  border: 1px solid rgba(56, 189, 248, 0.35);
+                  border-radius: 0.75rem;
+                  padding: 1rem 1.25rem;
+                  text-align: left;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 0.4rem;
+                  "
+                >
+                  <span style="font-size: 1.4rem">🖥️</span>
+                  <strong style="color: #38bdf8; font-size: 1.05rem"
+                    >DevTools Extension (GUI)</strong
+                  >
+                </div>
+                <div
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    line-height: 1.45;
+                  "
+                >
+                  Visual inspector, state timelines, & interactive controls for
+                  <strong>Human Developers 👨‍💻</strong>
+                </div>
+              </div>
+
+              <!-- MCP Server -->
+              <div
+                style="
+                  background: rgba(15, 23, 42, 0.85);
+                  border: 1px solid rgba(168, 85, 247, 0.35);
+                  border-radius: 0.75rem;
+                  padding: 1rem 1.25rem;
+                  text-align: left;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    margin-bottom: 0.4rem;
+                  "
+                >
+                  <span style="font-size: 1.4rem">🤖</span>
+                  <strong style="color: #c084fc; font-size: 1.05rem"
+                    >MCP Server (JSON-RPC)</strong
+                  >
+                </div>
+                <div
+                  style="
+                    font-size: 0.85rem;
+                    color: var(--text-muted);
+                    line-height: 1.45;
+                  "
+                >
+                  Exposes tool schemas & state query endpoints for
+                  <strong>AI Agents 🧠</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes" style="display: none">
+          DevTools are the other side of the MCP coin. Expose MCP endpoints so
+          both human developers and AI agents can query application state
+          through the exact same underlying Dart package logic.
         </div>
       </div>
 
       <!-- SLIDE 15: How to Make Tools -->
-      <div class="slide" data-title="How to Make Tools">
+      <div class="slide" data-title="How to Make Tools" data-topic="creation">
         <div class="slide-header">
           <h2>How to Make Tools: Static vs. Runtime Analysis</h2>
         </div>
@@ -1508,7 +2337,11 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 16: Practical Case Study: Riverpod -->
-      <div class="slide" data-title="Case Study: Riverpod">
+      <div
+        class="slide"
+        data-title="Case Study: Riverpod"
+        data-topic="creation"
+      >
         <div class="slide-header">
           <h2>Practical Architecture: The Riverpod Tooling Suite</h2>
         </div>
@@ -1554,7 +2387,7 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 17: Role of AI Skills: Discoverability -->
-      <div class="slide" data-title="Role of AI Skills">
+      <div class="slide" data-title="Role of AI Skills" data-topic="creation">
         <div class="slide-header">
           <h2>So, When DO We Use Skills Then?</h2>
         </div>
@@ -1597,12 +2430,14 @@ class BadCase {}
       </div>
 
       <!-- SLIDE 18: The AI Tooling Philosophy (Conclusion) -->
-      <div class="slide title-slide" data-title="Conclusion">
-        <h1 style="font-size: 3rem; margin: 0.75rem 0">
-          The AI Tooling Philosophy
-        </h1>
+      <div
+        class="slide title-slide conclusion-slide"
+        data-title="Conclusion"
+        data-topic="conclusion"
+      >
+        <h1 style="font-size: 3rem; margin: 0.75rem 0">Conclusion</h1>
         <div
-          class="card accent-glow"
+          class="card accent-glow conclusion-card"
           style="
             max-width: 850px;
             text-align: left;
@@ -1620,25 +2455,30 @@ class BadCase {}
               make an agent discover the tools to solve said problem.
             </li>
             <li style="font-size: 1.2rem">
-              <strong>Improve code quality</strong> thanks to determinism,
-              reduce execution time, and lower token costs paid to LLM
-              providers.
+              <strong>Building tools has never been easier</strong> thanks to
+              AI.
+            </li>
+            <li style="font-size: 1.2rem">
+              <strong>Write all tools in Dart:</strong> Custom lints, codegen,
+              CLIs, and MCP servers can all be written in Dart!
             </li>
           </ul>
         </div>
         <div
           style="
-            font-size: 1.3rem;
-            color: var(--accent-primary);
-            font-weight: 600;
+            font-size: 1.35rem;
+            color: #38bdf8;
+            font-weight: 700;
             margin-top: 0.75rem;
+            letter-spacing: 0.05em;
           "
         >
           Thank You! Q & A
         </div>
         <div class="notes" style="display: none">
           Thank you! Remember: Don't replace tools with prompts, use prompts to
-          create your tools.
+          create your tools. Plus, all these tools can be written in Dart, so
+          they're super easy to get started with!
         </div>
       </div>
     </div>
@@ -1747,6 +2587,17 @@ class BadCase {}
             }
           });
 
+          // Topic background
+          const activeSlide = slides[currentSlide];
+          const topic = activeSlide
+            ? activeSlide.getAttribute("data-topic")
+            : null;
+          if (topic) {
+            document.body.setAttribute("data-topic", topic);
+          } else {
+            document.body.removeAttribute("data-topic");
+          }
+
           // Progress bar
           const progress = ((currentSlide + 1) / totalSlides) * 100;
           progressBar.style.width = `${progress}%`;
@@ -1755,8 +2606,9 @@ class BadCase {}
           slideCounter.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
 
           // Speaker notes
-          const activeSlide = slides[currentSlide];
-          const notes = activeSlide.querySelector(".notes");
+          const notes = activeSlide
+            ? activeSlide.querySelector(".notes")
+            : null;
           notesContent.textContent = notes
             ? notes.textContent.trim()
             : "No speaker notes for this slide.";
@@ -1770,6 +2622,18 @@ class BadCase {}
               card.classList.remove("active");
             }
           });
+
+          // Confetti on last slide
+          if (
+            currentSlide === totalSlides - 1 &&
+            typeof confetti === "function"
+          ) {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+            });
+          }
         }
 
         function goToSlide(index) {
