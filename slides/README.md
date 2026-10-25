@@ -1,6 +1,6 @@
 # slides
 
-Flutter version of the "Build devtools for your app" deck (`../slides.html`).
+Flutter slides for the "Build devtools for your app" talk.
 
 ```sh
 flutter run -d macos   # or -d chrome
