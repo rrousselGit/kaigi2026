@@ -3,8 +3,11 @@
 
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
+// ignore: depend_on_referenced_packages
+import 'package:flutter_driver/driver_extension.dart';
 
 import 'confetti.dart';
 import 'example_panel.dart';
@@ -13,6 +16,7 @@ import 'theme.dart';
 import 'widgets.dart';
 
 void main() {
+  if (kDebugMode || kProfileMode) enableFlutterDriverExtension();
   runApp(const SlidesApp());
 }
 
