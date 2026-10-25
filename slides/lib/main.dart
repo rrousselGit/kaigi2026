@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'confetti.dart';
+import 'example_panel.dart';
 import 'slides.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -17,6 +18,9 @@ void main() {
 
 /// The logical size slides are laid out at, before being scaled to fit.
 const _canvas = Size(1440, 810);
+
+/// The logical size of slides that have an example shown next to them.
+const _splitCanvas = Size(1040, 810);
 const _navBarHeight = 60.0;
 const _transitionCurve = Cubic(0.16, 1, 0.3, 1);
 
@@ -151,7 +155,14 @@ class _DeckState extends State<Deck> {
                         child: Stack(
                           children: [
                             Positioned.fill(
-                              child: _SlideViewport(index: _index),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _SlideViewport(index: _index),
+                                  ),
+                                  ExamplePanel(example: slide.example),
+                                ],
+                              ),
                             ),
                             if (_showNotes)
                               Positioned(
@@ -308,7 +319,7 @@ class _SlideViewportState extends State<_SlideViewport>
             scale: 0.96 + 0.04 * pose.progress,
             child: FittedBox(
               child: SizedBox.fromSize(
-                size: _canvas,
+                size: slides[index].example == null ? _canvas : _splitCanvas,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 72,

@@ -35,7 +35,11 @@ void main() {
     await tester.pumpWidget(const SlidesApp());
 
     for (var i = 0; i < slides.length; i++) {
-      expect(find.text('Slide ${i + 1} / ${slides.length}'), findsOneWidget);
+      final label = '${i + 1}'.padLeft(2, '0');
+      expect(
+        find.text('$label  /  ${slides.length}', findRichText: true),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull, reason: slides[i].title);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);

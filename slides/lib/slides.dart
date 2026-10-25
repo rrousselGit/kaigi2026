@@ -4,6 +4,8 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'src/example_1/models.dart';
+import 'src/example_1/shop_app.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -13,6 +15,7 @@ class SlideData {
     required this.topic,
     required this.notes,
     required this.child,
+    this.example,
   });
 
   /// The title shown in the overview grid.
@@ -20,6 +23,12 @@ class SlideData {
   final Topic topic;
   final String notes;
   final Widget child;
+
+  /// An app shown next to the slide, in a phone frame.
+  ///
+  /// Consecutive slides with the same type of example share one instance of
+  /// it, so the example animates from one slide's state to the next.
+  final Widget? example;
 }
 
 const _testingTipLintDont = '''
@@ -58,6 +67,8 @@ class Foo {}
 test('test runtime behavior', () {
   expect(Foo().toString(), 'Foo()');
 });''';
+
+const _demoCart = [CartItem('headphones'), CartItem('speaker', quantity: 2)];
 
 final slides = <SlideData>[
   const SlideData(
@@ -698,6 +709,153 @@ final slides = <SlideData>[
     ),
   ),
   const SlideData(
+    title: 'Example: Shoply',
+    topic: Topic.devtools,
+    notes:
+        "Here's the app we'll build tools for: a small e-commerce app. "
+        'Everything you see on the phone is derived from a single state object.',
+    example: ShopApp(state: ShopState()),
+    child: _ExampleSlide(
+      title: 'Meet Shoply',
+      points: [
+        'A tiny e-commerce app: **catalog**, **product pages**, **cart** and '
+            '**checkout**.',
+        'Everything on screen is derived from **one state object**.',
+      ],
+      code: 'ShopState()',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Browsing',
+    topic: Topic.devtools,
+    notes: 'Users scroll through the catalog.',
+    example: ShopApp(state: ShopState(catalogScroll: 480)),
+    child: _ExampleSlide(
+      title: 'Browsing the Catalog',
+      points: ['Scroll position is UI state too.'],
+      code: 'ShopState(catalogScroll: 480)',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Filtering',
+    topic: Topic.devtools,
+    notes: 'Users narrow down the catalog with categories.',
+    example: ShopApp(state: ShopState(category: 'Audio')),
+    child: _ExampleSlide(
+      title: 'Filtering by Category',
+      points: ['Filters change what the catalog shows.'],
+      code: "ShopState(category: 'Audio')",
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Product Details',
+    topic: Topic.devtools,
+    notes: 'Opening a product pushes a new page.',
+    example: ShopApp(
+      state: ShopState(category: 'Audio', productId: 'headphones'),
+    ),
+    child: _ExampleSlide(
+      title: 'Opening a Product',
+      points: ['Navigation is state: the page stack derives from it.'],
+      code: '''ShopState(
+  category: 'Audio',
+  productId: 'headphones',
+)''',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Add to Cart',
+    topic: Topic.devtools,
+    notes: 'Adding to cart updates the badge, the button, and the catalog.',
+    example: ShopApp(
+      state: ShopState(
+        category: 'Audio',
+        productId: 'headphones',
+        cart: [CartItem('headphones')],
+      ),
+    ),
+    child: _ExampleSlide(
+      title: 'Adding to the Cart',
+      points: ['One change, many widgets updated: badge, button, catalog.'],
+      code: '''ShopState(
+  category: 'Audio',
+  productId: 'headphones',
+  cart: [CartItem('headphones')],
+)''',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Cart',
+    topic: Topic.devtools,
+    notes: 'The cart lists items and computes totals.',
+    example: ShopApp(
+      state: ShopState(
+        category: 'Audio',
+        productId: 'headphones',
+        cart: _demoCart,
+        cartOpen: true,
+      ),
+    ),
+    child: _ExampleSlide(
+      title: 'Reviewing the Cart',
+      points: ['Totals and shipping are **derived** from the cart.'],
+      code: '''ShopState(
+  ...,
+  cart: [
+    CartItem('headphones'),
+    CartItem('speaker', quantity: 2),
+  ],
+  cartOpen: true,
+)''',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Checkout',
+    topic: Topic.devtools,
+    notes: 'Checkout summarizes the order before placing it.',
+    example: ShopApp(
+      state: ShopState(
+        category: 'Audio',
+        productId: 'headphones',
+        cart: _demoCart,
+        cartOpen: true,
+        checkout: CheckoutStep.review,
+      ),
+    ),
+    child: _ExampleSlide(
+      title: 'Checking Out',
+      points: ['Address, delivery & payment: more state to inspect.'],
+      code: '''ShopState(
+  ...,
+  checkout: CheckoutStep.review,
+)''',
+    ),
+  ),
+  const SlideData(
+    title: 'Example: Order Placed',
+    topic: Topic.devtools,
+    notes: 'And the order is placed.',
+    example: ShopApp(
+      state: ShopState(
+        category: 'Audio',
+        productId: 'headphones',
+        cart: _demoCart,
+        cartOpen: true,
+        checkout: CheckoutStep.confirmed,
+      ),
+    ),
+    child: _ExampleSlide(
+      title: 'Order Placed',
+      points: [
+        'How did we get here? A DevTool could **replay every state change**.',
+      ],
+      code: '''ShopState(
+  ...,
+  checkout: CheckoutStep.confirmed,
+)''',
+    ),
+  ),
+  const SlideData(
     title: 'Pro Tip: DevTools in the AI Era',
     topic: Topic.devtools,
     notes:
@@ -987,6 +1145,33 @@ class _ImageSlide extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 950),
           child: child,
         ),
+      ],
+    );
+  }
+}
+
+/// A step of the example app walkthrough, shown next to the app itself.
+class _ExampleSlide extends StatelessWidget {
+  const _ExampleSlide({
+    required this.title,
+    required this.points,
+    required this.code,
+  });
+
+  final String title;
+  final List<String> points;
+
+  /// The state the example is in, as Dart code.
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentSlide(
+      title: title,
+      children: [
+        FeatureList(points, fontSize: 19),
+        const SizedBox(height: 32),
+        CodeBlock(code, fontSize: 17),
       ],
     );
   }
