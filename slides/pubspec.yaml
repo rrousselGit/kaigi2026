@@ -1,0 +1,63 @@
+name: slides
+description: "Flutter version of the 'Build devtools for your app' slide deck."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.14.0-180.0.dev
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  material_ui: ^1.8.0
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/img/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter-300.ttf
+          weight: 300
+        - asset: assets/fonts/inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/inter-400-italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/inter-700.ttf
+          weight: 700
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/outfit-500.ttf
+          weight: 500
+        - asset: assets/fonts/outfit-600.ttf
+          weight: 600
+        - asset: assets/fonts/outfit-700.ttf
+          weight: 700
+        - asset: assets/fonts/outfit-800.ttf
+          weight: 800
+    - family: FiraCode
+      fonts:
+        - asset: assets/fonts/fira-code-400.ttf
+          weight: 400
+        - asset: assets/fonts/fira-code-500.ttf
+          weight: 500
+        - asset: assets/fonts/fira-code-600.ttf
+          weight: 600
+        - asset: assets/fonts/fira-code-700.ttf
+          weight: 700

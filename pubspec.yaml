@@ -11,6 +11,7 @@ workspace:
   - examples/lints
   - examples/api_schema
   - examples/mcp
+  - slides
 
 dependency_overrides:
   connectivity_plus: 6.1.3
