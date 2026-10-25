@@ -190,7 +190,7 @@ final slides = <SlideData>[
         ),
         BadgeSubtitle(
           '*"Hey Gemini, create a new lint rule using '
-          "dart_analysis_server_plugin. This lint rule should disallow using ' "
+          "analysis_server_plugin. This lint rule should disallow using ' "
           'and " inside Widgets."*',
         ),
       ],
@@ -269,7 +269,7 @@ final slides = <SlideData>[
             ),
             _TaxonomyCard(
               'MCP Servers',
-              'Stateful Machine Context Protocol servers for AI agents.',
+              'Stateful Model Context Protocol servers for AI agents.',
             ),
             _TaxonomyCard(
               'DevTools Extensions',
@@ -641,7 +641,7 @@ final slides = <SlideData>[
         'MCPs are the perfect abstraction when allowing LLMs to perform tasks '
         'that humans would generally do in a GUI.',
     child: ContentSlide(
-      title: 'MCP Servers (Machine Context Protocol)',
+      title: 'MCP Servers (Model Context Protocol)',
       children: [
         _McpDiagram(),
         Callout(
@@ -876,27 +876,61 @@ class _TitleSlide extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 32),
-          child: H1('Build devtools for your app', fontSize: 64),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [palette.heading, palette.accent, Hues.violet],
+              stops: const [0.2, 0.65, 1],
+            ).createShader(bounds),
+            child: const H1('Build devtools for your app', fontSize: 80),
+          ),
         ),
-        const SizedBox(height: 32),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          width: 120,
+          height: 3,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            gradient: LinearGradient(
+              colors: [
+                palette.accent.withValues(alpha: 0),
+                palette.accent,
+                Hues.violet.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 40),
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 10, 24, 10),
           decoration: BoxDecoration(
             color: palette.textMain.withValues(alpha: 0.05),
             border: Border.all(color: palette.cardBorder),
             borderRadius: BorderRadius.circular(999),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 24,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: palette.accent,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [palette.accent, Hues.violet],
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: const Text(
@@ -944,6 +978,7 @@ class _ImageSlide extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        const Eyebrow(center: true),
         Padding(
           padding: const EdgeInsets.only(bottom: 28),
           child: H2(title, textAlign: TextAlign.center),
@@ -1410,7 +1445,7 @@ class _McpDiagram extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      'JSON-RPC over Stdio / WebSockets',
+                      'JSON-RPC over Stdio / HTTP',
                       style: TextStyle(
                         fontFamily: Fonts.code,
                         fontSize: 13.6,

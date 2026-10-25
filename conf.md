@@ -44,7 +44,7 @@ Custom lint rule:
 - Deterministic. It will always do the same thing. There can be bugs in your lint, but as a whole, the behavior is predictable
 
 > [!NOTE] Instead of using AI to do a task, use AI to write a tool that will do said task.
-> 'Hey gemini, create a new lint rule using dart_analysis_server_plugin. This lint rule should disallow using ' and " inside Widgets'.
+> 'Hey gemini, create a new lint rule using analysis_server_plugin. This lint rule should disallow using ' and " inside Widgets'.
 > Initial cost slightly higher than skill, long term economy and reliability win (within reasons)
 
 > [!DANGER]
@@ -281,12 +281,12 @@ No mock needed
 
 ## MCP servers
 
-In case some of you are not familiar with the term, MCP stands for Machine Protocol.
+In case some of you are not familiar with the term, MCP stands for Model Context Protocol.
 It is essentially just a server, running either locally on your machine or on a different device,
 that uses a specific protocol designed for AI agents.
 This is how AI agents can read files or perform tool calls.
 
-It sounds fancy. but we're using Dart! That's just about opening a websocket
+It sounds fancy. but we're using Dart! That's just about reading stdin (or an HTTP request)
 and sending/receiving a JSON object.
 Although if you don't want to deal with the transport hassle, there's an official Dart package for
 writing MCP ; which takes care of the logic.

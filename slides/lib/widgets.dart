@@ -193,21 +193,66 @@ class CodeBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Hues.codeBg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
-      child: Text.rich(
-        highlightDart(code),
-        textAlign: TextAlign.left,
-        style: TextStyle(
-          fontFamily: Fonts.code,
-          fontSize: fontSize,
-          height: 1.45,
-          color: Hues.codeText,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            color: const Color(0x08FFFFFF),
+            child: const Row(
+              spacing: 6,
+              children: [
+                _WindowDot(Color(0xFFFF5F57)),
+                _WindowDot(Color(0xFFFEBC2E)),
+                _WindowDot(Color(0xFF28C840)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Text.rich(
+              highlightDart(code),
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontFamily: Fonts.code,
+                fontSize: fontSize,
+                height: 1.45,
+                color: Hues.codeText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WindowDot extends StatelessWidget {
+  const _WindowDot(this.color);
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 9,
+      height: 9,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.85),
+        shape: BoxShape.circle,
       ),
     );
   }
@@ -233,6 +278,7 @@ class H1 extends StatelessWidget {
         fontSize: fontSize,
         fontWeight: FontWeight.w800,
         height: 1.1,
+        letterSpacing: -fontSize * 0.02,
         color: Palette.of(context).heading,
       ),
     );
@@ -252,9 +298,10 @@ class H2 extends StatelessWidget {
       textAlign: textAlign,
       style: TextStyle(
         fontFamily: Fonts.heading,
-        fontSize: 35.2,
+        fontSize: 36.8,
         fontWeight: FontWeight.w700,
         height: 1.2,
+        letterSpacing: -0.4,
         color: Palette.of(context).heading,
       ),
     );
@@ -334,9 +381,65 @@ class ContentSlide extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Eyebrow(),
         Padding(padding: const EdgeInsets.only(bottom: 28), child: H2(title)),
         ...children,
       ],
+    );
+  }
+}
+
+/// The small "── TOPIC" label above slide titles, in the topic's accent.
+class Eyebrow extends StatelessWidget {
+  const Eyebrow({super.key, this.center = false});
+
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final topic = SlideTopic.of(context);
+    final accent = palette.topicAccent(topic);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: center
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Container(
+            width: 28,
+            height: 2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [accent.withValues(alpha: 0), accent],
+              ),
+            ),
+          ),
+          Text(
+            topic.label.toUpperCase(),
+            style: TextStyle(
+              fontFamily: Fonts.heading,
+              fontSize: 13.6,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 2.4,
+              color: accent,
+            ),
+          ),
+          if (center)
+            Container(
+              width: 28,
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [accent, accent.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -404,12 +507,14 @@ class DeckCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: palette.cardBg,
         border: Border.all(color: palette.cardBorder),
-        borderRadius: BorderRadius.circular(13.6),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 20,
-            offset: Offset(0, 4),
+            color: palette.isLight
+                ? const Color(0x14000000)
+                : const Color(0x59000000),
+            blurRadius: 32,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -422,13 +527,42 @@ class DeckCard extends StatelessWidget {
               children: [child],
             ),
           ),
+          // A soft highlight along the top edge, as if lit from above.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: 1,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    palette.heading.withValues(alpha: 0),
+                    palette.heading.withValues(alpha: 0.18),
+                    palette.heading.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
           if (accentBar)
             Positioned(
               left: 0,
               top: 0,
               bottom: 0,
               width: 3,
-              child: ColoredBox(color: palette.accent),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      palette.accent,
+                      palette.accent.withValues(alpha: 0.15),
+                    ],
+                  ),
+                ),
+              ),
             ),
         ],
       ),
@@ -598,6 +732,12 @@ class BadgeCardSlide extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: tint,
                     borderRadius: BorderRadius.circular(999),
+                    boxShadow: [
+                      BoxShadow(
+                        color: tint.withValues(alpha: 0.5),
+                        blurRadius: 18,
+                      ),
+                    ],
                   ),
                   child: Text(
                     danger ? '⚠️ DANGER' : '💡 PRO TIP',

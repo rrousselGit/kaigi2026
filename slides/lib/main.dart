@@ -136,17 +136,10 @@ class _DeckState extends State<Deck> {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.easeInOut,
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment.topCenter,
-                        radius: 1.4,
-                        colors: [glow, base],
-                        stops: const [0, 0.7],
-                      ),
-                    ),
+                  child: _Background(
+                    glow: glow,
+                    base: base,
+                    accent: palette.topicAccent(slide.topic),
                   ),
                 ),
                 Column(
@@ -321,7 +314,10 @@ class _SlideViewportState extends State<_SlideViewport>
                     horizontal: 72,
                     vertical: 40,
                   ),
-                  child: slides[index].child,
+                  child: SlideTopic(
+                    topic: slides[index].topic,
+                    child: slides[index].child,
+                  ),
                 ),
               ),
             ),
@@ -330,6 +326,88 @@ class _SlideViewportState extends State<_SlideViewport>
       ),
     );
   }
+}
+
+/// The page background: a glow from the top, a faint orb of the topic's
+/// accent in the bottom-right corner, and a dot grid fading out from the top.
+class _Background extends StatelessWidget {
+  const _Background({
+    required this.glow,
+    required this.base,
+    required this.accent,
+  });
+
+  final Color glow;
+  final Color base;
+  final Color accent;
+
+  static const _duration = Duration(milliseconds: 600);
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        AnimatedContainer(
+          duration: _duration,
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.topCenter,
+              radius: 1.4,
+              colors: [glow, base],
+              stops: const [0, 0.7],
+            ),
+          ),
+        ),
+        AnimatedContainer(
+          duration: _duration,
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(1.1, 1.2),
+              radius: 1.1,
+              colors: [
+                accent.withValues(alpha: palette.isLight ? 0.10 : 0.14),
+                accent.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
+        ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => const RadialGradient(
+            center: Alignment.topCenter,
+            radius: 1.2,
+            colors: [Colors.white, Color(0x00FFFFFF)],
+          ).createShader(bounds),
+          child: CustomPaint(painter: _DotGrid(palette.texture)),
+        ),
+      ],
+    );
+  }
+}
+
+class _DotGrid extends CustomPainter {
+  _DotGrid(this.color);
+
+  final Color color;
+
+  static const _spacing = 28.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    for (var y = _spacing / 2; y < size.height; y += _spacing) {
+      for (var x = _spacing / 2; x < size.width; x += _spacing) {
+        canvas.drawCircle(Offset(x, y), 1.1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotGrid oldDelegate) => color != oldDelegate.color;
 }
 
 class _ProgressBar extends StatelessWidget {
@@ -341,8 +419,8 @@ class _ProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = Palette.of(context);
     return Container(
-      height: 4,
-      color: const Color(0x0DFFFFFF),
+      height: 3,
+      color: palette.texture,
       alignment: Alignment.centerLeft,
       child: AnimatedFractionallySizedBox(
         duration: const Duration(milliseconds: 300),
@@ -350,8 +428,16 @@ class _ProgressBar extends StatelessWidget {
         widthFactor: progress,
         child: Container(
           decoration: BoxDecoration(
-            color: palette.accent,
-            boxShadow: [BoxShadow(color: palette.accent, blurRadius: 8)],
+            gradient: LinearGradient(colors: [palette.accent, Hues.purple]),
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: palette.accent.withValues(alpha: 0.6),
+                blurRadius: 10,
+              ),
+            ],
           ),
         ),
       ),
@@ -384,7 +470,7 @@ class _NavBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       decoration: BoxDecoration(
         color: palette.navBg,
-        border: Border(top: BorderSide(color: palette.cardBorder)),
+        border: Border(top: BorderSide(color: palette.texture)),
       ),
       child: Row(
         spacing: 12,
@@ -399,12 +485,24 @@ class _NavBar extends StatelessWidget {
             tooltip: 'Next Slide (Right Arrow / Space / PageDown)',
             onTap: onNext,
           ),
-          Text(
-            'Slide ${index + 1} / ${slides.length}',
+          const SizedBox(width: 4),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${index + 1}'.padLeft(2, '0'),
+                  style: TextStyle(
+                    color: palette.heading,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                TextSpan(text: '  /  ${slides.length}'),
+              ],
+            ),
             style: TextStyle(
               fontFamily: Fonts.code,
               fontSize: 13.6,
-              color: palette.textMuted,
+              color: palette.textDim,
             ),
           ),
           const Spacer(),
@@ -446,18 +544,20 @@ class _NavButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: hovered
                 ? palette.accent.withValues(alpha: 0.15)
-                : palette.textMain.withValues(alpha: 0.05),
+                : palette.textMain.withValues(alpha: 0.04),
             border: Border.all(
-              color: hovered ? palette.accent : palette.cardBorder,
+              color: hovered
+                  ? palette.accent.withValues(alpha: 0.6)
+                  : Colors.transparent,
             ),
-            borderRadius: BorderRadius.circular(7.2),
+            borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 13.6,
               fontWeight: FontWeight.w500,
-              color: hovered ? palette.heading : palette.textMain,
+              color: hovered ? palette.heading : palette.textMuted,
             ),
           ),
         ),
