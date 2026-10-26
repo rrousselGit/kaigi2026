@@ -1,10 +1,16 @@
 // Slides are hardcoded text by nature.
 // ignore_for_file: lints_plugin/avoid_hardcoded_string
 
+// The windowing API is experimental, and only exposed through internal files.
+// ignore_for_file: implementation_imports, invalid_use_of_internal_member
+
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/src/foundation/_features.dart' show isWindowingEnabled;
+import 'package:flutter/src/widgets/_window.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 // ignore: depend_on_referenced_packages
@@ -18,7 +24,49 @@ import 'widgets.dart';
 
 void main() {
   if (kDebugMode || kProfileMode) enableFlutterDriverExtension();
-  runApp(const SlidesApp());
+  if (isWindowingEnabled) {
+    // The macOS runner starts without any window (see AppDelegate.swift), as
+    // windows can only be added at runtime if the app creates all of them.
+    runWidget(const _MainWindow());
+  } else {
+    runApp(const SlidesApp());
+  }
+}
+
+/// The app's main window, when windowing is enabled.
+class _MainWindow extends StatefulWidget {
+  const _MainWindow();
+
+  @override
+  State<_MainWindow> createState() => _MainWindowState();
+}
+
+class _MainWindowState extends State<_MainWindow> {
+  final _controller = WindowController(
+    size: const Size(1440, 900),
+    title: 'Build devtools for your app',
+    delegate: _MainWindowDelegate(),
+  );
+
+  @override
+  void dispose() {
+    _controller.destroy();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Window(controller: _controller, child: const SlidesApp());
+  }
+}
+
+/// Quits the app when the main window is closed.
+class _MainWindowDelegate with WindowControllerDelegate {
+  @override
+  void onWindowDestroyed() {
+    super.onWindowDestroyed();
+    ServicesBinding.instance.exitApplication(AppExitType.required);
+  }
 }
 
 /// The logical size slides are laid out at, before being scaled to fit.
@@ -59,6 +107,7 @@ class Deck extends StatefulWidget {
 class _DeckState extends State<Deck> {
   final _focusNode = FocusNode(debugLabel: 'deck');
   final _confetti = GlobalKey<ConfettiState>();
+  final _audienceConfetti = GlobalKey<ConfettiState>();
   var _index = 0;
 
   /// How much of the current slide is revealed, up to its [SlideData.steps].
@@ -67,10 +116,50 @@ class _DeckState extends State<Deck> {
   var _showOverview = false;
   var _themeIndex = 0;
 
+  /// Whether the presenter view (notes, timer) is shown.
+  var _presenting = false;
+  var _presentingSince = DateTime.now();
+
+  /// The window showing only the slides, while presenting with windowing
+  /// enabled (`flutter config --enable-windowing`).
+  WindowController? _audience;
+
   @override
   void dispose() {
     _focusNode.dispose();
+    _audience?.destroy();
     super.dispose();
+  }
+
+  void _togglePresentation() {
+    if (_presenting) {
+      _stopPresenting();
+      return;
+    }
+
+    setState(() {
+      _presenting = true;
+      _presentingSince = DateTime.now();
+      if (isWindowingEnabled) {
+        _audience = WindowController(
+          size: _canvas,
+          title: 'Build devtools for your app',
+          delegate: _AudienceWindowDelegate(_stopPresenting),
+        );
+      }
+    });
+  }
+
+  void _stopPresenting() {
+    final audience = _audience;
+    setState(() {
+      _presenting = false;
+      _audience = null;
+    });
+    // Destroyed once its view is no longer in the tree.
+    if (audience != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => audience.destroy());
+    }
   }
 
   /// Shows the slide at [index], with nothing revealed, or everything when
@@ -82,7 +171,10 @@ class _DeckState extends State<Deck> {
       _index = target;
       _step = revealed ? slides[target].steps : 0;
     });
-    if (target == slides.length - 1) _confetti.currentState?.fire();
+    if (target == slides.length - 1) {
+      _confetti.currentState?.fire();
+      _audienceConfetti.currentState?.fire();
+    }
   }
 
   void _next() {
@@ -140,6 +232,8 @@ class _DeckState extends State<Deck> {
         _toggleOverview();
       case LogicalKeyboardKey.keyT when !repeatable:
         _cycleTheme();
+      case LogicalKeyboardKey.keyP when !repeatable:
+        _togglePresentation();
       default:
         return KeyEventResult.ignored;
     }
@@ -153,92 +247,365 @@ class _DeckState extends State<Deck> {
   @override
   Widget build(BuildContext context) {
     final palette = Palette.all[_themeIndex];
-    final slide = slides[_index];
-    final (glow, base) = palette.background(slide.topic);
+    final (_, base) = palette.background(slides[_index].topic);
+    final audience = _audience;
 
-    return DeckTheme(
-      palette: palette,
-      child: Focus(
-        focusNode: _focusNode,
-        autofocus: true,
-        onKeyEvent: _onKey,
-        child: Material(
-          color: base,
-          child: DefaultTextStyle.merge(
-            style: TextStyle(fontFamily: Fonts.body, color: palette.textMain),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: _Background(
-                    glow: glow,
-                    base: base,
-                    accent: palette.topicAccent(slide.topic),
+    return ViewAnchor(
+      view: audience == null
+          ? null
+          : Window(
+              controller: audience,
+              child: _WindowApp(
+                child: DeckTheme(
+                  palette: palette,
+                  child: Focus(
+                    autofocus: true,
+                    onKeyEvent: _onKey,
+                    child: _stage(palette, confetti: _audienceConfetti),
                   ),
                 ),
-                Column(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: _focusNode.requestFocus,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _SlideViewport(
-                                      index: _index,
-                                      step: _step,
-                                    ),
-                                  ),
-                                  ExamplePanel(example: slide.example),
-                                ],
-                              ),
-                            ),
-                            if (_showNotes)
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: _NotesPanel(notes: slide.notes),
-                              ),
-                          ],
-                        ),
+              ),
+            ),
+      child: DeckTheme(
+        palette: palette,
+        child: Focus(
+          focusNode: _focusNode,
+          autofocus: true,
+          onKeyEvent: _onKey,
+          child: Material(
+            color: base,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(fontFamily: Fonts.body, color: palette.textMain),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _presenting
+                        ? _presenterLayout(palette)
+                        : _normalLayout(palette),
+                  ),
+                  if (_showOverview)
+                    Positioned.fill(
+                      child: _Overview(
+                        current: _index,
+                        onSelect: (index) {
+                          _goTo(index);
+                          _toggleOverview(false);
+                        },
+                        onClose: () => _toggleOverview(false),
                       ),
                     ),
-                    _NavBar(
-                      index: _index,
-                      onPrevious: _previous,
-                      onNext: _next,
-                      onOverview: _toggleOverview,
-                      onNotes: () => setState(() => _showNotes = !_showNotes),
-                      onTheme: _cycleTheme,
-                    ),
-                  ],
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _ProgressBar(progress: (_index + 1) / slides.length),
-                ),
-                Positioned.fill(child: Confetti(key: _confetti)),
-                if (_showOverview)
-                  Positioned.fill(
-                    child: _Overview(
-                      current: _index,
-                      onSelect: (index) {
-                        _goTo(index);
-                        _toggleOverview(false);
-                      },
-                      onClose: () => _toggleOverview(false),
-                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The slide with its background, as the audience sees it.
+  Widget _stage(Palette palette, {required GlobalKey<ConfettiState> confetti}) {
+    final slide = slides[_index];
+    final (glow, base) = palette.background(slide.topic);
+    return Material(
+      color: base,
+      child: DefaultTextStyle.merge(
+        style: TextStyle(fontFamily: Fonts.body, color: palette.textMain),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: _Background(
+                glow: glow,
+                base: base,
+                accent: palette.topicAccent(slide.topic),
+              ),
+            ),
+            Positioned.fill(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _SlideViewport(index: _index, step: _step),
+                  ),
+                  ExamplePanel(example: slide.example),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _ProgressBar(progress: (_index + 1) / slides.length),
+            ),
+            Positioned.fill(child: Confetti(key: confetti)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navBar() {
+    return _NavBar(
+      index: _index,
+      presenting: _presenting,
+      onPrevious: _previous,
+      onNext: _next,
+      onOverview: _toggleOverview,
+      onNotes: () => setState(() => _showNotes = !_showNotes),
+      onTheme: _cycleTheme,
+      onPresent: _togglePresentation,
+    );
+  }
+
+  Widget _normalLayout(Palette palette) {
+    return Column(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: _focusNode.requestFocus,
+            child: Stack(
+              children: [
+                Positioned.fill(child: _stage(palette, confetti: _confetti)),
+                if (_showNotes)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _NotesPanel(notes: slides[_index].notes),
                   ),
               ],
             ),
           ),
         ),
+        _navBar(),
+      ],
+    );
+  }
+
+  /// The presenter's window: the slide, with the notes and a timer next to it.
+  Widget _presenterLayout(Palette palette) {
+    return Column(
+      children: [
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: _canvas.aspectRatio,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _focusNode.requestFocus,
+                        child: Container(
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: palette.cardBorder),
+                          ),
+                          child: _stage(palette, confetti: _confetti),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 440,
+                child: _PresenterPanel(
+                  index: _index,
+                  step: _step,
+                  startedAt: _presentingSince,
+                  audienceWindow: _audience != null,
+                  onResetTimer: () =>
+                      setState(() => _presentingSince = DateTime.now()),
+                ),
+              ),
+            ],
+          ),
+        ),
+        _navBar(),
+      ],
+    );
+  }
+}
+
+/// The app around the content of a secondary window, which has its own
+/// [MediaQuery] and [Navigator].
+class _WindowApp extends StatelessWidget {
+  const _WindowApp({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Build devtools for your app',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(brightness: Brightness.dark, fontFamily: Fonts.body),
+      home: child,
+    );
+  }
+}
+
+/// Closes presentation mode when the audience window is closed.
+class _AudienceWindowDelegate with WindowControllerDelegate {
+  _AudienceWindowDelegate(this.onCloseRequested);
+
+  final VoidCallback onCloseRequested;
+
+  @override
+  void onWindowCloseRequested(WindowController controller) {
+    onCloseRequested();
+  }
+}
+
+/// Speaker notes, a timer, and what comes next, for the presenter only.
+class _PresenterPanel extends StatefulWidget {
+  const _PresenterPanel({
+    required this.index,
+    required this.step,
+    required this.startedAt,
+    required this.audienceWindow,
+    required this.onResetTimer,
+  });
+
+  final int index;
+  final int step;
+  final DateTime startedAt;
+
+  /// Whether the slides are shown in a separate window.
+  final bool audienceWindow;
+  final VoidCallback onResetTimer;
+
+  @override
+  State<_PresenterPanel> createState() => _PresenterPanelState();
+}
+
+class _PresenterPanelState extends State<_PresenterPanel> {
+  /// Updates the timer and the clock.
+  late final Timer _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ticker.cancel();
+    super.dispose();
+  }
+
+  static String _twoDigits(int value) => '$value'.padLeft(2, '0');
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final slide = slides[widget.index];
+    final elapsed = DateTime.now().difference(widget.startedAt);
+    final now = TimeOfDay.now();
+    final label = TextStyle(
+      fontSize: 12.8,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.2,
+      color: palette.accent,
+    );
+
+    final String upNext;
+    if (widget.step < slide.steps) {
+      final left = slide.steps - widget.step;
+      upNext = '$left more on this slide';
+    } else if (widget.index + 1 < slides.length) {
+      upNext = slides[widget.index + 1].title;
+    } else {
+      upNext = 'The end';
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 20, 28, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${_twoDigits(elapsed.inMinutes)}:'
+                '${_twoDigits(elapsed.inSeconds % 60)}',
+                style: TextStyle(
+                  fontFamily: Fonts.code,
+                  fontSize: 56,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                  color: palette.heading,
+                ),
+              ),
+              const SizedBox(width: 12),
+              _NavButton(
+                'Reset',
+                tooltip: 'Restart the timer',
+                onTap: widget.onResetTimer,
+              ),
+              const Spacer(),
+              Text(
+                '${_twoDigits(now.hour)}:${_twoDigits(now.minute)}',
+                style: TextStyle(
+                  fontFamily: Fonts.code,
+                  fontSize: 22,
+                  color: palette.textDim,
+                ),
+              ),
+            ],
+          ),
+          if (!widget.audienceWindow) ...[
+            const SizedBox(height: 12),
+            Text(
+              'No audience window: enable it with flutter config --enable-windowing.',
+              style: TextStyle(fontSize: 13.6, color: palette.textDim),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Text('SLIDE ${widget.index + 1} / ${slides.length}', style: label),
+          const SizedBox(height: 4),
+          Text(
+            slide.title,
+            style: TextStyle(
+              fontFamily: Fonts.heading,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: palette.heading,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('UP NEXT', style: label),
+          const SizedBox(height: 4),
+          Text(
+            upNext,
+            style: TextStyle(fontSize: 16, color: palette.textMuted),
+          ),
+          const SizedBox(height: 24),
+          Text('SPEAKER NOTES', style: label),
+          const SizedBox(height: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Text(
+                slide.notes,
+                style: TextStyle(
+                  fontSize: 20,
+                  height: 1.5,
+                  color: palette.textMain,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -693,9 +1060,13 @@ class _NavBar extends StatelessWidget {
     required this.onOverview,
     required this.onNotes,
     required this.onTheme,
+    required this.presenting,
+    required this.onPresent,
   });
 
   final int index;
+  final bool presenting;
+  final VoidCallback onPresent;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
   final VoidCallback onOverview;
@@ -745,18 +1116,38 @@ class _NavBar extends StatelessWidget {
               color: palette.textDim,
             ),
           ),
-          const Spacer(),
-          _NavButton(
-            'Grid Overview',
-            tooltip: 'Toggle Overview (M)',
-            onTap: onOverview,
+          // Scrolls instead of overflowing in narrow windows.
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: Row(
+                spacing: 12,
+                children: [
+                  _NavButton(
+                    'Grid Overview',
+                    tooltip: 'Toggle Overview (M)',
+                    onTap: onOverview,
+                  ),
+                  _NavButton(
+                    'Speaker Notes',
+                    tooltip: 'Toggle Speaker Notes (N)',
+                    onTap: onNotes,
+                  ),
+                  _NavButton(
+                    'Theme',
+                    tooltip: 'Toggle Theme (T)',
+                    onTap: onTheme,
+                  ),
+                  _NavButton(
+                    presenting ? 'Stop Presenting' : 'Present',
+                    tooltip: 'Toggle Presentation Mode (P)',
+                    onTap: onPresent,
+                  ),
+                ],
+              ),
+            ),
           ),
-          _NavButton(
-            'Speaker Notes',
-            tooltip: 'Toggle Speaker Notes (N)',
-            onTap: onNotes,
-          ),
-          _NavButton('Theme', tooltip: 'Toggle Theme (T)', onTap: onTheme),
         ],
       ),
     );

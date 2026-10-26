@@ -70,6 +70,31 @@ void main() {
     expect(step(), slides[index].steps);
   });
 
+  testWidgets('presentation mode shows the notes and a timer', (tester) async {
+    await pumpDeck(tester);
+    // The presenter panel ticks every second, so pumpAndSettle never settles.
+    Future<void> press(LogicalKeyboardKey key) async {
+      await tester.sendKeyEvent(key);
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    await press(LogicalKeyboardKey.keyP);
+    expect(find.text('SPEAKER NOTES'), findsOne);
+    expect(find.text(slides[0].notes), findsOne);
+    expect(find.text('00:00'), findsOne);
+    expect(find.text('Stop Presenting'), findsOne);
+
+    for (var step = 0; step <= slides[0].steps; step++) {
+      await press(LogicalKeyboardKey.arrowRight);
+    }
+    expect(find.text(slides[1].notes), findsOne);
+
+    await press(LogicalKeyboardKey.keyP);
+    await tester.pumpAndSettle();
+    expect(find.text('SPEAKER NOTES'), findsNothing);
+    expect(find.text('Present'), findsOne);
+  });
+
   testWidgets('slides of a group share one live widget', (tester) async {
     await pumpDeck(tester);
 
