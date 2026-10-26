@@ -20,6 +20,18 @@ abstract final class Hues {
   static const teal = Color(0xFF2DD4BF);
   static const violet = Color(0xFFA78BFA);
   static const indigo = Color(0xFF818CF8);
+  static const pumpkin = Color(0xFFF97316);
+  static const candyCorn = Color(0xFFFBBF24);
+
+  /// The red-orange of torii gates.
+  static const vermilion = Color(0xFFEF4A2F);
+  static const sakura = Color(0xFFF9A8D4);
+  static const wisteria = Color(0xFFB794F6);
+  static const matcha = Color(0xFFA3C76D);
+
+  /// The pale blue of onibi, Japanese ghost fire.
+  static const onibi = Color(0xFF67E8F9);
+  static const moon = Color(0xFFFDF3C7);
   static const slate = Color(0xFF64748B);
   static const codeText = Color(0xFFCBD5E1);
   static const codeBg = Color(0xFF0B1120);
@@ -28,20 +40,20 @@ abstract final class Hues {
 /// Each slide belongs to a topic, which drives the background glow and the
 /// eyebrow label above slide titles.
 enum Topic {
-  intro('Introduction', Color(0xFF1E293B), Color(0xFF0B0F19), Hues.sky),
-  why('Why tools', Color(0xFF311B92), Color(0xFF090A16), Hues.purpleLight),
-  lints(
-    'Custom lints',
-    Color(0xFF064E3B),
-    Color(0xFF051210),
-    Hues.emeraldLight,
+  intro('Introduction', Color(0xFF3B1A0B), Color(0xFF0D0807), Hues.pumpkin),
+  why('Why tools', Color(0xFF3A0F1A), Color(0xFF0D0608), Hues.vermilion),
+  lints('Custom lints', Color(0xFF1F2A12), Color(0xFF080A06), Hues.matcha),
+  codegen(
+    'Code generation',
+    Color(0xFF3A2A0A),
+    Color(0xFF0D0A05),
+    Hues.candyCorn,
   ),
-  codegen('Code generation', Color(0xFF0C4A6E), Color(0xFF061019), Hues.sky),
-  cli('CLIs', Color(0xFF134E4A), Color(0xFF051314), Hues.teal),
-  mcp('MCP servers', Color(0xFF4C1D95), Color(0xFF0C0717), Hues.violet),
-  devtools('DevTools', Color(0xFF881337), Color(0xFF15060B), Hues.roseLight),
-  creation('Building tools', Color(0xFF1E1B4B), Color(0xFF090A17), Hues.indigo),
-  conclusion('Wrap-up', Color(0xFF0E7490), Color(0xFF060D14), Hues.cyan);
+  cli('CLIs', Color(0xFF0E2A33), Color(0xFF05090C), Hues.onibi),
+  mcp('MCP servers', Color(0xFF2A1745), Color(0xFF0A0711), Hues.wisteria),
+  devtools('DevTools', Color(0xFF3D1230), Color(0xFF0E060B), Hues.sakura),
+  creation('Building tools', Color(0xFF1C1A40), Color(0xFF07070F), Hues.violet),
+  conclusion('Wrap-up', Color(0xFF4A1D08), Color(0xFF0F0714), Hues.pumpkin);
 
   const Topic(this.label, this.glow, this.base, this.accent);
 
@@ -80,46 +92,49 @@ class Palette {
     required this.navBg,
   });
 
+  /// A haunted night in sumi ink, lit by jack-o'-lanterns.
   static const dark = Palette(
     isLight: false,
-    cardBg: Color.fromRGBO(17, 24, 39, 0.7),
-    cardBorder: Color.fromRGBO(255, 255, 255, 0.08),
-    textMain: Color(0xFFF8FAFC),
-    textMuted: Color(0xFF94A3B8),
-    textDim: Color(0xFF64748B),
-    accent: Hues.sky,
-    heading: Colors.white,
-    surface: Color.fromRGBO(15, 23, 42, 0.6),
-    calloutText: Color(0xFFE2E8F0),
-    navBg: Color.fromRGBO(2, 6, 23, 0.55),
+    cardBg: Color.fromRGBO(24, 16, 14, 0.75),
+    cardBorder: Color.fromRGBO(249, 115, 22, 0.14),
+    textMain: Color(0xFFFAF5EB),
+    textMuted: Color(0xFFB8A99A),
+    textDim: Color(0xFF7A6B5E),
+    accent: Hues.pumpkin,
+    heading: Color(0xFFFFF7ED),
+    surface: Color.fromRGBO(28, 18, 14, 0.65),
+    calloutText: Color(0xFFF1E6D6),
+    navBg: Color.fromRGBO(10, 6, 5, 0.6),
   );
 
+  /// Onibi: ghost fire flickering over a wisteria night.
   static const neon = Palette(
     isLight: false,
-    cardBg: Color.fromRGBO(15, 23, 42, 0.8),
-    cardBorder: Color.fromRGBO(56, 189, 248, 0.2),
-    textMain: Color(0xFFF8FAFC),
-    textMuted: Color(0xFF94A3B8),
-    textDim: Color(0xFF64748B),
-    accent: Hues.sky,
+    cardBg: Color.fromRGBO(18, 12, 30, 0.82),
+    cardBorder: Color.fromRGBO(183, 148, 246, 0.25),
+    textMain: Color(0xFFF5F3FF),
+    textMuted: Color(0xFFA9A3C2),
+    textDim: Color(0xFF6E6889),
+    accent: Hues.onibi,
     heading: Colors.white,
-    surface: Color.fromRGBO(15, 23, 42, 0.6),
-    calloutText: Color(0xFFE2E8F0),
-    navBg: Color.fromRGBO(2, 6, 23, 0.55),
+    surface: Color.fromRGBO(20, 14, 34, 0.65),
+    calloutText: Color(0xFFE4E0F5),
+    navBg: Color.fromRGBO(6, 4, 14, 0.6),
   );
 
+  /// Washi paper and vermilion ink.
   static const light = Palette(
     isLight: true,
-    cardBg: Color.fromRGBO(255, 255, 255, 0.9),
-    cardBorder: Color.fromRGBO(0, 0, 0, 0.1),
-    textMain: Color(0xFF0F172A),
-    textMuted: Color(0xFF475569),
-    textDim: Color(0xFF94A3B8),
-    accent: Color(0xFF0284C7),
-    heading: Color(0xFF0F172A),
-    surface: Color.fromRGBO(255, 255, 255, 0.7),
-    calloutText: Color(0xFF1E293B),
-    navBg: Color.fromRGBO(255, 255, 255, 0.7),
+    cardBg: Color.fromRGBO(255, 251, 242, 0.92),
+    cardBorder: Color.fromRGBO(120, 40, 20, 0.14),
+    textMain: Color(0xFF1C1210),
+    textMuted: Color(0xFF5C4A42),
+    textDim: Color(0xFF9C8B80),
+    accent: Color(0xFFC2361D),
+    heading: Color(0xFF1C1210),
+    surface: Color.fromRGBO(255, 251, 242, 0.75),
+    calloutText: Color(0xFF2B1D18),
+    navBg: Color.fromRGBO(250, 243, 230, 0.75),
   );
 
   static const all = [dark, neon, light];
@@ -148,8 +163,8 @@ class Palette {
 
   /// The (glow, base) colors of the page background for a topic.
   (Color, Color) background(Topic topic) {
-    if (isLight) return (const Color(0xFFE2E8F0), const Color(0xFFF8FAFC));
-    if (identical(this, neon)) return (topic.glow, const Color(0xFF050515));
+    if (isLight) return (const Color(0xFFF1E4CC), const Color(0xFFFAF4E8));
+    if (identical(this, neon)) return (topic.glow, const Color(0xFF07040F));
     return (topic.glow, topic.base);
   }
 

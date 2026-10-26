@@ -20,7 +20,21 @@ class CheckoutScreen extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            const ShopHeader('Checkout'),
+            ShopHeader(
+              'Checkout',
+              trailing: state.expressCheckout
+                  ? FakeIconButton(
+                      Icons.edit_outlined,
+                      onTap: () => ShopScope.update(
+                        context,
+                        (state) => state.copyWith(
+                          checkout: CheckoutStep.none,
+                          cartOpen: true,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -64,6 +78,10 @@ class CheckoutScreen extends StatelessWidget {
               child: FakeButton(
                 'Place order · ${formatPrice(state.total)}',
                 icon: Icons.check_circle_outline_rounded,
+                onTap: () => ShopScope.update(
+                  context,
+                  (state) => state.copyWith(checkout: CheckoutStep.confirmed),
+                ),
               ),
             ),
           ],
@@ -182,7 +200,13 @@ class ConfirmationScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(flex: 2),
-              const FakeButton('Continue shopping'),
+              FakeButton(
+                'Continue shopping',
+                onTap: () => ShopScope.update(
+                  context,
+                  (state) => state.continueShopping(),
+                ),
+              ),
             ],
           ),
         ),

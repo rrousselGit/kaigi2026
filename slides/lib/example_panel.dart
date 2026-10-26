@@ -1,7 +1,5 @@
 // ignore_for_file: lints_plugin/avoid_hardcoded_string
 
-import 'dart:ui' show PointerDeviceKind;
-
 import 'package:material_ui/material_ui.dart';
 
 import 'theme.dart';
@@ -123,12 +121,11 @@ class _Phone extends StatelessWidget {
             textScaler: TextScaler.noScaling,
           ),
           child: ScrollConfiguration(
-            // Examples aren't clickable, but should still be scrollable with
-            // any device, including by dragging with the mouse.
-            behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: PointerDeviceKind.values.toSet(),
-              scrollbars: false,
-            ),
+            // Mice scroll with their wheel, not by dragging: a drag starts
+            // after 2 pixels, so the slightest movement while clicking would
+            // turn the click into a scroll.
+            behavior: ScrollConfiguration.of(context)
+                .copyWith(scrollbars: false),
             child: Stack(
               fit: StackFit.expand,
               children: [

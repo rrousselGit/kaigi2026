@@ -41,6 +41,10 @@ class CartScreen extends StatelessWidget {
                 child: FakeButton(
                   'Checkout · ${formatPrice(state.total)}',
                   icon: Icons.lock_outline_rounded,
+                  onTap: () => ShopScope.update(
+                    context,
+                    (state) => state.copyWith(checkout: CheckoutStep.review),
+                  ),
                 ),
               ),
           ],
@@ -122,7 +126,7 @@ class _CartLine extends StatelessWidget {
               ],
             ),
           ),
-          _Quantity(item.quantity),
+          _Quantity(item),
         ],
       ),
     );
@@ -130,12 +134,18 @@ class _CartLine extends StatelessWidget {
 }
 
 class _Quantity extends StatelessWidget {
-  const _Quantity(this.quantity);
+  const _Quantity(this.item);
 
-  final int quantity;
+  final CartItem item;
 
   @override
   Widget build(BuildContext context) {
+    final quantity = item.quantity;
+    void add(int quantity) => ShopScope.update(
+      context,
+      (state) => state.addToCart(item.productId, quantity: quantity),
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
@@ -146,7 +156,14 @@ class _Quantity extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: 10,
         children: [
-          const Icon(Icons.remove_rounded, size: 16, color: ShopColors.muted),
+          Tappable(
+            onTap: () => add(-1),
+            child: const Icon(
+              Icons.remove_rounded,
+              size: 16,
+              color: ShopColors.muted,
+            ),
+          ),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (child, animation) =>
@@ -160,7 +177,14 @@ class _Quantity extends StatelessWidget {
               ),
             ),
           ),
-          const Icon(Icons.add_rounded, size: 16, color: ShopColors.ink),
+          Tappable(
+            onTap: () => add(1),
+            child: const Icon(
+              Icons.add_rounded,
+              size: 16,
+              color: ShopColors.ink,
+            ),
+          ),
         ],
       ),
     );

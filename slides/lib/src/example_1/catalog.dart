@@ -65,11 +65,18 @@ class _CatalogScreenState extends State<CatalogScreen> {
               child: Row(
                 children: [
                   const Expanded(child: _Logo()),
-                  const FakeIconButton(Icons.favorite_border_rounded),
+                  FakeIconButton(
+                    Icons.favorite_border_rounded,
+                    badge: state.wishlist.length,
+                  ),
                   const SizedBox(width: 10),
                   FakeIconButton(
                     Icons.shopping_bag_outlined,
                     badge: state.cartCount,
+                    onTap: () => ShopScope.update(
+                      context,
+                      (state) => state.copyWith(cartOpen: true),
+                    ),
                   ),
                 ],
               ),
@@ -114,9 +121,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
                             mainAxisExtent: 226,
                           ),
                       itemCount: visible.length,
-                      itemBuilder: (context, index) => _ProductCard(
-                        visible[index],
-                        inCart: state.quantityOf(visible[index].id),
+                      itemBuilder: (context, index) => Tappable(
+                        onTap: () => ShopScope.update(
+                          context,
+                          (state) => state.copyWith(
+                            productId: () => visible[index].id,
+                          ),
+                        ),
+                        child: _ProductCard(
+                          visible[index],
+                          inCart: state.quantityOf(visible[index].id),
+                        ),
                       ),
                     ),
                   ),
@@ -261,25 +276,33 @@ class _Categories extends StatelessWidget {
           for (final category in categories)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: category == selected ? ShopColors.ink : Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: category == selected
-                        ? ShopColors.ink
-                        : ShopColors.border,
-                  ),
+              child: Tappable(
+                onTap: () => ShopScope.update(
+                  context,
+                  (state) => state.copyWith(category: category),
                 ),
-                child: Text(
-                  category,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: category == selected ? Colors.white : ShopColors.ink,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: category == selected ? ShopColors.ink : Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: category == selected
+                          ? ShopColors.ink
+                          : ShopColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    category,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: category == selected
+                          ? Colors.white
+                          : ShopColors.ink,
+                    ),
                   ),
                 ),
               ),

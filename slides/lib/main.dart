@@ -1,6 +1,7 @@
 // Slides are hardcoded text by nature.
 // ignore_for_file: lints_plugin/avoid_hardcoded_string
 
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -250,12 +251,15 @@ class _SlideViewportState extends State<_SlideViewport>
   @override
   void didUpdateWidget(_SlideViewport oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.index == oldWidget.index) return;
+    // Slides of the same group update in place, without a transition.
+    if (_keyOf(widget.index) == _keyOf(oldWidget.index)) return;
 
     final current = _incomingPose;
     // Going back to the slide that is still leaving resumes it from where it
     // is, instead of restarting it from hidden.
-    _incomingFrom = widget.index == _outgoing ? _outgoingPose : _hidden;
+    _incomingFrom = _keyOf(widget.index) == _keyOf(_outgoing)
+        ? _outgoingPose
+        : _hidden;
     _outgoing = oldWidget.index;
     _outgoingFrom = current;
     _controller.forward(from: 0);
@@ -310,11 +314,17 @@ class _SlideViewportState extends State<_SlideViewport>
     );
   }
 
+  static Object? _keyOf(int? index) => switch (index) {
+    final index? => slides[index].group ?? index,
+    null => null,
+  };
+
   Widget _slide(int index, _SlidePose pose) {
     return KeyedSubtree(
       // Keyed so that a slide keeps its state (e.g. text fields) when it moves
-      // between the incoming and outgoing positions.
-      key: ValueKey(index),
+      // between the incoming and outgoing positions, and so that slides of a
+      // group share it.
+      key: ValueKey(_keyOf(index)),
       child: Opacity(
         opacity: pose.opacity.clamp(0.0, 1.0),
         child: Transform.translate(
@@ -344,7 +354,8 @@ class _SlideViewportState extends State<_SlideViewport>
 }
 
 /// The page background: a glow from the top, a faint orb of the topic's
-/// accent in the bottom-right corner, and a dot grid fading out from the top.
+/// accent in the bottom-right corner, and a haunted Japanese night drawn
+/// over it.
 class _Background extends StatelessWidget {
   const _Background({
     required this.glow,
@@ -390,39 +401,223 @@ class _Background extends StatelessWidget {
             ),
           ),
         ),
-        ShaderMask(
-          blendMode: BlendMode.dstIn,
-          shaderCallback: (bounds) => const RadialGradient(
-            center: Alignment.topCenter,
-            radius: 1.2,
-            colors: [Colors.white, Color(0x00FFFFFF)],
-          ).createShader(bounds),
-          child: CustomPaint(painter: _DotGrid(palette.texture)),
+        CustomPaint(
+          painter: _HauntedNight(
+            texture: palette.texture,
+            isLight: palette.isLight,
+          ),
         ),
       ],
     );
   }
 }
 
-class _DotGrid extends CustomPainter {
-  _DotGrid(this.color);
+/// Stars, a full moon with bats, a torii gate and seigaiha waves.
+///
+/// On light themes the moon becomes a red rising sun, and the stars and bats
+/// are left out.
+class _HauntedNight extends CustomPainter {
+  _HauntedNight({required this.texture, required this.isLight});
 
-  final Color color;
-
-  static const _spacing = 28.0;
+  final Color texture;
+  final bool isLight;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    for (var y = _spacing / 2; y < size.height; y += _spacing) {
-      for (var x = _spacing / 2; x < size.width; x += _spacing) {
-        canvas.drawCircle(Offset(x, y), 1.1, paint);
+    if (!isLight) _paintStars(canvas, size);
+    _paintMoon(canvas, size);
+    if (!isLight) _paintBats(canvas, size);
+    _paintTorii(canvas, size);
+    _paintWaves(canvas, size);
+  }
+
+  void _paintStars(Canvas canvas, Size size) {
+    // Seeded so that the stars stay in place between repaints.
+    final random = Random(31);
+    final paint = Paint()..color = const Color(0x2EFFFFFF);
+    for (var i = 0; i < 70; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height * 0.6;
+      canvas.drawCircle(Offset(x, y), 0.6 + random.nextDouble() * 1.1, paint);
+    }
+  }
+
+  void _paintMoon(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.87, size.height * 0.15);
+    final radius = size.shortestSide * 0.075;
+    final color = isLight ? Hues.vermilion : Hues.moon;
+
+    canvas
+      ..drawCircle(
+        center,
+        radius * 1.6,
+        Paint()
+          ..color = color.withValues(alpha: isLight ? 0.08 : 0.07)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius),
+      )
+      ..drawCircle(
+        center,
+        radius,
+        Paint()..color = color.withValues(alpha: isLight ? 0.13 : 0.12),
+      );
+    if (isLight) return;
+
+    final crater = Paint()..color = const Color(0x0A000000);
+    canvas
+      ..drawCircle(
+        center + Offset(-radius * 0.3, -radius * 0.2),
+        radius * 0.2,
+        crater,
+      )
+      ..drawCircle(
+        center + Offset(radius * 0.35, radius * 0.25),
+        radius * 0.14,
+        crater,
+      )
+      ..drawCircle(
+        center + Offset(-radius * 0.1, radius * 0.45),
+        radius * 0.09,
+        crater,
+      );
+  }
+
+  void _paintBats(Canvas canvas, Size size) {
+    final unit = size.shortestSide * 0.012;
+    final paint = Paint()..color = const Color(0x33000000);
+    for (final (dx, dy, scale) in const [
+      (0.80, 0.12, 1.2),
+      (0.84, 0.21, 0.8),
+      (0.91, 0.09, 0.9),
+      (0.76, 0.24, 0.6),
+    ]) {
+      final c = Offset(size.width * dx, size.height * dy);
+      final s = unit * scale;
+      final bat = Path()
+        ..moveTo(c.dx, c.dy - s * 0.4)
+        ..quadraticBezierTo(c.dx - s, c.dy - s * 1.6, c.dx - s * 3, c.dy - s)
+        ..quadraticBezierTo(
+          c.dx - s * 2.2,
+          c.dy - s * 0.6,
+          c.dx - s * 2.2,
+          c.dy + s * 0.2,
+        )
+        ..quadraticBezierTo(
+          c.dx - s * 1.6,
+          c.dy - s * 0.3,
+          c.dx - s * 1.1,
+          c.dy + s * 0.3,
+        )
+        ..quadraticBezierTo(c.dx - s * 0.5, c.dy - s * 0.1, c.dx, c.dy + s)
+        ..quadraticBezierTo(
+          c.dx + s * 0.5,
+          c.dy - s * 0.1,
+          c.dx + s * 1.1,
+          c.dy + s * 0.3,
+        )
+        ..quadraticBezierTo(
+          c.dx + s * 1.6,
+          c.dy - s * 0.3,
+          c.dx + s * 2.2,
+          c.dy + s * 0.2,
+        )
+        ..quadraticBezierTo(
+          c.dx + s * 2.2,
+          c.dy - s * 0.6,
+          c.dx + s * 3,
+          c.dy - s,
+        )
+        ..quadraticBezierTo(c.dx + s, c.dy - s * 1.6, c.dx, c.dy - s * 0.4)
+        ..close();
+      canvas.drawPath(bat, paint);
+    }
+  }
+
+  void _paintTorii(Canvas canvas, Size size) {
+    final h = size.height * 0.34;
+    final w = h * 0.95;
+    final left = size.width * 0.03;
+    final bottom = size.height;
+    final top = bottom - h;
+    final paint = Paint()
+      ..color = Hues.vermilion.withValues(alpha: isLight ? 0.10 : 0.09);
+
+    final pillar = w * 0.07;
+    final inset = w * 0.17;
+    canvas
+      // Pillars, slightly leaning inwards.
+      ..drawPath(
+        Path()
+          ..moveTo(left + inset, bottom)
+          ..lineTo(left + inset + pillar * 0.4, top + h * 0.1)
+          ..lineTo(left + inset + pillar * 1.4, top + h * 0.1)
+          ..lineTo(left + inset + pillar, bottom)
+          ..close(),
+        paint,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(left + w - inset, bottom)
+          ..lineTo(left + w - inset - pillar * 0.4, top + h * 0.1)
+          ..lineTo(left + w - inset - pillar * 1.4, top + h * 0.1)
+          ..lineTo(left + w - inset - pillar, bottom)
+          ..close(),
+        paint,
+      )
+      // Kasagi: the top beam, curving up at both ends.
+      ..drawPath(
+        Path()
+          ..moveTo(left, top)
+          ..quadraticBezierTo(left + w / 2, top + h * 0.08, left + w, top)
+          ..lineTo(left + w * 0.97, top + h * 0.07)
+          ..quadraticBezierTo(
+            left + w / 2,
+            top + h * 0.13,
+            left + w * 0.03,
+            top + h * 0.07,
+          )
+          ..close(),
+        paint,
+      )
+      // Nuki: the lower tie beam.
+      ..drawRect(
+        Rect.fromLTWH(left + w * 0.08, top + h * 0.22, w * 0.84, h * 0.045),
+        paint,
+      )
+      // Gakuzuka: the strut holding the name plaque.
+      ..drawRect(
+        Rect.fromLTWH(left + w * 0.47, top + h * 0.1, w * 0.06, h * 0.12),
+        paint,
+      );
+  }
+
+  void _paintWaves(Canvas canvas, Size size) {
+    final radius = size.shortestSide * 0.035;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = texture;
+
+    for (var row = 0; row < 3; row++) {
+      final y = size.height - radius * (2 - row) * 0.9;
+      final offset = row.isOdd ? radius : 0.0;
+      for (var x = -offset; x < size.width + radius; x += radius * 2) {
+        final center = Offset(x + offset, y + radius * 0.4);
+        for (var ring = 1; ring <= 3; ring++) {
+          canvas.drawArc(
+            Rect.fromCircle(center: center, radius: radius * ring / 3),
+            pi,
+            pi,
+            false,
+            paint,
+          );
+        }
       }
     }
   }
 
   @override
-  bool shouldRepaint(_DotGrid oldDelegate) => color != oldDelegate.color;
+  bool shouldRepaint(_HauntedNight oldDelegate) =>
+      texture != oldDelegate.texture || isLight != oldDelegate.isLight;
 }
 
 class _ProgressBar extends StatelessWidget {

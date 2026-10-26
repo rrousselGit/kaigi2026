@@ -19,6 +19,8 @@ class ProductScreen extends StatelessWidget {
     final state = ShopScope.of(context);
     final product = productById(productId);
     final inCart = state.quantityOf(productId);
+    void addToCart() =>
+        ShopScope.update(context, (state) => state.addToCart(productId));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -44,6 +46,10 @@ class ProductScreen extends StatelessWidget {
                             trailing: FakeIconButton(
                               Icons.shopping_bag_outlined,
                               badge: state.cartCount,
+                              onTap: () => ShopScope.update(
+                                context,
+                                (state) => state.copyWith(cartOpen: true),
+                              ),
                             ),
                           ),
                         ),
@@ -82,18 +88,47 @@ class ProductScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                Expanded(
-                  child: inCart == 0
-                      ? const FakeButton(
-                          'Add to cart',
-                          icon: Icons.add_shopping_cart_rounded,
-                        )
-                      : FakeButton(
-                          'In cart · $inCart',
-                          icon: Icons.check_rounded,
-                          color: ShopColors.success,
-                        ),
-                ),
+                if (state.expressCheckout) ...[
+                  // Two buttons don't fit with icons.
+                  Expanded(
+                    child: inCart == 0
+                        ? FakeButton(
+                            'Add to cart',
+                            color: ShopColors.ink,
+                            onTap: addToCart,
+                          )
+                        : FakeButton(
+                            'In cart · $inCart',
+                            color: ShopColors.success,
+                            onTap: addToCart,
+                          ),
+                  ),
+                  Expanded(
+                    child: FakeButton(
+                      'Buy now',
+                      onTap: () => ShopScope.update(
+                        context,
+                        (state) =>
+                            (inCart == 0 ? state.addToCart(productId) : state)
+                                .copyWith(checkout: CheckoutStep.review),
+                      ),
+                    ),
+                  ),
+                ] else
+                  Expanded(
+                    child: inCart == 0
+                        ? FakeButton(
+                            'Add to cart',
+                            icon: Icons.add_shopping_cart_rounded,
+                            onTap: addToCart,
+                          )
+                        : FakeButton(
+                            'In cart · $inCart',
+                            icon: Icons.check_rounded,
+                            color: ShopColors.success,
+                            onTap: addToCart,
+                          ),
+                  ),
               ],
             ),
           ),

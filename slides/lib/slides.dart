@@ -6,6 +6,8 @@ import 'package:material_ui/material_ui.dart';
 
 import 'src/example_1/models.dart';
 import 'src/example_1/shop_app.dart';
+import 'src/site_map/shoply.dart';
+import 'src/site_map/site_map_view.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -16,6 +18,7 @@ class SlideData {
     required this.notes,
     required this.child,
     this.example,
+    this.group,
   });
 
   /// The title shown in the overview grid.
@@ -29,6 +32,11 @@ class SlideData {
   /// Consecutive slides with the same type of example share one instance of
   /// it, so the example animates from one slide's state to the next.
   final Widget? example;
+
+  /// Consecutive slides of the same group share one instance of [child]:
+  /// moving between them updates it in place instead of cross-fading, so it
+  /// can animate between the states that each slide describes.
+  final Object? group;
 }
 
 const _testingTipLintDont = '''
@@ -856,6 +864,84 @@ final slides = <SlideData>[
     ),
   ),
   const SlideData(
+    title: 'DevTool: Site Map',
+    topic: Topic.devtools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'A first devtool for Shoply: a site map. Every page of the app, what '
+        'can be tapped on it, and where each button leads. Like a Figma '
+        'prototype, but for the real app.',
+    child: _SiteMapSlide(
+      title: 'A Site Map of Shoply',
+      example: _SiteMapExample.shoply,
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Site Map Screens',
+    topic: Topic.devtools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'The same map, rendering the real pages instead of wireframes. Each '
+        'page is filled with fake data, and arrows start from the actual '
+        'buttons.',
+    child: _SiteMapSlide(
+      title: 'A Site Map of Shoply',
+      example: _SiteMapExample.shoply,
+      previews: true,
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Review, Before',
+    topic: Topic.devtools,
+    group: _SiteMapExample.wishlist,
+    notes:
+        'Now a pull request adds a wishlist. In the code review, that is four '
+        'files of diff. Here is the app before the change...',
+    child: _SiteMapSlide(
+      title: 'Reviewing a New Page',
+      example: _SiteMapExample.wishlist,
+      showBase: true,
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Review, After',
+    topic: Topic.devtools,
+    group: _SiteMapExample.wishlist,
+    notes:
+        '...and after. One new page, and new arrows leading to and from it: '
+        'exactly what users will experience differently.',
+    child: _SiteMapSlide(
+      title: 'Reviewing a New Page',
+      example: _SiteMapExample.wishlist,
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Spot the Change',
+    topic: Topic.devtools,
+    group: _SiteMapExample.buyNow,
+    notes:
+        'Another pull request. This time, no new page: existing pages '
+        'changed. Can you spot what changed?',
+    child: _SiteMapSlide(
+      title: 'Can You Spot the Change?',
+      example: _SiteMapExample.buyNow,
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Highlighted Changes',
+    topic: Topic.devtools,
+    group: _SiteMapExample.buyNow,
+    notes:
+        'With highlighting, the tool answers for you: Product gained a "Buy '
+        'now" button straight to Checkout, and Checkout an "Edit cart" button '
+        'back to the cart. Users can now skip the cart entirely.',
+    child: _SiteMapSlide(
+      title: 'Highlighting the Change',
+      example: _SiteMapExample.buyNow,
+      highlight: true,
+    ),
+  ),
+  const SlideData(
     title: 'Pro Tip: DevTools in the AI Era',
     topic: Topic.devtools,
     notes:
@@ -1014,7 +1100,7 @@ final slides = <SlideData>[
     title: 'Conclusion',
     topic: Topic.conclusion,
     notes:
-        "Thank you! Remember: Don't replace tools with prompts, use prompts to "
+        "Thank you, and happy Halloween! Remember: Don't replace tools with prompts, use prompts to "
         'create your tools. Plus, all these tools can be written in Dart, so '
         "they're super easy to get started with!",
     child: _ConclusionSlide(),
@@ -1034,6 +1120,15 @@ class _TitleSlide extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        Text(
+          '🏮  ハロウィン · Halloween Edition  🏮',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2,
+            color: palette.accent,
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 32),
           child: ShaderMask(
@@ -1041,7 +1136,7 @@ class _TitleSlide extends StatelessWidget {
             shaderCallback: (bounds) => LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [palette.heading, palette.accent, Hues.violet],
+              colors: [palette.heading, palette.accent, Hues.wisteria],
               stops: const [0.2, 0.65, 1],
             ).createShader(bounds),
             child: const H1('Build devtools for your app', fontSize: 80),
@@ -1056,12 +1151,21 @@ class _TitleSlide extends StatelessWidget {
               colors: [
                 palette.accent.withValues(alpha: 0),
                 palette.accent,
-                Hues.violet.withValues(alpha: 0),
+                Hues.wisteria.withValues(alpha: 0),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 20),
+        Text(
+          '道具を作ろう 👻',
+          style: TextStyle(
+            fontSize: 22,
+            letterSpacing: 6,
+            color: palette.textMuted,
+          ),
+        ),
+        const SizedBox(height: 32),
         Container(
           padding: const EdgeInsets.fromLTRB(10, 10, 24, 10),
           decoration: BoxDecoration(
@@ -1087,17 +1191,11 @@ class _TitleSlide extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [palette.accent, Hues.violet],
+                    colors: [palette.accent, Hues.vermilion],
                   ),
                   shape: BoxShape.circle,
                 ),
-                child: const Text(
-                  'RR',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
+                child: const Text('🎃', style: TextStyle(fontSize: 22)),
               ),
               const SizedBox(width: 16),
               Column(
@@ -1150,6 +1248,77 @@ class _ImageSlide extends StatelessWidget {
   }
 }
 
+enum _SiteMapExample {
+  shoply,
+
+  /// The pull request adding a wishlist page to the app.
+  wishlist,
+
+  /// The pull request adding a "Buy now" button to existing pages.
+  buyNow,
+}
+
+/// The site map of the example app, as a devtool would draw it.
+///
+/// Consecutive slides of an [example] share one site map, which animates to
+/// the [previews], [showBase] and [highlight] of each slide.
+class _SiteMapSlide extends StatelessWidget {
+  const _SiteMapSlide({
+    required this.title,
+    required this.example,
+    this.previews = false,
+    this.showBase = false,
+    this.highlight = false,
+  });
+
+  final String title;
+  final _SiteMapExample example;
+  final bool previews;
+  final bool showBase;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Eyebrow(),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.centerLeft,
+              children: [...previous, ?current],
+            ),
+            child: H2(title, key: ValueKey(title)),
+          ),
+        ),
+        Expanded(
+          child: switch (example) {
+            _SiteMapExample.shoply => SiteMapView(
+              siteMap: shoplySiteMap,
+              previews: previews,
+            ),
+            _SiteMapExample.wishlist => SiteMapView.diff(
+              shoplyWishlistDiff,
+              previews: previews,
+              showBase: showBase,
+              highlight: highlight,
+            ),
+            _SiteMapExample.buyNow => SiteMapView.diff(
+              shoplyBuyNowDiff,
+              previews: previews,
+              showBase: showBase,
+              highlight: highlight,
+            ),
+          },
+        ),
+      ],
+    );
+  }
+}
+
 /// A step of the example app walkthrough, shown next to the app itself.
 class _ExampleSlide extends StatelessWidget {
   const _ExampleSlide({
@@ -1195,14 +1364,23 @@ class _ConclusionSlide extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ShaderMask(
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) => const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Hues.sky, Hues.cyan],
-          ).createShader(bounds),
-          child: const H1('Conclusion', fontSize: 48),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🎃', style: TextStyle(fontSize: 44)),
+            const SizedBox(width: 20),
+            ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Hues.candyCorn, Hues.pumpkin, Hues.vermilion],
+              ).createShader(bounds),
+              child: const H1('Conclusion', fontSize: 48),
+            ),
+            const SizedBox(width: 20),
+            const Text('👻', style: TextStyle(fontSize: 44)),
+          ],
         ),
         const SizedBox(height: 32),
         ConstrainedBox(
@@ -1212,17 +1390,17 @@ class _ConclusionSlide extends StatelessWidget {
             decoration: BoxDecoration(
               color: palette.isLight
                   ? palette.cardBg
-                  : const Color.fromRGBO(15, 23, 42, 0.85),
-              border: Border.all(color: Hues.sky.withValues(alpha: 0.4)),
+                  : const Color.fromRGBO(22, 12, 10, 0.88),
+              border: Border.all(color: Hues.pumpkin.withValues(alpha: 0.4)),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Hues.cyan.withValues(alpha: 0.25),
+                  color: Hues.pumpkin.withValues(alpha: 0.25),
                   blurRadius: 40,
                   offset: const Offset(0, 10),
                 ),
                 BoxShadow(
-                  color: Hues.sky.withValues(alpha: 0.15),
+                  color: Hues.wisteria.withValues(alpha: 0.15),
                   blurRadius: 60,
                 ),
               ],
@@ -1243,7 +1421,7 @@ class _ConclusionSlide extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Hues.sky, Hues.cyan],
+                        colors: [Hues.pumpkin, Hues.vermilion],
                       ),
                     ),
                   ),
@@ -1253,11 +1431,11 @@ class _ConclusionSlide extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 32),
-        const Text(
-          'Thank You! Q & A',
+        Text(
+          'ありがとう！ Trick or treat? Q & A 🍬',
           style: TextStyle(
             fontSize: 21.6,
-            color: Hues.sky,
+            color: palette.accent,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.1,
           ),

@@ -9,16 +9,33 @@ import 'catalog.dart';
 import 'checkout.dart';
 import 'models.dart';
 import 'product.dart';
+import 'wishlist.dart';
 
-/// A small e-commerce app, entirely driven by [state].
+/// A small e-commerce app, driven by [state].
 ///
-/// It has no interactive controls: the slides change [state] instead, and the
-/// navigation stack is derived from it. Pages are therefore pushed when moving
-/// forward through the slides, and popped when going back.
-class ShopApp extends StatelessWidget {
+/// The slides change [state], and the navigation stack is derived from it:
+/// pages are pushed when moving forward through the slides, and popped when
+/// going back.
+///
+/// The app can also be clicked through. Clicks change a local copy of the
+/// state, which is reset to [state] whenever the slides change it.
+class ShopApp extends StatefulWidget {
   const ShopApp({super.key, required this.state});
 
   final ShopState state;
+
+  @override
+  State<ShopApp> createState() => _ShopAppState();
+}
+
+class _ShopAppState extends State<ShopApp> {
+  late var _state = widget.state;
+
+  @override
+  void didUpdateWidget(ShopApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state != oldWidget.state) _state = widget.state;
+  }
 
   static final _theme = ThemeData(
     colorSchemeSeed: const Color(0xFF4F46E5),
@@ -28,14 +45,21 @@ class ShopApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = _state;
     final productId = state.productId;
     return Theme(
       data: _theme,
       child: ShopScope(
         state: state,
+        onChanged: (state) => setState(() => _state = state),
         child: Navigator(
           pages: [
             const _ShopPage(key: ValueKey('catalog'), child: CatalogScreen()),
+            if (state.wishlistOpen)
+              const _ShopPage(
+                key: ValueKey('wishlist'),
+                child: WishlistScreen(),
+              ),
             if (productId != null)
               _ShopPage(
                 key: ValueKey('product-$productId'),
@@ -54,7 +78,7 @@ class ShopApp extends StatelessWidget {
                 child: ConfirmationScreen(),
               ),
           ],
-          // Pages are only ever removed by the slides changing the state.
+          // Pages are only ever removed by changing the state.
           onDidRemovePage: (_) {},
         ),
       ),
@@ -64,12 +88,29 @@ class ShopApp extends StatelessWidget {
 
 /// Exposes the [ShopState] to the screens of the [ShopApp].
 class ShopScope extends InheritedWidget {
-  const ShopScope({super.key, required this.state, required super.child});
+  const ShopScope({
+    super.key,
+    required this.state,
+    this.onChanged,
+    required super.child,
+  });
 
   final ShopState state;
 
+  /// Called when the user clicks through the app. Null for static previews.
+  final ValueChanged<ShopState>? onChanged;
+
   static ShopState of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<ShopScope>()!.state;
+
+  /// Applies [change] to the state, if the app is interactive.
+  static void update(
+    BuildContext context,
+    ShopState Function(ShopState state) change,
+  ) {
+    final scope = context.getInheritedWidgetOfExactType<ShopScope>()!;
+    scope.onChanged?.call(change(scope.state));
+  }
 
   @override
   bool updateShouldNotify(ShopScope oldWidget) => state != oldWidget.state;
@@ -85,7 +126,7 @@ class _ShopPage extends Page<void> {
 }
 
 /// A route that slides in from the right, without the swipe-to-go-back
-/// gesture of platform routes: the example must not react to the mouse.
+/// gesture of platform routes: going back is done with the back buttons.
 class _ShopRoute extends PageRoute<void> {
   _ShopRoute(_ShopPage page) : super(settings: page);
 

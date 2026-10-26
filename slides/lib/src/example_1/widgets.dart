@@ -4,6 +4,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'models.dart';
+import 'shop_app.dart';
 
 abstract final class ShopColors {
   static const ink = Color(0xFF111827);
@@ -50,52 +51,57 @@ class ProductImage extends StatelessWidget {
   }
 }
 
-/// Looks like a button, but isn't one: the example is driven by the slides.
+/// A button of the example. It does nothing without [onTap].
 class FakeButton extends StatelessWidget {
   const FakeButton(
     this.label, {
     super.key,
     this.icon,
     this.color = ShopColors.primary,
+    this.onTap,
   });
 
   final String label;
   final IconData? icon;
   final Color color;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: _animationDuration,
-      height: 52,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: AnimatedSwitcher(
+    return Tappable(
+      onTap: onTap,
+      child: AnimatedContainer(
         duration: _animationDuration,
-        child: Row(
-          key: ValueKey(label),
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 8,
-          children: [
-            if (icon != null) Icon(icon, color: Colors.white, size: 20),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+        height: 52,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: AnimatedSwitcher(
+          duration: _animationDuration,
+          child: Row(
+            key: ValueKey(label),
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 8,
+            children: [
+              if (icon != null) Icon(icon, color: Colors.white, size: 20),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -104,65 +110,71 @@ class FakeButton extends StatelessWidget {
 
 /// A round icon "button".
 class FakeIconButton extends StatelessWidget {
-  const FakeIconButton(this.icon, {super.key, this.badge = 0});
+  const FakeIconButton(this.icon, {super.key, this.badge = 0, this.onTap});
 
   final IconData icon;
 
   /// A counter drawn over the icon, hidden when 0.
   final int badge;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 40,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 8)],
-              ),
-              child: Icon(icon, size: 20, color: ShopColors.ink),
-            ),
-          ),
-          Positioned(
-            top: -4,
-            right: -4,
-            child: AnimatedScale(
-              duration: _animationDuration,
-              curve: Curves.easeOutBack,
-              scale: badge == 0 ? 0 : 1,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 20),
-                height: 20,
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white, width: 2),
+    return Tappable(
+      onTap: onTap,
+      child: SizedBox.square(
+        dimension: 40,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: Color(0x14000000), blurRadius: 8),
+                  ],
                 ),
-                alignment: Alignment.center,
-                child: AnimatedSwitcher(
-                  duration: _animationDuration,
-                  transitionBuilder: (child, animation) =>
-                      ScaleTransition(scale: animation, child: child),
-                  child: Text(
-                    '$badge',
-                    key: ValueKey(badge),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                child: Icon(icon, size: 20, color: ShopColors.ink),
+              ),
+            ),
+            Positioned(
+              top: -4,
+              right: -4,
+              child: AnimatedScale(
+                duration: _animationDuration,
+                curve: Curves.easeOutBack,
+                scale: badge == 0 ? 0 : 1,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 20),
+                  height: 20,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  alignment: Alignment.center,
+                  child: AnimatedSwitcher(
+                    duration: _animationDuration,
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: Text(
+                      '$badge',
+                      key: ValueKey(badge),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -181,7 +193,10 @@ class ShopHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
         children: [
-          const FakeIconButton(Icons.arrow_back_rounded),
+          FakeIconButton(
+            Icons.arrow_back_rounded,
+            onTap: () => ShopScope.update(context, (state) => state.pop()),
+          ),
           Expanded(
             child: Text(
               title,
@@ -315,6 +330,45 @@ class BottomBar extends StatelessWidget {
         border: Border(top: BorderSide(color: ShopColors.border)),
       ),
       child: child,
+    );
+  }
+}
+
+/// Makes [child] clickable when [onTap] is set, with a pointer cursor and a
+/// slight press effect.
+class Tappable extends StatefulWidget {
+  const Tappable({super.key, required this.onTap, required this.child});
+
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  State<Tappable> createState() => _TappableState();
+}
+
+class _TappableState extends State<Tappable> {
+  var _pressed = false;
+
+  void _press(bool pressed) => setState(() => _pressed = pressed);
+
+  @override
+  Widget build(BuildContext context) {
+    final onTap = widget.onTap;
+    if (onTap == null) return widget.child;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _press(true),
+        onTapCancel: () => _press(false),
+        onTapUp: (_) => _press(false),
+        onTap: onTap,
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 100),
+          scale: _pressed ? 0.95 : 1,
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

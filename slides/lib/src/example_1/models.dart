@@ -197,8 +197,9 @@ enum CheckoutStep { none, review, confirmed }
 
 /// Everything the example app shows.
 ///
-/// The app has no state of its own: each slide describes what the app looks
-/// like, and moving between slides animates from one [ShopState] to the next.
+/// Each slide describes what the app looks like, and moving between slides
+/// animates from one [ShopState] to the next. Clicking through the app goes
+/// from one state to the next with the methods below.
 class ShopState {
   const ShopState({
     this.category = 'All',
@@ -207,6 +208,9 @@ class ShopState {
     this.cart = const [],
     this.cartOpen = false,
     this.checkout = CheckoutStep.none,
+    this.wishlist = const [],
+    this.wishlistOpen = false,
+    this.expressCheckout = false,
   });
 
   /// The selected filter on the catalog.
@@ -225,6 +229,15 @@ class ShopState {
 
   final CheckoutStep checkout;
 
+  /// Ids of the products saved for later.
+  final List<String> wishlist;
+
+  /// Whether the wishlist is open, on top of the catalog.
+  final bool wishlistOpen;
+
+  /// Feature flag: buying a product directly from its page, without the cart.
+  final bool expressCheckout;
+
   int get cartCount => cart.fold(0, (sum, item) => sum + item.quantity);
   double get subtotal => cart.fold(0, (sum, item) => sum + item.total);
   double get shipping => subtotal == 0 || subtotal >= 100 ? 0 : 7.99;
@@ -236,6 +249,62 @@ class ShopState {
     }
     return 0;
   }
+
+  ShopState copyWith({
+    String? category,
+    String? Function()? productId,
+    List<CartItem>? cart,
+    bool? cartOpen,
+    CheckoutStep? checkout,
+    bool? wishlistOpen,
+  }) {
+    return ShopState(
+      category: category ?? this.category,
+      catalogScroll: catalogScroll,
+      productId: productId == null ? this.productId : productId(),
+      cart: cart ?? this.cart,
+      cartOpen: cartOpen ?? this.cartOpen,
+      checkout: checkout ?? this.checkout,
+      wishlist: wishlist,
+      wishlistOpen: wishlistOpen ?? this.wishlistOpen,
+      expressCheckout: expressCheckout,
+    );
+  }
+
+  /// Closes the page on top, like a back button.
+  ShopState pop() {
+    return switch (this) {
+      ShopState(checkout: CheckoutStep.confirmed) => copyWith(
+        checkout: CheckoutStep.review,
+      ),
+      ShopState(checkout: CheckoutStep.review) => copyWith(
+        checkout: CheckoutStep.none,
+      ),
+      ShopState(cartOpen: true) => copyWith(cartOpen: false),
+      ShopState(productId: _?) => copyWith(productId: () => null),
+      _ => copyWith(wishlistOpen: false),
+    };
+  }
+
+  /// Adds [quantity] of a product to the cart, or removes it with a negative
+  /// [quantity].
+  ShopState addToCart(String productId, {int quantity = 1}) {
+    final total = quantityOf(productId) + quantity;
+    final index = cart.indexWhere((item) => item.productId == productId);
+    return copyWith(
+      cart: [
+        for (final item in cart)
+          if (item.productId != productId)
+            item
+          else if (total > 0)
+            CartItem(productId, quantity: total),
+        if (index == -1 && total > 0) CartItem(productId, quantity: total),
+      ],
+    );
+  }
+
+  /// Goes back to the catalog with an empty cart, once an order is placed.
+  ShopState continueShopping() => ShopState(category: category);
 }
 
 String formatPrice(double price) => '\$${price.toStringAsFixed(2)}';
