@@ -1,53 +1,93 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:slides/main.dart';
 import 'package:slides/slides.dart';
+import 'package:slides/widgets.dart';
 
 import 'fonts.dart';
 
 void main() {
   setUpAll(loadFonts);
 
-  testWidgets('every slide renders without overflow', (tester) async {
+  Future<void> pumpDeck(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1440, 870);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-
     await tester.pumpWidget(const SlidesApp());
+  }
 
-    for (var i = 0; i < slides.length; i++) {
-      final label = '${i + 1}'.padLeft(2, '0');
-      expect(
-        find.text('$label  /  ${slides.length}', findRichText: true),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull, reason: slides[i].title);
+  Finder counter(int index) => find.text(
+    '${'${index + 1}'.padLeft(2, '0')}  /  ${slides.length}',
+    findRichText: true,
+  );
 
+  /// Presses "next" until the slide at [index] is shown.
+  Future<void> goTo(WidgetTester tester, int index) async {
+    while (counter(index).evaluate().isEmpty) {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pumpAndSettle();
     }
+  }
+
+  testWidgets('every slide renders without overflow', (tester) async {
+    await pumpDeck(tester);
+
+    for (var i = 0; i < slides.length; i++) {
+      expect(counter(i), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: slides[i].title);
+
+      // Reveals every step, then moves to the next slide.
+      for (var step = 0; step <= slides[i].steps; step++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+      }
+    }
+  });
+
+  testWidgets('next reveals steps before moving on', (tester) async {
+    await pumpDeck(tester);
+    final index = slides.indexWhere((slide) => slide.steps > 0);
+    await goTo(tester, index);
+
+    int step() => SlideStep.of(tester.element(find.byType(Reveal).first));
+    expect(step(), 0);
+
+    for (var i = 1; i <= slides[index].steps; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(counter(index), findsOneWidget);
+      expect(step(), i);
+    }
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(counter(index + 1), findsOneWidget);
+
+    // Going back shows the previous slide fully revealed.
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pumpAndSettle();
+    expect(counter(index), findsOneWidget);
+    expect(step(), slides[index].steps);
   });
 
   testWidgets('slides of a group share one live widget', (tester) async {
-    tester.view.physicalSize = const Size(1440, 870);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(const SlidesApp());
+    await pumpDeck(tester);
 
     final first = slides.indexWhere((slide) => slide.group != null);
     final group = slides[first].group;
-    for (var i = 0; i < first; i++) {
+    await goTo(tester, first);
+    for (var i = 0; i < slides[first].steps; i++) {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
     }
-    await tester.pumpAndSettle();
-    final state = tester.state(find.byType(InteractiveViewer));
+    final type = slides[first].child.runtimeType;
+    final element = tester.element(find.byType(type));
 
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pump();
     expect(slides[first + 1].group, group);
     // Updated in place: no second slide cross-fading in.
-    expect(find.byType(InteractiveViewer), findsOne);
-    expect(tester.state(find.byType(InteractiveViewer)), same(state));
+    expect(find.byType(type), findsOne);
+    expect(tester.element(find.byType(type)), same(element));
   });
 }

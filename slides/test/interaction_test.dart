@@ -20,8 +20,11 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(const SlidesApp());
     final index = slides.indexWhere((slide) => slide.title == title);
-    for (var i = 0; i < index; i++) {
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    // "Next" first reveals the steps of a slide, then moves to the next one.
+    for (final slide in slides.take(index)) {
+      for (var step = 0; step <= slide.steps; step++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      }
     }
     await tester.pumpAndSettle();
   }

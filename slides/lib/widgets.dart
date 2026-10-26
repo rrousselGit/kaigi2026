@@ -577,12 +577,16 @@ class FeatureList extends StatelessWidget {
     this.fontSize = 16.8,
     this.gap = 10.4,
     this.top = 8,
+    this.firstStep,
   });
 
   final List<String> items;
   final double fontSize;
   final double gap;
   final double top;
+
+  /// When set, items are revealed one at a time, starting at this step.
+  final int? firstStep;
 
   @override
   Widget build(BuildContext context) {
@@ -593,40 +597,48 @@ class FeatureList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final (index, item) in items.indexed)
-            Padding(
-              padding: EdgeInsets.only(top: index == 0 ? 0 : gap),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      '✦',
-                      style: TextStyle(
-                        color: palette.accent,
-                        fontSize: 14.4,
-                        height: fontSize * 1.45 / 14.4,
+            _reveal(
+              index,
+              Padding(
+                padding: EdgeInsets.only(top: index == 0 ? 0 : gap),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        '✦',
+                        style: TextStyle(
+                          color: palette.accent,
+                          fontSize: 14.4,
+                          height: fontSize * 1.45 / 14.4,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Md(
-                      item,
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        height: 1.45,
-                        color: palette.textMain,
+                    Expanded(
+                      child: Md(
+                        item,
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          height: 1.45,
+                          color: palette.textMain,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
         ],
       ),
     );
   }
+
+  Widget _reveal(int index, Widget item) => switch (firstStep) {
+    final firstStep? => Reveal(firstStep + index, child: item),
+    null => item,
+  };
 }
 
 class Callout extends StatelessWidget {
@@ -996,6 +1008,52 @@ class Arrows extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Exposes how much of the slide being built is revealed.
+class SlideStep extends InheritedWidget {
+  const SlideStep({super.key, required this.step, required super.child});
+
+  final int step;
+
+  /// Outside of a slide (e.g. in the overview grid), everything is revealed.
+  static int of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SlideStep>()?.step ??
+      _allRevealed;
+
+  static const _allRevealed = 1 << 30;
+
+  @override
+  bool updateShouldNotify(SlideStep oldWidget) => oldWidget.step != step;
+}
+
+/// Fades [child] in once the slide reaches [step] (see `SlideData.steps`).
+///
+/// Hidden content still takes its space, so that revealing it does not move
+/// the rest of the slide.
+class Reveal extends StatelessWidget {
+  const Reveal(this.step, {super.key, required this.child});
+
+  final int step;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = SlideStep.of(context) >= step;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: visible ? 1 : 0),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - value)),
+          child: child,
+        ),
       ),
     );
   }

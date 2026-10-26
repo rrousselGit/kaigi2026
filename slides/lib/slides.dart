@@ -1,7 +1,8 @@
 // Slides are hardcoded text by nature.
 // ignore_for_file: lints_plugin/avoid_hardcoded_string
 
-import 'package:flutter/services.dart';
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import 'src/example_1/models.dart';
@@ -21,6 +22,7 @@ class SlideData {
     required this.child,
     this.example,
     this.group,
+    this.steps = 0,
   });
 
   /// The title shown in the overview grid.
@@ -39,17 +41,27 @@ class SlideData {
   /// moving between them updates it in place instead of cross-fading, so it
   /// can animate between the states that each slide describes.
   final Object? group;
+
+  /// How many times "next" reveals more of [child] before moving to the next
+  /// slide. See [Reveal].
+  final int steps;
 }
 
 const _testingTipLintDont = '''
-// test/lint_test.dart
-test(() async {
-  final result = analyze(\'\'\'
+// test/my_lint_test.dart
+@reflectiveTest
+class MyLintTest extends AnalysisRuleTest {
+  @override
+  String get analysisRule => 'my_lint';
+
+  Future<void> test_badCase() async {
+    await assertDiagnostics(r\'\'\'
 class GoodCase {}
 
 class BadCase {}
-\'\'\');
-});''';
+\'\'\', [lint(25, 7)]);
+  }
+}''';
 
 const _testingTipLintDo = '''
 // test/lint.dart
@@ -57,6 +69,17 @@ class GoodCase {}
 
 // ignore: my_lint/code
 class BadCase {}''';
+
+const _testingTipLintOptions = '''
+# test/analysis_options.yaml
+plugins:
+  my_lint:
+    path: ../
+    diagnostics:
+      code: true
+linter:
+  rules:
+    - unnecessary_ignore''';
 
 const _testingTipCodegenDont = '''
 // test/generator_test.dart
@@ -96,6 +119,50 @@ avoid_hardcoded_string:
   lib/screens/checkout.dart: 7
   lib/widgets/promo_banner.dart: 2''';
 
+const _regexLint = '''
+// ❌ What AIs write if you let them
+RegExp(r"Text\\('[^']*'\\)")
+
+// ✅ Visit the analyzed code instead
+class _Visitor extends RecursiveAstVisitor<void> {
+  @override
+  void visitStringLiteral(StringLiteral node) {...}
+}''';
+
+const _testLint = '''
+// test/hardcoded_strings_test.dart
+test('widgets have no hardcoded strings', () async {
+  for (final file in dartFiles('lib/')) {
+    final unit = await resolve(file);
+    expect(hardcodedStrings(unit), isEmpty);
+  }
+});''';
+
+const _skillFile = '''
+---
+name: no-hardcoded-strings
+description: Use when editing widgets.
+---
+
+Never put user-facing text in widgets.
+Use `context.l10n` instead.
+
+Before finishing, check every `Text(...)`
+you added or changed.''';
+
+const _lintRule = '''
+class AvoidHardcodedString extends AnalysisRule {
+  AvoidHardcodedString() : super(
+    name: 'avoid_hardcoded_string',
+    description: 'Use context.l10n instead.',
+  );
+
+  @override
+  void registerNodeProcessors(registry, context) {
+    registry.addSimpleStringLiteral(this, _Visitor(this));
+  }
+}''';
+
 const _demoCart = [CartItem('headphones'), CartItem('speaker', quantity: 2)];
 
 final slides = <SlideData>[
@@ -111,6 +178,7 @@ final slides = <SlideData>[
   ),
   const SlideData(
     title: 'I Love Building Tools',
+    steps: 2,
     topic: Topic.intro,
     notes:
         "I've always been passionate about building tools that empower "
@@ -118,6 +186,7 @@ final slides = <SlideData>[
         'and Provider projects.',
     child: _ImageSlide(
       title: 'I Love Building Tools',
+      maxWidth: 1100,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -132,6 +201,45 @@ final slides = <SlideData>[
             aspectRatio: 924 / 1302,
             maxHeight: 440,
           ),
+          SizedBox(width: 24),
+          SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Reveal(
+                  1,
+                  child: _PubPackageCard(
+                    name: 'custom_lint',
+                    version: '0.8.1',
+                    description:
+                        'Lint rules are a powerful way to improve the '
+                        'maintainability of a project. Custom Lint allows '
+                        'package authors and developers to easily write '
+                        'custom lint rules.',
+                    publisher: 'invertase.io',
+                    likes: '264',
+                    points: '130',
+                    downloads: '749k',
+                  ),
+                ),
+                SizedBox(height: 16),
+                Reveal(
+                  2,
+                  child: _PubPackageCard(
+                    name: 'expect_error',
+                    version: '1.0.16',
+                    description:
+                        'A testing utility for checking compilation errors',
+                    publisher: 'dash-overflow.net',
+                    likes: '6',
+                    points: '110',
+                    downloads: '5.9k',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     ),
@@ -140,9 +248,11 @@ final slides = <SlideData>[
     title: 'Original Plan vs AI Reality',
     topic: Topic.intro,
     notes:
-        "So we'll still talk about tooling for your own personal apps. But "
-        "I'll contextualize it in the modern AI era: Why create tools, When "
-        'to/not to, Which tool to create, and How to create them.',
+        'Lots of you now delegate a big part of the programming to AI. '
+        'Explaining how to hand-write a devtool extension feels awkward: you '
+        "probably aren't running tools yourself anymore, your agent is. So this "
+        'talk is about building tools in the AI era, and why we need them more '
+        'than ever.',
     child: _ImageSlide(
       title: 'The Original Plan vs. The AI Reality',
       child: FramedImage(
@@ -153,208 +263,334 @@ final slides = <SlideData>[
     ),
   ),
   const SlideData(
-    title: 'Why Create Tools?',
-    topic: Topic.why,
+    title: 'Software Is Mostly Maintenance',
+    steps: 2,
+    topic: Topic.intro,
     notes:
-        'Skills are dead easy but non-deterministic and pricy long-term. Lints '
-        'sound scary but are 100% deterministic.',
+        "AI didn't remove maintenance, it multiplied it. Every PR an agent "
+        'opens is a PR someone has to review, and code someone has to keep '
+        'working.',
     child: ContentSlide(
-      title: 'Why Create Tools? (Tools vs. Skills)',
+      title: 'Software Is Mostly Maintenance',
       children: [
-        Callout(
-          'Consider enforcing style guides: *"Do not hardcode text inside '
-          'Widgets"*. We could write an AI Skill, or a custom Lint rule plugin.',
-          top: 0,
-        ),
-        SizedBox(height: 8),
         Grid(
           columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'Approach A: Writing an AI Skill',
-                items: [
-                  '**Dead easy to write** in markdown.',
-                  '**Non-deterministic**',
-                  '**Context Bloat**',
-                  '**Pricy long term**',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Approach B: Custom Lint Rule Plugin',
-                items: [
-                  '**Sounds scary to do**',
-                  '**Deterministic**',
-                  '**Zero runtime token cost**',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Danger: Token Consumption Spikes',
-    topic: Topic.why,
-    notes:
-        'Danger: Broad or poorly scoped skills (like scanning an entire '
-        'repository on every PR) cause massive context bloat and token '
-        'consumption spikes over time.',
-    child: BadgeCardSlide(
-      danger: true,
-      children: [
-        BadgeTitle('Bad skills can cause token consumption spikes.'),
-        BadgeSubtitle(
-          '*"Scan the codebase for hardcoded text"* vs. '
-          '*"Scan only the files modified in the PR"*',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Pro Tip: Write Tools with AI',
-    topic: Topic.why,
-    notes:
-        'Key takeaway: Shift from using AI to perform repetitive manual tasks '
-        'to using AI to generate deterministic tools (lints, scripts, codegen) '
-        'that perform those tasks for you.',
-    child: BadgeCardSlide(
-      children: [
-        BadgeTitle(
-          'Instead of using AI to do a task, use AI to write a tool that will '
-          'do said task.',
-        ),
-        BadgeSubtitle(
-          '*"Hey Gemini, create a new lint rule using '
-          "analysis_server_plugin. This lint rule should disallow using ' "
-          'and " inside Widgets."*',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'ROI & Decision Math',
-    topic: Topic.why,
-    notes:
-        'This ignores maintenance cost or bug reduction, but helps detect '
-        'cases where gain is too small compared to investment.',
-    child: ContentSlide(
-      title: 'When to (and NOT to) Build a Tool',
-      children: [
-        P(
-          "Don't spend 10 days and millions of tokens creating a tool that "
-          'runs once and saves 30 minutes. Calculate time gained:',
-        ),
-        SizedBox(height: 8),
-        Grid(
-          columns: 2,
+          gap: 48,
           children: [
             Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FeatureList(top: 0, [
-                  '**Team Compounding:** Small weekly time savings per dev '
-                      'compound into major annual team gains.',
-                  '**AI Shifts the Equation:** Building a tool with AI in 4 '
-                      'hours instead of 40 hours makes ROI break-even almost '
-                      'immediate.',
+                FeatureList(fontSize: 20.8, gap: 18, top: 0, firstStep: 0, [
+                  '**Writing the code:** a few days.',
+                  '**Living with it:** years. Reviews, refactors, upgrades, '
+                      'bugs, onboarding.',
                 ]),
-                Callout(
-                  '⚠️ **Token Expense:** Running a tool for 30s 1,000 times/yr '
-                  'costs electricity. Running an agent for that costs '
-                  'thousands of dollars on tokens.',
-                  fontSize: 14.4,
+                SizedBox(height: 16),
+                Reveal(
+                  2,
+                  child: Callout(
+                    '**AI made writing cheap.** So we write more. So there is '
+                    'more to maintain.',
+                    fontSize: 19.2,
+                  ),
                 ),
               ],
             ),
-            _RoiCalculator(),
+            _TrendChart(
+              yLabel: 'Time to implement a feature',
+              stacked: true,
+              series: [
+                _Series('Coding', Hues.pumpkin, [
+                  Offset(0, 0.6),
+                  Offset(0.45, 0.58),
+                  Offset(0.68, 0.54),
+                  Offset(0.85, 0.16),
+                  Offset(1, 0.1),
+                ]),
+                _Series('Review', Hues.wisteria, [
+                  Offset(0, 0.22),
+                  Offset(0.45, 0.22),
+                  Offset(0.68, 0.23),
+                  Offset(0.85, 0.3),
+                  Offset(1, 0.33),
+                ]),
+              ],
+            ),
           ],
         ),
       ],
     ),
   ),
   const SlideData(
-    title: 'Tooling Taxonomy',
-    topic: Topic.why,
+    title: 'Two Kinds of Software',
+    steps: 1,
+    topic: Topic.intro,
     notes:
-        "Let's look at each tool category in detail: Pros, Cons, Personal "
-        'Recommendations, and Testing Tips!',
+        "A lint, a CLI or a debug panel doesn't need the care of production "
+        'code. A prompt and a quick check is enough. What used to be a '
+        'week-long side project is now an afternoon.',
     child: ContentSlide(
-      title: 'Which Tool Should You Create?',
+      title: 'Two Kinds of Software',
       children: [
-        P(
-          'There are many different kinds of developer tools available in '
-          'Dart/Flutter:',
-        ),
-        SizedBox(height: 8),
         Grid(
-          columns: 3,
-          gap: 16,
+          columns: 2,
+          gap: 40,
           children: [
-            _TaxonomyCard(
-              'Custom Lints',
-              'Enforce code conventions & prevent bugs via analyzer plugins.',
+            _SoftwareKind(
+              title: 'Shipped to users',
+              verdict: 'Expensive and slow',
+              color: Hues.roseLight,
+              illustration: _ShippedIllustration(),
+              metrics: [
+                ('Users', 'Thousands', 1),
+                ('Devices', 'Unknown', 0.95),
+                ('Review', 'Every line', 1),
+                ('Cost of a bug', 'High', 0.9),
+              ],
             ),
-            _TaxonomyCard(
-              'Code Generators',
-              'Ensure consistency & deterministic updates across data models.',
-            ),
-            _TaxonomyCard(
-              'CLIs & Scripts',
-              'Universal scripting interface for Humans, CI, and AI agents.',
-            ),
-            _TaxonomyCard(
-              'MCP Servers',
-              'Stateful Model Context Protocol servers for AI agents.',
-            ),
-            _TaxonomyCard(
-              'DevTools Extensions',
-              'Visual GUIs & inspectors for human developers and QA.',
-            ),
-            _TaxonomyCard(
-              'Codemods & Docs',
-              'Automated API refactoring, architecture graphs, & docs.',
+            Reveal(
+              1,
+              child: _SoftwareKind(
+                title: 'Internal tools',
+                verdict: 'Cheap. Let AI write it.',
+                color: Hues.emeraldLight,
+                illustration: _InternalIllustration(),
+                metrics: [
+                  ('Users', 'A handful of devs', 0.08),
+                  ('Devices', 'Known machines', 0.12),
+                  ('Review', 'Barely', 0.15),
+                  ('Cost of a bug', 'A restart', 0.08),
+                ],
+              ),
             ),
           ],
+        ),
+      ],
+    ),
+  ),
+  const SlideData(
+    title: 'Build a Lot of Tools',
+    steps: 3,
+    topic: Topic.intro,
+    notes:
+        'This is the thesis of the talk. The asymmetry from the previous slide '
+        'means we can be much less picky about which tools are worth building. '
+        'Not one big devtool per year, but dozens of small, cheap tools, each '
+        'removing one bit of maintenance friction. The rest of the talk is '
+        'about which ones, and how to make them pay off.',
+    child: _BuildALotSlide(),
+  ),
+  const SlideData(
+    title: 'Turn Review Comments into Tools',
+    steps: 1,
+    topic: Topic.why,
+    notes:
+        'When you write the same review comment for the third time, stop. '
+        'That comment should become a pull request adding a tool. Here a lint, '
+        'but the same goes for any repeated friction. Then nobody has to '
+        'write, or read, that comment ever again.',
+    child: _ReviewToLintSlide(),
+  ),
+  const SlideData(
+    title: 'Progressive Improvement',
+    steps: 3,
+    topic: Topic.why,
+    notes:
+        'Each review comment turned into a tool is one less thing to '
+        'remember. Over time, the rules of the codebase live in CI, not in the '
+        'heads of a few senior engineers.',
+    child: _ProgressiveImprovementSlide(),
+  ),
+  const SlideData(
+    title: 'Prompt or Program?',
+    steps: 9,
+    topic: Topic.why,
+    notes:
+        'Every tool now competes with "why not just write a skill?". Skills '
+        'are easy, but probabilistic: mistakes slip through and pile up. A '
+        'lint rule sounds scary, but we just saw that tools are cheap now.',
+    child: ContentSlide(
+      title: 'Prompt or Program?',
+      children: [
+        Grid(
+          columns: 2,
+          children: [
+            DeckCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  H3('📝 A skill'),
+                  CodeBlock(_skillFile, fontSize: 14),
+                  SizedBox(height: 16),
+                  _ProsCons(
+                    firstStep: 1,
+                    pros: ['**Dead easy** to write'],
+                    cons: [
+                      '**Non-deterministic**: skips cases, changes with the '
+                          'model',
+                      '**Context bloat**',
+                      '**Pays tokens** on every run',
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Reveal(
+              5,
+              child: DeckCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    H3('⚙️ A specialized devtool'),
+                    CodeBlock(_lintRule, fontSize: 14),
+                    SizedBox(height: 16),
+                    _ProsCons(
+                      firstStep: 6,
+                      pros: [
+                        '**Deterministic**',
+                        '**Zero context**',
+                        '**Pays electricity**',
+                      ],
+                      cons: ['**Sounds scary to build**, but AI can write it'],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+  const SlideData(
+    title: 'Same Prompt, Two Agents',
+    steps: 1,
+    topic: Topic.why,
+    notes:
+        'Same prompt, same model. On the left, the agent figures things out '
+        'on its own: it reads file after file, greps, reads some more, and '
+        'still misses a few. On the right, it runs the lint and reads the '
+        'result. Now multiply by every PR, forever. Even "only scan modified '
+        "files\" is English, and English is fuzzy: you're not watching what "
+        'your agent reads.',
+    child: ContentSlide(
+      title: 'Same Prompt, Two Agents',
+      children: [
+        Grid(
+          columns: 2,
+          gap: 32,
+          children: [
+            _AgentRun(
+              title: 'Figuring it out',
+              color: Hues.roseLight,
+              revealDuration: Duration(seconds: 6),
+              seconds: 167,
+              tokens: 214000,
+              lines: [
+                '• Bash(git diff --name-only main)',
+                '• Read(lib/screens/cart.dart)',
+                '• Read(lib/screens/checkout.dart)',
+                '• Read(lib/widgets/promo_banner.dart)',
+                '• Grep("[\'\\"]", lib/)',
+                '  -> 412 matches',
+                '• Read(lib/l10n/strings.dart)',
+                '• Read(lib/screens/product.dart)',
+                '  … 23 more reads',
+                'Found 11 hardcoded strings.',
+              ],
+            ),
+            _AgentRun(
+              title: 'Using a lint',
+              color: Hues.emeraldLight,
+              revealDuration: Duration(milliseconds: 900),
+              seconds: 6,
+              tokens: 2100,
+              lines: [
+                '• Bash(dart analyze)',
+                '  -> cart.dart:42 avoid_hardcoded_string',
+                '  -> checkout.dart:18 avoid_hardcoded_string',
+                '  -> … 11 more',
+                'Found 13 hardcoded strings.',
+              ],
+            ),
+          ],
+        ),
+        Reveal(
+          1,
+          child: Callout(
+            '**On every PR, forever.** And the one figuring it out missed two.',
+            top: 24,
+          ),
         ),
       ],
     ),
   ),
   const SlideData(
     title: 'Tool: Custom Lints',
+    steps: 8,
     topic: Topic.lints,
     notes:
         'Personal note: I highly recommend every project implement custom '
         'lint rules. You can automate a significant part of your styleguide in '
         'a few hours.',
+    child: _CustomLintsSlide(),
+  ),
+  const SlideData(
+    title: 'Lints: Things to Note',
+    steps: 6,
+    topic: Topic.lints,
+    notes:
+        "Two things. First, don't let your AI parse Dart with regexes: it "
+        'will miss multi-line strings, comments, interpolation. Ask it to use '
+        'package:analyzer, which knows what is a string and what is a widget. '
+        "Second, you don't have to build an actual lint plugin. A plain test "
+        'that analyzes the source does the same job in CI and for agents. It '
+        "is less readable for humans, since nothing shows in the IDE, but it "
+        'has no RAM cost.',
     child: ContentSlide(
-      title: 'Custom Lints (analysis_server_plugin)',
+      title: 'Things to Note',
       children: [
         Grid(
           columns: 2,
           children: [
             DeckCard(
-              child: _CardContent(
-                title: 'Pros',
-                items: [
-                  '**Cheap to build**',
-                  '**Naturally visible** to Humans, AIs, and CI via '
-                      '`dart analyze`.',
-                  '**Empowers AI by design**',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  H3("Don't parse Dart with regexes"),
+                  CodeBlock(_regexLint, fontSize: 14),
+                  SizedBox(height: 16),
+                  _ProsCons(
+                    firstStep: 1,
+                    pros: ['**package:analyzer**: a resolved, typed AST'],
+                    cons: [
+                      'Regexes miss multi-line strings, comments, '
+                          'interpolation…',
+                    ],
+                  ),
                 ],
               ),
             ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Cons',
-                items: [
-                  '**RAM cost**',
-                  'Slows down `dart analyze` slightly to spawn plugins.',
-                  'Not everything in styleguides can be implemented as a lint.',
-                ],
+            Reveal(
+              3,
+              child: DeckCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    H3('A test can be a lint too'),
+                    CodeBlock(_testLint, fontSize: 14),
+                    SizedBox(height: 16),
+                    _ProsCons(
+                      firstStep: 4,
+                      pros: [
+                        '**No RAM cost**: no plugin running in the IDE',
+                        'Still runs in **CI and for agents**',
+                      ],
+                      cons: ['Less human readable: nothing shows in the IDE'],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -364,23 +600,29 @@ final slides = <SlideData>[
   ),
   const SlideData(
     title: 'Testing Tip: Custom Lints',
+    steps: 1,
     topic: Topic.lints,
     notes: 'Testing tip for custom lints.',
     child: BadgeCardSlide(
       maxWidth: 1000,
+      padding: EdgeInsets.symmetric(horizontal: 48, vertical: 32),
       children: [
-        BadgeTitle('Testing Tip: Custom Lints', bottom: 32),
+        BadgeTitle('Testing Tip: Custom Lints', bottom: 20),
         Grid(
           columns: 2,
           gap: 24,
           children: [
             _DoDontCard(dont: true, code: _testingTipLintDont),
-            _DoDontCard(
-              dont: false,
-              code: _testingTipLintDo,
-              footer:
-                  'And enable the lint on your project, alongside '
-                  '[`unnecessary_ignore`](https://dart.dev/tools/linter-rules/unnecessary_ignore)',
+            Reveal(
+              1,
+              child: _DoDontCard(
+                dont: false,
+                code: _testingTipLintDo,
+                secondCode: _testingTipLintOptions,
+                footer:
+                    'Then run `dart analyze`. A missing warning makes the '
+                    '`ignore` [unnecessary](https://dart.dev/tools/linter-rules/unnecessary_ignore).',
+              ),
             ),
           ],
         ),
@@ -394,66 +636,43 @@ final slides = <SlideData>[
   ),
   const SlideData(
     title: 'Tool: Quick Fixes',
+    steps: 8,
     topic: Topic.lints,
     notes:
-        'Quick fixes accompany lint rules, but AI often edits code directly '
-        'instead of using quick fixes.',
-    child: ContentSlide(
-      title: 'Quick Fixes & Automated Refactors',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'Pros',
-                items: ['Cheap to build.', 'Good at scale for batch fixes'],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Cons',
-                items: [
-                  '**A lot less useful**: Requires making a mistake first.',
-                  'Writing automated fixes is often a lot more complex.',
-                  'AIs are currently a bit bad at using quick-fixes',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+        'Quick fixes go along lint rules: an automated fix for the warning. '
+        'On the left, a fix you wrote: deterministic and instant. But agents '
+        "can't use it, and it isn't context aware: it does one thing, the same "
+        'way every time. On the right, '
+        'you just tell the agent to fix the warnings, and it adapts to the '
+        'situation. So for '
+        'in-house lints, skip the fixes. They are worth it when publishing a '
+        'package used by thousands of developers.',
+    child: _QuickFixSlide(),
   ),
   const SlideData(
-    title: 'Danger: Skip Quick Fixes',
+    title: 'Lints: Baselines',
+    steps: 2,
     topic: Topic.lints,
     notes:
-        'Skip writing quick fixes for internal team lints. AI handles code '
-        'fixes reliably.',
-    child: BadgeCardSlide(
-      danger: true,
-      children: [
-        BadgeTitle("Don't bother writing fixes. AI takes care of it."),
-        BadgeSubtitle(
-          "We don't care about deterministic output for fixes — AI handles "
-          'them effectively. Save effort unless maintaining open-source '
-          'packages for thousands of developers.',
-        ),
-      ],
-    ),
+        'A new lint on an old codebase reports hundreds of warnings. Instead of '
+        'fixing them all before merging, record them in a baseline: the lint '
+        'ignores those, and only reports new code.',
+    group: #baseline,
+    child: _BaselineSlide(),
   ),
   const SlideData(
-    title: 'Lints: Review Comments to Tools',
+    title: 'Danger: Never Grow the Baseline',
     topic: Topic.lints,
     notes:
-        'When you write the same review comment for the third time, stop. '
-        'That comment should become a pull request adding a tool: usually a '
-        'lint. Then nobody has to write, or read, that comment ever again.',
-    child: _ReviewToLintSlide(),
+        'The one rule of baselines: once created, they only shrink. '
+        'Regenerating the baseline to silence a new warning defeats the lint. '
+        'Have CI fail if the baseline gains entries.',
+    group: #baseline,
+    child: _BaselineSlide(showDanger: true),
   ),
   const SlideData(
     title: 'Pro Tip: Generate Lints with AI',
+    steps: 3,
     topic: Topic.lints,
     notes:
         'Writing a lint used to take an afternoon of reading analyzer docs. '
@@ -469,6 +688,7 @@ final slides = <SlideData>[
             DeckCard(
               child: _CardContent(
                 title: 'Be specific',
+                firstStep: 1,
                 items: [
                   'Name **`analysis_server_plugin`**: otherwise AIs often '
                       'reach for other approaches.',
@@ -483,64 +703,6 @@ final slides = <SlideData>[
         ),
       ],
     ),
-  ),
-  const SlideData(
-    title: 'Lints: Baselines',
-    topic: Topic.lints,
-    notes:
-        'A new lint on an old codebase reports hundreds of warnings. Instead of '
-        'fixing them all before merging, record them in a baseline: the lint '
-        'ignores those, and only reports new code.',
-    child: ContentSlide(
-      title: 'Baselines: No Big-Bang Migration',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            CodeBlock(_lintBaseline, fontSize: 15),
-            DeckCard(
-              child: _CardContent(
-                title: 'How it works',
-                items: [
-                  'The lint **ignores** what the baseline lists.',
-                  '**New code** must follow the rule right away.',
-                  'Old code is **fixed over time**, when touching a file: '
-                      'its entry shrinks, then disappears.',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Danger: Never Grow the Baseline',
-    topic: Topic.lints,
-    notes:
-        'The one rule of baselines: once created, they only shrink. '
-        'Regenerating the baseline to silence a new warning defeats the lint. '
-        'Have CI fail if the baseline gains entries.',
-    child: BadgeCardSlide(
-      danger: true,
-      children: [
-        BadgeTitle('Once created, a baseline may only shrink.'),
-        BadgeSubtitle(
-          'Regenerating it to silence a new warning defeats the lint. Make CI '
-          'fail when the baseline gains entries: fixing old violations is '
-          'welcome, adding new ones is not.',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Lints: Progressive Improvement',
-    topic: Topic.lints,
-    notes:
-        'Each review comment turned into a lint is one less thing to remember. '
-        'Over time, the rules of the codebase live in CI, not in the heads of '
-        'a few senior engineers.',
-    child: _ProgressiveImprovementSlide(),
   ),
   const SlideData(
     title: 'Tool: Code Generators',
@@ -1385,10 +1547,15 @@ class _TitleSlide extends StatelessWidget {
 }
 
 class _ImageSlide extends StatelessWidget {
-  const _ImageSlide({required this.title, required this.child});
+  const _ImageSlide({
+    required this.title,
+    required this.child,
+    this.maxWidth = 950,
+  });
 
   final String title;
   final Widget child;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1401,10 +1568,682 @@ class _ImageSlide extends StatelessWidget {
           child: H2(title, textAlign: TextAlign.center),
         ),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 950),
+          constraints: BoxConstraints(maxWidth: maxWidth),
           child: child,
         ),
       ],
+    );
+  }
+}
+
+class _CustomLintsSlide extends StatelessWidget {
+  const _CustomLintsSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ContentSlide(
+      title: 'Custom Lints',
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _LintEditor(),
+                  SizedBox(height: 16),
+                  Reveal(1, child: _LintTerminal()),
+                ],
+              ),
+            ),
+            SizedBox(width: 32),
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Reveal(
+                    2,
+                    child: _PubPackageCard(
+                      name: 'analysis_server_plugin',
+                      version: '0.3.25',
+                      description:
+                          'A framework and support code for building plugins '
+                          'for the analysis server.',
+                      publisher: 'tools.dart.dev',
+                      likes: '23',
+                      points: '150',
+                      downloads: '1.4M',
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  _ProsCons(
+                    firstStep: 3,
+                    pros: [
+                      '**Cheap to build**, especially with AI',
+                      '**Deterministic**',
+                      'Seen by **humans, agents and CI**',
+                    ],
+                    cons: [
+                      '**RAM cost** on low-end machines',
+                      'Slightly slower `dart analyze`',
+                      'Not every rule fits in a lint',
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickFixSlide extends StatelessWidget {
+  const _QuickFixSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ContentSlide(
+      title: 'Quick Fixes',
+      children: [
+        Grid(
+          columns: 2,
+          gap: 32,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _QuickFixMenu(),
+                SizedBox(height: 20),
+                _ProsCons(
+                  firstStep: 1,
+                  pros: ['**Deterministic** and instant'],
+                  cons: [
+                    '**AI cannot use them**',
+                    '**Not context aware**: a one-trick pony',
+                  ],
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Reveal(4, child: _AgentFix()),
+                SizedBox(height: 20),
+                _ProsCons(
+                  firstStep: 5,
+                  pros: ['**Nothing to write**', 'Can adapt to most scenarios'],
+                  cons: ['Costs a few tokens'],
+                ),
+              ],
+            ),
+          ],
+        ),
+        Reveal(
+          8,
+          child: Callout(
+            '**Skip quick fixes for in-house lints.** Write them for packages '
+            'used by thousands of developers.',
+            top: 16,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The IDE's quick fix menu, opened on a lint warning.
+class _QuickFixMenu extends StatelessWidget {
+  const _QuickFixMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    const code = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 15,
+      height: 1.7,
+      color: Hues.codeText,
+    );
+
+    Widget action(String text, {bool selected = false}) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: selected ? palette.accent.withValues(alpha: 0.25) : null,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        spacing: 8,
+        children: [
+          Icon(
+            selected ? Icons.lightbulb_rounded : Icons.block_rounded,
+            size: 16,
+            color: selected ? Hues.candyCorn : Hues.slate,
+          ),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14.4,
+              color: selected ? Colors.white : Hues.codeText,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return _CodeWindow(
+      title: 'lib/screens/cart.dart',
+      icon: Icons.lightbulb_rounded,
+      caption: 'A quick fix you wrote',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text.rich(
+            TextSpan(
+              style: code,
+              children: [
+                TextSpan(
+                  text: 'return ',
+                  style: TextStyle(color: _LintEditor._keyword),
+                ),
+                TextSpan(
+                  text: 'Text',
+                  style: TextStyle(color: _LintEditor._type),
+                ),
+                TextSpan(text: '('),
+                TextSpan(
+                  text: "'Your cart is empty'",
+                  style: TextStyle(
+                    color: _LintEditor._string,
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.wavy,
+                    decorationColor: Hues.candyCorn,
+                    decorationThickness: 2,
+                  ),
+                ),
+                TextSpan(text: ');'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 60, top: 6),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: palette.cardBorder),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x80000000), blurRadius: 16),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  action('Use a translation', selected: true),
+                  action('Ignore for this line'),
+                  action('Ignore for this file'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// An agent fixing the same lint warning from a one-line prompt.
+class _AgentFix extends StatelessWidget {
+  const _AgentFix();
+
+  static const _lines = [
+    '• Edit(lib/screens/cart.dart)',
+    "  - Text('Your cart is empty')",
+    '  + Text(context.l10n.emptyCart)',
+    '• Edit(lib/l10n/app_en.arb)',
+    '  + "emptyCart": "Your cart is empty"',
+    '• Bash(dart analyze)',
+    '  -> No issues found!',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const code = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 14.4,
+      height: 1.7,
+      color: Hues.codeText,
+    );
+    return _CodeWindow(
+      title: 'Agent',
+      icon: Icons.smart_toy_rounded,
+      caption: 'Just ask the agent',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '> Fix the lint warnings',
+              style: code.copyWith(color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final line in _lines)
+            Text(
+              line,
+              style: switch (line.trimLeft()[0]) {
+                '+' => code.copyWith(color: Hues.emeraldLight),
+                '-' when !line.contains('->') => code.copyWith(
+                  color: Hues.roseLight,
+                ),
+                '-' => code.copyWith(color: Hues.slate),
+                _ => code,
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A file open in an IDE, with a custom lint warning on a hardcoded string.
+class _LintEditor extends StatelessWidget {
+  const _LintEditor();
+
+  static const _keyword = Color(0xFFC792EA);
+  static const _type = Color(0xFF82AAFF);
+  static const _string = Color(0xFFC3E88D);
+
+  @override
+  Widget build(BuildContext context) {
+    const code = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 15,
+      height: 1.7,
+      color: Hues.codeText,
+    );
+    const keyword = TextStyle(color: _keyword);
+    const type = TextStyle(color: _type);
+
+    return _CodeWindow(
+      title: 'lib/screens/cart.dart',
+      icon: Icons.person_rounded,
+      caption: 'Humans, in the IDE',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text.rich(
+            TextSpan(
+              style: code,
+              children: [
+                TextSpan(text: 'class ', style: keyword),
+                TextSpan(text: 'EmptyCart ', style: type),
+                TextSpan(text: 'extends ', style: keyword),
+                TextSpan(text: 'StatelessWidget', style: type),
+                TextSpan(text: ' {\n  '),
+                TextSpan(text: 'Widget ', style: type),
+                TextSpan(text: 'build('),
+                TextSpan(text: 'BuildContext ', style: type),
+                TextSpan(text: 'context) {\n    '),
+                TextSpan(text: 'return ', style: keyword),
+                TextSpan(text: 'Text', style: type),
+                TextSpan(text: '('),
+                TextSpan(
+                  text: "'Your cart is empty'",
+                  style: TextStyle(
+                    color: _string,
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.wavy,
+                    decorationColor: Hues.candyCorn,
+                    decorationThickness: 2,
+                  ),
+                ),
+                TextSpan(text: ');'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 100, top: 4, bottom: 4),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Hues.candyCorn.withValues(alpha: 0.5),
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 8,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 17,
+                    color: Hues.candyCorn,
+                  ),
+                  Text(
+                    'Strings shown to users must be translated.',
+                    style: TextStyle(fontSize: 13.6, color: Colors.white),
+                  ),
+                  Text(
+                    'avoid_hardcoded_string',
+                    style: TextStyle(fontSize: 13.6, color: Hues.slate),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Text('  }\n}', style: code),
+        ],
+      ),
+    );
+  }
+}
+
+/// The same lint warning, as `dart analyze` prints it for CI and agents.
+class _LintTerminal extends StatelessWidget {
+  const _LintTerminal();
+
+  @override
+  Widget build(BuildContext context) {
+    const code = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 14,
+      height: 1.7,
+      color: Hues.codeText,
+    );
+    return _CodeWindow(
+      title: 'Terminal',
+      icon: Icons.smart_toy_rounded,
+      caption: 'Agents and CI, with dart analyze',
+      child: const Text.rich(
+        TextSpan(
+          style: code,
+          children: [
+            TextSpan(text: '\$ dart analyze\n'),
+            TextSpan(
+              text: 'warning',
+              style: TextStyle(color: Hues.candyCorn),
+            ),
+            TextSpan(
+              text: ' • lib/screens/cart.dart:3:17 • avoid_hardcoded_string',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A dark window with a title bar, and who looks at it on the right.
+class _CodeWindow extends StatelessWidget {
+  const _CodeWindow({
+    required this.title,
+    required this.icon,
+    required this.caption,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final String caption;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Hues.codeBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.cardBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x59000000),
+            blurRadius: 32,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            color: const Color(0xFF111827),
+            child: Row(
+              spacing: 6,
+              children: [
+                for (final color in const [
+                  Hues.rose,
+                  Hues.candyCorn,
+                  Hues.emerald,
+                ])
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: Fonts.code,
+                    fontSize: 12.8,
+                    color: Hues.slate,
+                  ),
+                ),
+                const Spacer(),
+                Icon(icon, size: 16, color: palette.accent),
+                Text(
+                  caption,
+                  style: TextStyle(
+                    fontSize: 13.6,
+                    fontWeight: FontWeight.w600,
+                    color: palette.accent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(16), child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProsCons extends StatelessWidget {
+  const _ProsCons({required this.pros, required this.cons, this.firstStep});
+
+  final List<String> pros;
+  final List<String> cons;
+
+  /// When set, rows are revealed one at a time, starting at this step.
+  final int? firstStep;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    Widget row(String text, {required bool pro}) => Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Icon(
+            pro ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            size: 20,
+            color: pro ? Hues.emeraldLight : Hues.roseLight,
+          ),
+          Expanded(
+            child: Md(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.3,
+                color: palette.textMain,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, pro) in pros.indexed)
+          _reveal(index, row(pro, pro: true)),
+        const SizedBox(height: 8),
+        for (final (index, con) in cons.indexed)
+          _reveal(pros.length + index, row(con, pro: false)),
+      ],
+    );
+  }
+
+  Widget _reveal(int index, Widget row) => switch (firstStep) {
+    final firstStep? => Reveal(firstStep + index, child: row),
+    null => row,
+  };
+}
+
+/// A package as listed on pub.dev, with its numbers at the time of writing.
+class _PubPackageCard extends StatelessWidget {
+  const _PubPackageCard({
+    required this.name,
+    required this.version,
+    required this.description,
+    required this.publisher,
+    required this.likes,
+    required this.points,
+    required this.downloads,
+  });
+
+  static const _blue = Color(0xFF0175C2);
+  static const _grey = Color(0xFF6B7280);
+
+  final String name;
+  final String version;
+  final String description;
+  final String publisher;
+  final String likes;
+  final String points;
+  final String downloads;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget metric(String value, String label) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: _blue,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10.4,
+            letterSpacing: 0.8,
+            fontWeight: FontWeight.w600,
+            color: _grey,
+          ),
+        ),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x73000000),
+            blurRadius: 32,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'pub.dev',
+            style: TextStyle(
+              fontSize: 11.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: _grey,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            spacing: 8,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: _blue,
+                ),
+              ),
+              Text(version, style: const TextStyle(fontSize: 14, color: _grey)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 13.6,
+              height: 1.45,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            spacing: 4,
+            children: [
+              const Icon(Icons.verified_rounded, size: 15, color: _blue),
+              Text(
+                publisher,
+                style: const TextStyle(fontSize: 13.6, color: _blue),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            spacing: 28,
+            children: [
+              metric(likes, 'LIKES'),
+              metric(points, 'POINTS'),
+              metric(downloads, 'DOWNLOADS'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1684,19 +2523,25 @@ class _ReviewToLintSlide extends StatelessWidget {
                   child: _ReviewThread(),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 40,
-                  color: palette.accent,
+              Reveal(
+                1,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 40,
+                    color: palette.accent,
+                  ),
                 ),
               ),
               const Expanded(
-                child: DeckCard(
-                  accentBar: false,
-                  padding: EdgeInsets.all(28),
-                  child: _LintPullRequest(),
+                child: Reveal(
+                  1,
+                  child: DeckCard(
+                    accentBar: false,
+                    padding: EdgeInsets.all(28),
+                    child: _LintPullRequest(),
+                  ),
                 ),
               ),
             ],
@@ -2144,6 +2989,71 @@ class _Comment extends StatelessWidget {
 }
 
 /// Why turning rules into tools pays off over time.
+/// How baselines work, with the one rule of baselines fading in below.
+///
+/// Both slides share one instance (see [SlideData.group]), so the rule fades
+/// in instead of the whole slide changing.
+class _BaselineSlide extends StatelessWidget {
+  const _BaselineSlide({this.showDanger = false});
+
+  final bool showDanger;
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentSlide(
+      title: 'Baselines: No Big-Bang Migration',
+      children: [
+        Grid(
+          columns: 2,
+          children: [
+            const CodeBlock(_lintBaseline, fontSize: 15),
+            DeckCard(
+              child: _CardContent(
+                title: 'How it works',
+                // The next slide shares this one, and shows everything.
+                firstStep: showDanger ? null : 0,
+                items: [
+                  'The lint **ignores** what the baseline lists.',
+                  '**New code** must follow the rule right away.',
+                  'Old code is **fixed over time**, when touching a file: '
+                      'its entry shrinks, then disappears.',
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+        // Always laid out, so that the content above does not move.
+        AnimatedOpacity(
+          opacity: showDanger ? 1 : 0,
+          duration: const Duration(milliseconds: 500),
+          child: AnimatedSlide(
+            offset: showDanger ? Offset.zero : const Offset(0, 0.15),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeOutCubic,
+            child: const BadgeCardSlide(
+              danger: true,
+              maxWidth: double.infinity,
+              padding: EdgeInsets.fromLTRB(40, 32, 40, 24),
+              children: [
+                BadgeTitle(
+                  'Once created, a baseline may only shrink.',
+                  fontSize: 26,
+                  bottom: 8,
+                ),
+                BadgeSubtitle(
+                  'Regenerating it to silence a new warning defeats the lint. '
+                  'Make CI fail when the baseline gains entries.',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProgressiveImprovementSlide extends StatelessWidget {
   const _ProgressiveImprovementSlide();
 
@@ -2162,26 +3072,35 @@ class _ProgressiveImprovementSlide extends StatelessWidget {
           columns: 3,
           gap: 16,
           children: [
-            DiagramNode(
-              emoji: '🎯',
-              title: 'Consistency',
-              caption: 'The same rules, everywhere',
-              color: Hues.sky,
-              tint: Hues.sky,
+            Reveal(
+              1,
+              child: DiagramNode(
+                emoji: '🎯',
+                title: 'Consistency',
+                caption: 'The same rules, everywhere',
+                color: Hues.sky,
+                tint: Hues.sky,
+              ),
             ),
-            DiagramNode(
-              emoji: '🧭',
-              title: 'Onboarding',
-              caption: 'Newcomers learn the rules from warnings',
-              color: Hues.teal,
-              tint: Hues.teal,
+            Reveal(
+              2,
+              child: DiagramNode(
+                emoji: '🧭',
+                title: 'Onboarding',
+                caption: 'Newcomers learn the rules from warnings',
+                color: Hues.teal,
+                tint: Hues.teal,
+              ),
             ),
-            DiagramNode(
-              emoji: '🤖',
-              title: 'Better AI output',
-              caption: 'Agents run the tools too, and fix what they report',
-              color: Hues.purpleLight,
-              tint: Hues.purple,
+            Reveal(
+              3,
+              child: DiagramNode(
+                emoji: '🤖',
+                title: 'Better AI output',
+                caption: 'Agents run the tools too, and fix what they report',
+                color: Hues.purpleLight,
+                tint: Hues.purple,
+              ),
             ),
           ],
         ),
@@ -2323,12 +3242,16 @@ class _CardContent extends StatelessWidget {
     required this.items,
     this.description,
     this.fontSize = 16.8,
+    this.firstStep,
   });
 
   final String title;
   final String? description;
   final List<String> items;
   final double fontSize;
+
+  /// See [FeatureList.firstStep].
+  final int? firstStep;
 
   @override
   Widget build(BuildContext context) {
@@ -2338,34 +3261,843 @@ class _CardContent extends StatelessWidget {
         H3(title),
         if (description case final description?)
           P(description, fontSize: 15.2, bottom: 8),
-        FeatureList(items, fontSize: fontSize),
+        FeatureList(items, fontSize: fontSize, firstStep: firstStep),
       ],
     );
   }
 }
 
-class _TaxonomyCard extends StatelessWidget {
-  const _TaxonomyCard(this.title, this.description);
-
-  final String title;
-  final String description;
+class _BuildALotSlide extends StatelessWidget {
+  const _BuildALotSlide();
 
   @override
   Widget build(BuildContext context) {
-    return DeckCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [H3(title), P(description, fontSize: 13.6, bottom: 0)],
+    final palette = Palette.of(context);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1080),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Eyebrow(center: true),
+            Md(
+              'Building custom tools became so cheap with AI that it is worth '
+              'building **a lot of them**, to improve maintenance on what you '
+              'ship to users.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: Fonts.heading,
+                fontSize: 32,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+                color: palette.textMuted,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const Reveal(
+              1,
+              child: _TrendChart(
+                yLabel: 'Cost of a custom tool',
+                height: 240,
+                threshold: (0.4, 'Worth building'),
+                series: [
+                  _Series('', Hues.pumpkin, [
+                    Offset(0, 0.85),
+                    Offset(0.45, 0.82),
+                    Offset(0.66, 0.76),
+                    Offset(0.82, 0.24),
+                    Offset(1, 0.12),
+                  ]),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Grid(
+              columns: 2,
+              gap: 24,
+              children: [
+                Reveal(
+                  2,
+                  child: DeckCard(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                    child: _CardContent(
+                      title: 'Before',
+                      items: [
+                        'Only specialized engineers working full-time on OSS '
+                            'build devtools.',
+                      ],
+                    ),
+                  ),
+                ),
+                Reveal(
+                  3,
+                  child: DeckCard(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                    child: _CardContent(
+                      title: 'Now',
+                      items: [
+                        'So cheap and simple you can build a devtool in the '
+                            'middle of a rush.',
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+/// A fake agent transcript answering the same prompt, revealed over
+/// [revealDuration] to show how long it takes.
+class _AgentRun extends StatelessWidget {
+  const _AgentRun({
+    required this.title,
+    required this.color,
+    required this.revealDuration,
+    required this.seconds,
+    required this.tokens,
+    required this.lines,
+  });
+
+  static const _prompt = 'Check this PR for hardcoded strings';
+
+  final String title;
+  final Color color;
+  final Duration revealDuration;
+
+  /// How long the run takes, in the story told by the slide.
+  final int seconds;
+  final int tokens;
+  final List<String> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final code = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 14.4,
+      height: 1.7,
+      color: Hues.codeText,
+    );
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: revealDuration,
+      builder: (context, progress, _) {
+        final visibleLines = (progress * lines.length).ceil();
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Hues.codeBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 30),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              H3(title, color: color),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: palette.heading.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '> $_prompt',
+                  style: code.copyWith(color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final (index, line) in lines.indexed)
+                // Hidden lines still take space, so the card does not grow.
+                Opacity(
+                  opacity: index < visibleLines ? 1 : 0,
+                  child: Text(
+                    line,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: line.startsWith('•')
+                        ? code
+                        : line.startsWith(' ')
+                        ? code.copyWith(color: Hues.slate)
+                        : code.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                  ),
+                ),
+              const Spacer(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  _AgentStat(
+                    label: 'Time',
+                    value: _duration((seconds * progress).round()),
+                    color: color,
+                  ),
+                  const SizedBox(width: 32),
+                  _AgentStat(
+                    label: 'Tokens',
+                    value: _tokens((tokens * progress).round()),
+                    color: color,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  static String _duration(int seconds) => seconds < 60
+      ? '${seconds}s'
+      : '${seconds ~/ 60}m ${'${seconds % 60}'.padLeft(2, '0')}s';
+
+  static String _tokens(int tokens) => tokens < 10000
+      ? '${(tokens / 1000).toStringAsFixed(1)}k'
+      : '${tokens ~/ 1000}k';
+}
+
+class _AgentStat extends StatelessWidget {
+  const _AgentStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 12,
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w700,
+            color: Hues.slate,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontFamily: Fonts.heading,
+            fontSize: 36,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One side of the "Two Kinds of Software" comparison.
+class _SoftwareKind extends StatelessWidget {
+  const _SoftwareKind({
+    required this.title,
+    required this.verdict,
+    required this.color,
+    required this.illustration,
+    required this.metrics,
+  });
+
+  final String title;
+  final String verdict;
+  final Color color;
+  final Widget illustration;
+
+  /// Each metric as (label, value, how much of the bar it fills).
+  final List<(String, String, double)> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return DeckCard(
+      accentBar: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 190, child: illustration),
+          const SizedBox(height: 16),
+          H3(title, color: color, fontSize: 24),
+          for (final (label, value, fill) in metrics)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      label,
+                      style: TextStyle(fontSize: 15, color: palette.textMuted),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 10,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: palette.textMuted.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: FractionallySizedBox(
+                        widthFactor: fill,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.5),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: palette.textMain,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              border: Border.all(color: color.withValues(alpha: 0.4)),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              verdict,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: Fonts.heading,
+                fontSize: 19.2,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A phone surrounded by a crowd of users.
+class _ShippedIllustration extends StatelessWidget {
+  const _ShippedIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    Widget bar(double width, double height, {double alpha = 0.18}) => Container(
+      width: width,
+      height: height,
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: palette.heading.withValues(alpha: alpha),
+        borderRadius: BorderRadius.circular(3),
+      ),
+    );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const CustomPaint(
+          painter: _CrowdPainter(
+            count: 40,
+            color: Hues.roseLight,
+            clear: Size(130, 190),
+          ),
+        ),
+        Center(
+          child: Container(
+            width: 96,
+            height: 180,
+            padding: const EdgeInsets.fromLTRB(10, 16, 10, 10),
+            decoration: BoxDecoration(
+              color: Hues.codeBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: palette.heading.withValues(alpha: 0.5),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Hues.roseLight.withValues(alpha: 0.25),
+                  blurRadius: 24,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bar(40, 6, alpha: 0.35),
+                bar(72, 44, alpha: 0.12),
+                bar(72, 6),
+                bar(56, 6),
+                bar(72, 44, alpha: 0.12),
+                bar(48, 6),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A terminal next to the few developers using it.
+class _InternalIllustration extends StatelessWidget {
+  const _InternalIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final style = TextStyle(
+      fontFamily: Fonts.code,
+      fontSize: 13,
+      height: 1.6,
+      color: Hues.codeText,
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const CustomPaint(
+          painter: _CrowdPainter(
+            count: 3,
+            color: Hues.emeraldLight,
+            clear: Size(280, 150),
+            spots: [Offset(-175, -5), Offset(-197, 35), Offset(-153, 35)],
+          ),
+        ),
+        Center(
+          child: Container(
+            width: 250,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Hues.codeBg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: palette.cardBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: Hues.emeraldLight.withValues(alpha: 0.2),
+                  blurRadius: 24,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  spacing: 6,
+                  children: [
+                    for (final color in const [
+                      Hues.rose,
+                      Hues.candyCorn,
+                      Hues.emerald,
+                    ])
+                      Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(r'$ dart run tool/seed', style: style),
+                Text(
+                  'Seeded 12 test users',
+                  style: style.copyWith(color: Hues.emeraldLight),
+                ),
+                Text(r'$ _', style: style),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Little people scattered around a [clear] area in the middle.
+class _CrowdPainter extends CustomPainter {
+  const _CrowdPainter({
+    required this.count,
+    required this.color,
+    required this.clear,
+    this.spots,
+  });
+
+  final int count;
+  final Color color;
+  final Size clear;
+
+  /// Where to draw people, relative to the center, instead of scattering them.
+  final List<Offset>? spots;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(count);
+    final center = size.center(Offset.zero);
+    final avoid = Rect.fromCenter(
+      center: center,
+      width: clear.width + 24,
+      height: clear.height,
+    );
+    final people = [for (final spot in spots ?? const []) center + spot];
+    for (var attempt = 0; attempt < 5000 && people.length < count; attempt++) {
+      final person = Offset(
+        12 + random.nextDouble() * (size.width - 24),
+        14 + random.nextDouble() * (size.height - 30),
+      );
+      if (avoid.inflate(10).contains(person)) continue;
+      if (people.any((other) => (other - person).distance < 30)) continue;
+      people.add(person);
+    }
+
+    final paint = Paint()..color = color.withValues(alpha: 0.75);
+    for (final person in people) {
+      canvas
+        ..drawCircle(person.translate(0, -7), 6, paint)
+        ..drawRRect(
+          RRect.fromRectAndCorners(
+            Rect.fromLTWH(person.dx - 9, person.dy, 18, 11),
+            topLeft: const Radius.circular(9),
+            topRight: const Radius.circular(9),
+          ),
+          paint,
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CrowdPainter oldDelegate) =>
+      oldDelegate.count != count ||
+      oldDelegate.color != color ||
+      oldDelegate.clear != clear;
+}
+
+/// A line of a [_TrendChart], with [points] from (0, 0) at the bottom left
+/// to (1, 1) at the top right.
+///
+/// In a stacked chart, the y of [points] is the thickness of the band instead.
+class _Series {
+  const _Series(this.label, this.color, this.points);
+
+  final String label;
+  final Color color;
+  final List<Offset> points;
+}
+
+/// An illustrative chart (no real data) of [series] over the last years, with
+/// a marker where coding agents arrived.
+class _TrendChart extends StatelessWidget {
+  const _TrendChart({
+    required this.yLabel,
+    required this.series,
+    this.threshold,
+    this.stacked = false,
+    this.height = 320,
+  });
+
+  final String yLabel;
+  final List<_Series> series;
+
+  /// Draws [series] as bands stacked on top of each other, instead of lines.
+  /// The points of all series must share the same x.
+  final bool stacked;
+
+  /// A dashed horizontal line, as (y, label).
+  final (double, String)? threshold;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return SizedBox(
+      height: height,
+      child: CustomPaint(
+        painter: _TrendChartPainter(
+          yLabel: yLabel,
+          series: series,
+          threshold: threshold,
+          stacked: stacked,
+          axisColor: palette.textMuted,
+          accent: palette.accent,
+          textStyle: DefaultTextStyle.of(context).style
+              .copyWith(fontSize: 14.4, color: palette.textMuted),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendChartPainter extends CustomPainter {
+  _TrendChartPainter({
+    required this.yLabel,
+    required this.series,
+    required this.threshold,
+    required this.stacked,
+    required this.axisColor,
+    required this.accent,
+    required this.textStyle,
+  });
+
+  /// Where coding agents arrived, on the x axis.
+  static const _agentsX = 0.7;
+
+  final String yLabel;
+  final List<_Series> series;
+  final (double, String)? threshold;
+  final bool stacked;
+  final Color axisColor;
+  final Color accent;
+  final TextStyle textStyle;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final chart = Rect.fromLTRB(32, 28, size.width - 8, size.height - 28);
+    Offset toCanvas(Offset point) => Offset(
+      chart.left + point.dx * chart.width,
+      chart.bottom - point.dy * chart.height,
+    );
+
+    final axis = Paint()
+      ..color = axisColor.withValues(alpha: 0.5)
+      ..strokeWidth = 1.5;
+    canvas
+      ..drawLine(chart.topLeft, chart.bottomLeft, axis)
+      ..drawLine(chart.bottomLeft, chart.bottomRight, axis);
+
+    canvas
+      ..save()
+      ..translate(8, chart.center.dy)
+      ..rotate(-math.pi / 2);
+    _text(yLabel).paint(canvas, Offset(-_text(yLabel).width / 2, -2));
+    canvas.restore();
+
+    _text('2020').paint(canvas, Offset(chart.left, chart.bottom + 6));
+    final today = _text('Today');
+    today.paint(canvas, Offset(chart.right - today.width, chart.bottom + 6));
+
+    if (threshold case (final y, final label)) {
+      final lineY = toCanvas(Offset(0, y)).dy;
+      _dashedLine(
+        canvas,
+        Offset(chart.left, lineY),
+        Offset(chart.right, lineY),
+        Hues.emeraldLight.withValues(alpha: 0.8),
+      );
+      final text = _text(label, color: Hues.emeraldLight);
+      text.paint(canvas, Offset(chart.left + 12, lineY - text.height - 4));
+    }
+
+    if (stacked) {
+      _paintBands(canvas, chart, toCanvas);
+    } else {
+      _paintLines(canvas, chart, toCanvas);
+    }
+
+    final agentsX = toCanvas(const Offset(_agentsX, 0)).dx;
+    _dashedLine(
+      canvas,
+      Offset(agentsX, chart.top),
+      Offset(agentsX, chart.bottom),
+      // White stands out over the colored bands of stacked charts.
+      (stacked ? Colors.white : accent).withValues(alpha: 0.7),
+    );
+    final agents = _text('🤖 Coding agents', color: accent);
+    agents.paint(canvas, Offset(agentsX - agents.width / 2, 0));
+  }
+
+  void _paintLines(
+    Canvas canvas,
+    Rect chart,
+    Offset Function(Offset) toCanvas,
+  ) {
+    for (final (index, line) in series.indexed) {
+      if (line.label.isNotEmpty) {
+        final legendY = chart.top + 12 + index * 26;
+        canvas.drawLine(
+          Offset(chart.left + 16, legendY),
+          Offset(chart.left + 36, legendY),
+          Paint()
+            ..color = line.color
+            ..strokeWidth = 4
+            ..strokeCap = StrokeCap.round,
+        );
+        final text = _text(line.label, color: line.color, bold: true);
+        text.paint(canvas, Offset(chart.left + 46, legendY - text.height / 2));
+      }
+
+      final points = line.points.map(toCanvas).toList();
+      final path = Path()..moveTo(points.first.dx, points.first.dy);
+      _curveThrough(path, points);
+      canvas
+        ..drawPath(
+          path,
+          Paint()
+            ..color = line.color.withValues(alpha: 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 10
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        )
+        ..drawPath(
+          path,
+          Paint()
+            ..color = line.color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4
+            ..strokeCap = StrokeCap.round,
+        );
+    }
+  }
+
+  void _paintBands(
+    Canvas canvas,
+    Rect chart,
+    Offset Function(Offset) toCanvas,
+  ) {
+    var bottom = [for (final point in series.first.points) Offset(point.dx, 0)];
+    for (final band in series) {
+      final top = [
+        for (final (index, point) in band.points.indexed)
+          bottom[index].translate(0, point.dy),
+      ];
+      final upper = top.map(toCanvas).toList();
+      final lower = bottom.map(toCanvas).toList().reversed.toList();
+
+      final area = Path()..moveTo(upper.first.dx, upper.first.dy);
+      _curveThrough(area, upper);
+      area.lineTo(lower.first.dx, lower.first.dy);
+      _curveThrough(area, lower);
+      area.close();
+      final edge = Path()..moveTo(upper.first.dx, upper.first.dy);
+      _curveThrough(edge, upper);
+      canvas
+        ..drawPath(
+          area,
+          // Opaque, so that bands read as solid blocks over the background.
+          Paint()
+            ..color = Color.alphaBlend(
+              band.color.withValues(alpha: 0.7),
+              Hues.codeBg,
+            ),
+        )
+        ..drawPath(
+          edge,
+          Paint()
+            ..color = band.color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.5,
+        );
+
+      final label = _text(band.label, color: Colors.white, bold: true);
+      final labelY = toCanvas(Offset(0, (bottom.first.dy + top.first.dy) / 2));
+      label.paint(
+        canvas,
+        Offset(chart.left + 12, labelY.dy - label.height / 2),
+      );
+
+      bottom = top;
+    }
+  }
+
+  /// Extends [path], which is at the first of [points], through the others.
+  void _curveThrough(Path path, List<Offset> points) {
+    for (final (index, to) in points.indexed.skip(1)) {
+      // Horizontal tangents at each point, for smooth S-shaped segments.
+      final from = points[index - 1];
+      final midX = (from.dx + to.dx) / 2;
+      path.cubicTo(midX, from.dy, midX, to.dy, to.dx, to.dy);
+    }
+  }
+
+  TextPainter _text(String text, {Color? color, bool bold = false}) {
+    return TextPainter(
+      text: TextSpan(
+        text: text,
+        style: textStyle.copyWith(
+          color: color,
+          fontWeight: bold ? FontWeight.w700 : null,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+  }
+
+  void _dashedLine(Canvas canvas, Offset from, Offset to, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5;
+    final length = (to - from).distance;
+    final direction = (to - from) / length;
+    for (var start = 0.0; start < length; start += 10) {
+      canvas.drawLine(
+        from + direction * start,
+        from + direction * math.min(start + 5, length),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TrendChartPainter oldDelegate) =>
+      oldDelegate.axisColor != axisColor ||
+      oldDelegate.accent != accent ||
+      oldDelegate.textStyle != textStyle;
+}
+
 class _DoDontCard extends StatelessWidget {
-  const _DoDontCard({required this.dont, required this.code, this.footer});
+  const _DoDontCard({
+    required this.dont,
+    required this.code,
+    this.secondCode,
+    this.footer,
+  });
 
   final bool dont;
   final String code;
+
+  /// Another file, shown below [code].
+  final String? secondCode;
   final String? footer;
 
   @override
@@ -2382,6 +4114,10 @@ class _DoDontCard extends StatelessWidget {
             textAlign: TextAlign.left,
           ),
           CodeBlock(code),
+          if (secondCode case final secondCode?) ...[
+            const SizedBox(height: 12),
+            CodeBlock(secondCode),
+          ],
           if (footer case final footer?)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -2395,121 +4131,6 @@ class _DoDontCard extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoiCalculator extends StatefulWidget {
-  const _RoiCalculator();
-
-  @override
-  State<_RoiCalculator> createState() => _RoiCalculatorState();
-}
-
-class _RoiCalculatorState extends State<_RoiCalculator> {
-  final _devs = TextEditingController(text: '10');
-  final _minutes = TextEditingController(text: '9');
-  final _frequency = TextEditingController(text: '1');
-
-  @override
-  void dispose() {
-    _devs.dispose();
-    _minutes.dispose();
-    _frequency.dispose();
-    super.dispose();
-  }
-
-  int get _hoursSaved {
-    double read(TextEditingController c) => double.tryParse(c.text) ?? 0;
-    return (read(_devs) * read(_minutes) * read(_frequency) * 56 / 60).round();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = Palette.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: palette.isLight
-            ? palette.cardBg
-            : const Color.fromRGBO(15, 23, 42, 0.85),
-        border: Border.all(color: palette.cardBorder),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const H3('Interactive ROI Calculator', fontSize: 17.6),
-          _row('Team Size (Devs):', _devs),
-          _row('Task Time Saved (mins):', _minutes),
-          _row('Frequency (per dev/wk):', _frequency),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: palette.accent.withValues(alpha: 0.08),
-              border: Border.all(color: palette.accent.withValues(alpha: 0.25)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'ESTIMATED ANNUAL TEAM SAVINGS',
-                  style: TextStyle(fontSize: 12.8, color: palette.textMuted),
-                ),
-                Text(
-                  '$_hoursSaved Hours',
-                  style: TextStyle(
-                    fontFamily: Fonts.heading,
-                    fontSize: 28.8,
-                    fontWeight: FontWeight.w800,
-                    color: palette.accent,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, TextEditingController controller) {
-    final palette = Palette.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14.4, color: palette.textMuted),
-          ),
-          Container(
-            width: 90,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: palette.textMain.withValues(alpha: 0.05),
-              border: Border.all(color: palette.cardBorder),
-              borderRadius: BorderRadius.circular(6.4),
-            ),
-            child: TextField(
-              controller: controller,
-              onChanged: (_) => setState(() {}),
-              textAlign: TextAlign.right,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              cursorColor: palette.accent,
-              style: TextStyle(
-                fontFamily: Fonts.code,
-                fontSize: 14.4,
-                color: palette.heading,
-              ),
-              decoration: const InputDecoration.collapsed(hintText: null),
-            ),
-          ),
         ],
       ),
     );

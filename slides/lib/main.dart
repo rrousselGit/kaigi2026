@@ -60,6 +60,9 @@ class _DeckState extends State<Deck> {
   final _focusNode = FocusNode(debugLabel: 'deck');
   final _confetti = GlobalKey<ConfettiState>();
   var _index = 0;
+
+  /// How much of the current slide is revealed, up to its [SlideData.steps].
+  var _step = 0;
   var _showNotes = false;
   var _showOverview = false;
   var _themeIndex = 0;
@@ -70,11 +73,32 @@ class _DeckState extends State<Deck> {
     super.dispose();
   }
 
-  void _goTo(int index) {
+  /// Shows the slide at [index], with nothing revealed, or everything when
+  /// [revealed] (e.g. when coming back to it).
+  void _goTo(int index, {bool revealed = false}) {
     final target = index.clamp(0, slides.length - 1);
     if (target == _index) return;
-    setState(() => _index = target);
+    setState(() {
+      _index = target;
+      _step = revealed ? slides[target].steps : 0;
+    });
     if (target == slides.length - 1) _confetti.currentState?.fire();
+  }
+
+  void _next() {
+    if (_step < slides[_index].steps) {
+      setState(() => _step++);
+    } else {
+      _goTo(_index + 1);
+    }
+  }
+
+  void _previous() {
+    if (_step > 0) {
+      setState(() => _step--);
+    } else {
+      _goTo(_index - 1, revealed: true);
+    }
   }
 
   void _toggleOverview([bool? show]) {
@@ -103,9 +127,9 @@ class _DeckState extends State<Deck> {
       case LogicalKeyboardKey.arrowRight ||
           LogicalKeyboardKey.pageDown ||
           LogicalKeyboardKey.space:
-        _goTo(_index + 1);
+        _next();
       case LogicalKeyboardKey.arrowLeft || LogicalKeyboardKey.pageUp:
-        _goTo(_index - 1);
+        _previous();
       case LogicalKeyboardKey.home when !repeatable:
         _goTo(0);
       case LogicalKeyboardKey.end when !repeatable:
@@ -163,7 +187,10 @@ class _DeckState extends State<Deck> {
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: _SlideViewport(index: _index),
+                                    child: _SlideViewport(
+                                      index: _index,
+                                      step: _step,
+                                    ),
                                   ),
                                   ExamplePanel(example: slide.example),
                                 ],
@@ -182,8 +209,8 @@ class _DeckState extends State<Deck> {
                     ),
                     _NavBar(
                       index: _index,
-                      onPrevious: () => _goTo(_index - 1),
-                      onNext: () => _goTo(_index + 1),
+                      onPrevious: _previous,
+                      onNext: _next,
                       onOverview: _toggleOverview,
                       onNotes: () => setState(() => _showNotes = !_showNotes),
                       onTheme: _cycleTheme,
@@ -228,9 +255,10 @@ const _SlidePose _hidden = (opacity: 0, progress: 0);
 /// Every transition starts from what is currently on screen, so changing slide
 /// mid-transition (including going back) never makes a slide jump or blink.
 class _SlideViewport extends StatefulWidget {
-  const _SlideViewport({required this.index});
+  const _SlideViewport({required this.index, required this.step});
 
   final int index;
+  final int step;
 
   @override
   State<_SlideViewport> createState() => _SlideViewportState();
@@ -245,6 +273,7 @@ class _SlideViewportState extends State<_SlideViewport>
   );
 
   int? _outgoing;
+  int _outgoingStep = 0;
   _SlidePose _outgoingFrom = _hidden;
   _SlidePose _incomingFrom = _hidden;
 
@@ -261,6 +290,7 @@ class _SlideViewportState extends State<_SlideViewport>
         ? _outgoingPose
         : _hidden;
     _outgoing = oldWidget.index;
+    _outgoingStep = oldWidget.step;
     _outgoingFrom = current;
     _controller.forward(from: 0);
   }
@@ -306,8 +336,8 @@ class _SlideViewportState extends State<_SlideViewport>
           fit: StackFit.expand,
           children: [
             if (outgoing != null && !_controller.isCompleted)
-              _slide(outgoing, _outgoingPose),
-            _slide(widget.index, _incomingPose),
+              _slide(outgoing, _outgoingStep, _outgoingPose),
+            _slide(widget.index, widget.step, _incomingPose),
           ],
         );
       },
@@ -319,7 +349,7 @@ class _SlideViewportState extends State<_SlideViewport>
     null => null,
   };
 
-  Widget _slide(int index, _SlidePose pose) {
+  Widget _slide(int index, int step, _SlidePose pose) {
     return KeyedSubtree(
       // Keyed so that a slide keeps its state (e.g. text fields) when it moves
       // between the incoming and outgoing positions, and so that slides of a
@@ -341,7 +371,7 @@ class _SlideViewportState extends State<_SlideViewport>
                   ),
                   child: SlideTopic(
                     topic: slides[index].topic,
-                    child: slides[index].child,
+                    child: SlideStep(step: step, child: slides[index].child),
                   ),
                 ),
               ),
