@@ -59,23 +59,24 @@ class _EmptyCart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = ShopColors.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          Text('🛒', style: TextStyle(fontSize: 64)),
+          const Text('🛒', style: TextStyle(fontSize: 64)),
           Text(
             'Your cart is empty',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: ShopColors.ink,
+              color: colors.ink,
             ),
           ),
           Text(
             'Items you add will show up here.',
-            style: TextStyle(color: ShopColors.muted),
+            style: TextStyle(color: colors.muted),
           ),
         ],
       ),
@@ -90,6 +91,7 @@ class _CartLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final product = item.product;
     return ShopCard(
       padding: const EdgeInsets.all(10),
@@ -109,18 +111,18 @@ class _CartLine extends StatelessWidget {
                   product.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: ShopColors.ink,
+                    color: colors.ink,
                   ),
                 ),
                 Text(
                   formatPrice(item.total),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: ShopColors.primary,
+                    color: colors.primary,
                   ),
                 ),
               ],
@@ -140,6 +142,7 @@ class _Quantity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final quantity = item.quantity;
     void add(int quantity) => ShopScope.update(
       context,
@@ -149,7 +152,7 @@ class _Quantity extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F7FB),
+        color: colors.background,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -158,11 +161,7 @@ class _Quantity extends StatelessWidget {
         children: [
           Tappable(
             onTap: () => add(-1),
-            child: const Icon(
-              Icons.remove_rounded,
-              size: 16,
-              color: ShopColors.muted,
-            ),
+            child: Icon(Icons.remove_rounded, size: 16, color: colors.muted),
           ),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -171,19 +170,12 @@ class _Quantity extends StatelessWidget {
             child: Text(
               '$quantity',
               key: ValueKey(quantity),
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: ShopColors.ink,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w700, color: colors.ink),
             ),
           ),
           Tappable(
             onTap: () => add(1),
-            child: const Icon(
-              Icons.add_rounded,
-              size: 16,
-              color: ShopColors.ink,
-            ),
+            child: Icon(Icons.add_rounded, size: 16, color: colors.ink),
           ),
         ],
       ),
@@ -199,6 +191,7 @@ class OrderSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Column(
       children: [
         SummaryRow('Subtotal', formatPrice(state.subtotal)),
@@ -206,7 +199,7 @@ class OrderSummary extends StatelessWidget {
           'Shipping',
           state.shipping == 0 ? 'Free' : formatPrice(state.shipping),
         ),
-        const Divider(height: 20, color: ShopColors.border),
+        Divider(height: 20, color: colors.border),
         SummaryRow('Total', formatPrice(state.total), bold: true),
       ],
     );

@@ -16,6 +16,7 @@ class ProductScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final state = ShopScope.of(context);
     final product = productById(productId);
     final inCart = state.quantityOf(productId);
@@ -23,7 +24,7 @@ class ProductScreen extends StatelessWidget {
         ShopScope.update(context, (state) => state.addToCart(productId));
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.surface,
       body: Column(
         children: [
           Expanded(
@@ -74,16 +75,16 @@ class ProductScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Price',
-                      style: TextStyle(fontSize: 12, color: ShopColors.muted),
+                      style: TextStyle(fontSize: 12, color: colors.muted),
                     ),
                     Text(
                       formatPrice(product.price),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: ShopColors.ink,
+                        color: colors.ink,
                       ),
                     ),
                   ],
@@ -94,12 +95,12 @@ class ProductScreen extends StatelessWidget {
                     child: inCart == 0
                         ? FakeButton(
                             'Add to cart',
-                            color: ShopColors.ink,
+                            color: colors.ink,
                             onTap: addToCart,
                           )
                         : FakeButton(
                             'In cart · $inCart',
-                            color: ShopColors.success,
+                            color: colors.success,
                             onTap: addToCart,
                           ),
                   ),
@@ -125,7 +126,7 @@ class ProductScreen extends StatelessWidget {
                         : FakeButton(
                             'In cart · $inCart',
                             icon: Icons.check_rounded,
-                            color: ShopColors.success,
+                            color: colors.success,
                             onTap: addToCart,
                           ),
                   ),
@@ -145,47 +146,44 @@ class _Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           product.category.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
-            color: ShopColors.primary,
+            color: colors.primary,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           product.name,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: ShopColors.ink,
+            color: colors.ink,
             letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 8),
         Rating(product, showReviews: true),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'About',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: ShopColors.ink,
+            color: colors.ink,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           product.description,
-          style: const TextStyle(
-            fontSize: 14.5,
-            height: 1.55,
-            color: ShopColors.muted,
-          ),
+          style: TextStyle(fontSize: 14.5, height: 1.55, color: colors.muted),
         ),
         const SizedBox(height: 20),
         const Row(
@@ -209,25 +207,22 @@ class _Perk extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF6F7FB),
+          color: colors.background,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 6,
           children: [
-            Icon(icon, size: 20, color: ShopColors.primary),
+            Icon(icon, size: 20, color: colors.primary),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11.5,
-                height: 1.3,
-                color: ShopColors.ink,
-              ),
+              style: TextStyle(fontSize: 11.5, height: 1.3, color: colors.ink),
             ),
           ],
         ),

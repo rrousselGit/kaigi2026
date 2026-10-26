@@ -48,6 +48,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final state = ShopScope.of(context);
     final visible = [
       for (final product in products)
@@ -97,10 +98,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         state.category == 'All'
                             ? 'Popular right now'
                             : state.category,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: ShopColors.ink,
+                          color: colors.ink,
                         ),
                       ),
                     ),
@@ -150,6 +151,7 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Row(
       spacing: 8,
       children: [
@@ -157,19 +159,19 @@ class _Logo extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [ShopColors.primary, Color(0xFF9333EA)],
+            gradient: LinearGradient(
+              colors: [colors.primary, const Color(0xFF9333EA)],
             ),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 20),
         ),
-        const Text(
+        Text(
           'Shoply',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: ShopColors.ink,
+            color: colors.ink,
             letterSpacing: -0.5,
           ),
         ),
@@ -183,26 +185,27 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ShopColors.border),
+        border: Border.all(color: colors.border),
       ),
-      child: const Row(
+      child: Row(
         spacing: 10,
         children: [
-          Icon(Icons.search_rounded, color: ShopColors.muted),
+          Icon(Icons.search_rounded, color: colors.muted),
           Expanded(
             child: Text(
               'Search products',
-              style: TextStyle(color: ShopColors.muted, fontSize: 15),
+              style: TextStyle(color: colors.muted, fontSize: 15),
             ),
           ),
-          Icon(Icons.tune_rounded, color: ShopColors.muted, size: 20),
+          Icon(Icons.tune_rounded, color: colors.muted, size: 20),
         ],
       ),
     );
@@ -214,14 +217,17 @@ class _PromoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       padding: const EdgeInsets.all(20),
-      height: 140,
+      // Grows with large fonts, rather than overflowing.
+      constraints: const BoxConstraints(minHeight: 140),
+      alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [ShopColors.primary, Color(0xFF9333EA)],
+        gradient: LinearGradient(
+          colors: [colors.primary, const Color(0xFF9333EA)],
         ),
       ),
       child: const Row(
@@ -267,6 +273,7 @@ class _Categories extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return SizedBox(
       height: 56,
       child: ListView(
@@ -286,12 +293,10 @@ class _Categories extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: category == selected ? ShopColors.ink : Colors.white,
+                    color: category == selected ? colors.ink : colors.surface,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: category == selected
-                          ? ShopColors.ink
-                          : ShopColors.border,
+                      color: category == selected ? colors.ink : colors.border,
                     ),
                   ),
                   child: Text(
@@ -299,9 +304,7 @@ class _Categories extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: category == selected
-                          ? Colors.white
-                          : ShopColors.ink,
+                      color: category == selected ? colors.surface : colors.ink,
                     ),
                   ),
                 ),
@@ -323,6 +326,7 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return ShopCard(
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -345,7 +349,7 @@ class _ProductCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: ShopColors.success,
+                        color: colors.success,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -367,10 +371,10 @@ class _ProductCard extends StatelessWidget {
             product.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: ShopColors.ink,
+              color: colors.ink,
             ),
           ),
           const SizedBox(height: 4),
@@ -379,10 +383,10 @@ class _ProductCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   formatPrice(product.price),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: ShopColors.primary,
+                    color: colors.primary,
                   ),
                 ),
               ),

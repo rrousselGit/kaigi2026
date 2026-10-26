@@ -62,14 +62,19 @@ const _changesWidth = 280.0;
 /// A Figma-like board: one frame per page, with arrows from buttons to the
 /// pages they open.
 ///
-/// [previews], [showBase] and [highlight] are where the map starts, and can
-/// then be toggled from its toolbar. Changing them animates the map to the new
+/// [previews], [settings], [showSettings], [showBase] and [highlight] are
+/// where the map starts, and can then be changed from its toolbar. Changing them animates the map to the new
 /// value, which lets slides drive it.
 class SiteMapView extends StatefulWidget {
-  const SiteMapView({super.key, required this.siteMap, this.previews = false})
-    : diff = null,
-      showBase = false,
-      highlight = false;
+  const SiteMapView({
+    super.key,
+    required this.siteMap,
+    this.previews = false,
+    this.settings = const PreviewSettings(),
+    this.showSettings = false,
+  }) : diff = null,
+       showBase = false,
+       highlight = false;
 
   /// Reviews [diff]: switches between the map before and after the change,
   /// and highlights what changed.
@@ -77,6 +82,8 @@ class SiteMapView extends StatefulWidget {
     SiteMapDiff this.diff, {
     super.key,
     this.previews = false,
+    this.settings = const PreviewSettings(),
+    this.showSettings = false,
     this.showBase = false,
     this.highlight = true,
   }) : siteMap = diff.head;
@@ -86,6 +93,12 @@ class SiteMapView extends StatefulWidget {
 
   /// Whether pages are rendered for real, rather than as wireframes.
   final bool previews;
+
+  /// The theme, text size and device pages are rendered with.
+  final PreviewSettings settings;
+
+  /// Whether the panel changing the [settings] is open.
+  final bool showSettings;
 
   /// Whether the [diff]'s base is shown, rather than its head.
   final bool showBase;
@@ -102,6 +115,8 @@ class _SiteMapViewState extends State<SiteMapView>
   late var _previews = widget.previews;
   late var _showBase = widget.showBase;
   late var _highlight = widget.highlight;
+  late var _settings = widget.settings;
+  late var _showSettings = widget.showSettings;
 
   late var _layout = _makeLayout();
   final _transform = TransformationController();
@@ -139,6 +154,10 @@ class _SiteMapViewState extends State<SiteMapView>
     if (widget.previews != oldWidget.previews) _applyPreviews(widget.previews);
     if (widget.showBase != oldWidget.showBase) _applyShowBase(widget.showBase);
     if (widget.highlight != oldWidget.highlight) _highlight = widget.highlight;
+    if (widget.settings != oldWidget.settings) _applySettings(widget.settings);
+    if (widget.showSettings != oldWidget.showSettings) {
+      _showSettings = widget.showSettings;
+    }
   }
 
   @override
@@ -167,8 +186,20 @@ class _SiteMapViewState extends State<SiteMapView>
   SiteMapLayout _makeLayout() => SiteMapLayout(
     widget.siteMap,
     previews: _previews,
+    screen: _settings.device.size,
     base: widget.diff?.base,
   );
+
+  void _applySettings(PreviewSettings settings) {
+    final relayout = settings.device != _settings.device;
+    _settings = settings;
+    if (!relayout) return;
+    _focus(null);
+    _layout = _makeLayout();
+    _sources.value = {};
+    // Refit on the next build, as the map changed size.
+    _fittedTo = null;
+  }
 
   late final List<String> _routeIds =
       widget.diff?.routeIds ??
@@ -405,6 +436,7 @@ class _SiteMapViewState extends State<SiteMapView>
               GestureDetector(
                 onTap: () => setState(() {
                   _selected = null;
+                  _showSettings = false;
                   _focus(null);
                 }),
                 child: InteractiveViewer(
@@ -484,6 +516,14 @@ class _SiteMapViewState extends State<SiteMapView>
                         (true, 'Screens', Icons.smartphone_rounded),
                       ],
                     ),
+                    if (_previews)
+                      _Toggle(
+                        label: 'Preview',
+                        icon: Icons.tune_rounded,
+                        value: _showSettings,
+                        onChanged: (value) =>
+                            setState(() => _showSettings = value),
+                      ),
                     _ZoomControls(
                       transform: _transform,
                       onZoom: (factor) => _zoomBy(factor, viewport),
@@ -492,6 +532,16 @@ class _SiteMapViewState extends State<SiteMapView>
                   ],
                 ),
               ),
+              if (_showSettings && _previews)
+                Positioned(
+                  left: 16,
+                  top: _toolbarHeight + 8,
+                  child: _PreviewSettingsPanel(
+                    settings: _settings,
+                    onChanged: (settings) =>
+                        setState(() => _applySettings(settings)),
+                  ),
+                ),
               if (widget.diff case final diff?)
                 Positioned(
                   right: 16,
@@ -585,7 +635,11 @@ class _SiteMapViewState extends State<SiteMapView>
         // The focused page is drawn above the board instead.
         child: id == _focused
             ? null
-            : _ScreenPage(links: const [], child: _previewOf(id, preview)),
+            : ScreenPreview(
+                settings: _settings,
+                links: const [],
+                child: _previewOf(id, preview),
+              ),
       ),
       _ => _Frame(
         route: route,
@@ -685,7 +739,8 @@ class _SiteMapViewState extends State<SiteMapView>
                   outline: _highlighting && change != Change.unchanged
                       ? _Colors.of(change)
                       : null,
-                  child: _ScreenPage(
+                  child: ScreenPreview(
+                    settings: _settings,
                     // Without a navigator, buttons opening other pages can't
                     // work.
                     links: [
@@ -925,10 +980,17 @@ class _PreviewFrame extends StatelessWidget {
   }
 }
 
-/// A page of the app at the size of a phone, scaled to fit, with its [links]
-/// to other pages disabled.
-class _ScreenPage extends StatelessWidget {
-  const _ScreenPage({required this.links, required this.child});
+/// A page of the app at the size of a device, scaled to fit, with its
+/// [links] to other pages disabled.
+class ScreenPreview extends StatelessWidget {
+  const ScreenPreview({
+    super.key,
+    this.settings = const PreviewSettings(),
+    this.links = const [],
+    required this.child,
+  });
+
+  final PreviewSettings settings;
 
   /// Matches the buttons opening other pages.
   final List<bool Function(Widget)> links;
@@ -940,14 +1002,15 @@ class _ScreenPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return FittedBox(
       child: SizedBox.fromSize(
-        size: FrameMetrics.screen,
+        size: settings.device.size,
         child: MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            size: FrameMetrics.screen,
+            size: settings.device.size,
             padding: _insets,
             viewPadding: _insets,
             viewInsets: EdgeInsets.zero,
-            textScaler: TextScaler.noScaling,
+            textScaler: TextScaler.linear(settings.textScale),
+            platformBrightness: settings.brightness,
           ),
           child: ScrollConfiguration(
             // Mice scroll with their wheel, not by dragging: a drag starts
@@ -1050,6 +1113,95 @@ class _LinkTapBlocker extends OneSequenceGestureRecognizer {
 
   @override
   String get debugDescription => 'link tap blocker';
+}
+
+/// The environment pages are previewed in: theme, text size and device.
+class _PreviewSettingsPanel extends StatelessWidget {
+  const _PreviewSettingsPanel({
+    required this.settings,
+    required this.onChanged,
+  });
+
+  final PreviewSettings settings;
+  final ValueChanged<PreviewSettings> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget row(String label, Widget control) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(
+              label,
+              style: const TextStyle(color: _Colors.label, fontSize: 13),
+            ),
+          ),
+          control,
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _Colors.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _Colors.panelBorder),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          row(
+            'Theme',
+            _Segmented(
+              value: settings.brightness,
+              onChanged: (brightness) =>
+                  onChanged(settings.copyWith(brightness: brightness)),
+              options: const [
+                (Brightness.light, 'Light', Icons.light_mode_outlined),
+                (Brightness.dark, 'Dark', Icons.dark_mode_outlined),
+              ],
+            ),
+          ),
+          row(
+            'Text size',
+            _Segmented(
+              value: settings.textScale,
+              onChanged: (textScale) =>
+                  onChanged(settings.copyWith(textScale: textScale)),
+              options: const [
+                (1.0, '100%', Icons.text_fields_rounded),
+                (1.3, '130%', Icons.text_fields_rounded),
+                (1.6, '160%', Icons.text_fields_rounded),
+              ],
+            ),
+          ),
+          row(
+            'Device',
+            _Segmented(
+              value: settings.device,
+              onChanged: (device) =>
+                  onChanged(settings.copyWith(device: device)),
+              options: [
+                for (final device in PreviewDevice.values)
+                  (
+                    device,
+                    device.label,
+                    device == PreviewDevice.tablet
+                        ? Icons.tablet_mac_rounded
+                        : Icons.smartphone_rounded,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Toolbar extends StatelessWidget {

@@ -9,6 +9,7 @@ import 'catalog.dart';
 import 'checkout.dart';
 import 'models.dart';
 import 'product.dart';
+import 'widgets.dart';
 import 'wishlist.dart';
 
 /// A small e-commerce app, driven by [state].
@@ -37,18 +38,13 @@ class _ShopAppState extends State<ShopApp> {
     if (widget.state != oldWidget.state) _state = widget.state;
   }
 
-  static final _theme = ThemeData(
-    colorSchemeSeed: const Color(0xFF4F46E5),
-    fontFamily: Fonts.body,
-    scaffoldBackgroundColor: const Color(0xFFF6F7FB),
-  );
-
   @override
   Widget build(BuildContext context) {
     final state = _state;
     final productId = state.productId;
     return Theme(
-      data: _theme,
+      // The slides show the app in light mode, whatever the system's theme.
+      data: shopTheme(Brightness.light),
       child: ShopScope(
         state: state,
         onChanged: (state) => setState(() => _state = state),
@@ -85,6 +81,23 @@ class _ShopAppState extends State<ShopApp> {
     );
   }
 }
+
+/// The theme of the [ShopApp], in light or dark mode.
+ThemeData shopTheme(Brightness brightness) => switch (brightness) {
+  Brightness.light => _lightTheme,
+  Brightness.dark => _darkTheme,
+};
+
+final _lightTheme = _theme(Brightness.light, ShopColors.light);
+final _darkTheme = _theme(Brightness.dark, ShopColors.dark);
+
+ThemeData _theme(Brightness brightness, ShopColors colors) => ThemeData(
+  brightness: brightness,
+  colorSchemeSeed: const Color(0xFF4F46E5),
+  fontFamily: Fonts.body,
+  scaffoldBackgroundColor: colors.background,
+  extensions: [colors],
+);
 
 /// Exposes the [ShopState] to the screens of the [ShopApp].
 class ShopScope extends InheritedWidget {

@@ -13,6 +13,7 @@ class CheckoutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final state = ShopScope.of(context);
 
     return Scaffold(
@@ -63,10 +64,10 @@ class CheckoutScreen extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
                               '${item.quantity} × ${item.product.name}',
-                              style: const TextStyle(color: ShopColors.ink),
+                              style: TextStyle(color: colors.ink),
                             ),
                           ),
-                        const Divider(height: 20, color: ShopColors.border),
+                        Divider(height: 20, color: colors.border),
                         OrderSummary(state),
                       ],
                     ),
@@ -104,6 +105,7 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: ShopCard(
@@ -114,10 +116,10 @@ class _Section extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: ShopColors.primary.withValues(alpha: 0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: ShopColors.primary, size: 20),
+              child: Icon(icon, color: colors.primary, size: 20),
             ),
             Expanded(
               child: Column(
@@ -126,17 +128,17 @@ class _Section extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: ShopColors.ink,
+                      color: colors.ink,
                     ),
                   ),
                   for (final line in lines)
-                    Text(line, style: const TextStyle(color: ShopColors.muted)),
+                    Text(line, style: TextStyle(color: colors.muted)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: ShopColors.muted),
+            Icon(Icons.chevron_right_rounded, color: colors.muted),
           ],
         ),
       ),
@@ -149,10 +151,11 @@ class ConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final state = ShopScope.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -169,23 +172,23 @@ class ConfirmationScreen extends StatelessWidget {
                   width: 112,
                   height: 112,
                   decoration: BoxDecoration(
-                    color: ShopColors.success.withValues(alpha: 0.12),
+                    color: colors.success.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.check_rounded,
                     size: 64,
-                    color: ShopColors.success,
+                    color: colors.success,
                   ),
                 ),
               ),
               const SizedBox(height: 28),
-              const Text(
+              Text(
                 'Order placed!',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: ShopColors.ink,
+                  color: colors.ink,
                 ),
               ),
               const SizedBox(height: 8),
@@ -193,10 +196,10 @@ class ConfirmationScreen extends StatelessWidget {
                 'Order #SH-20481 · ${formatPrice(state.total)}\n'
                 'Arriving Thursday',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   height: 1.5,
-                  color: ShopColors.muted,
+                  color: colors.muted,
                 ),
               ),
               const Spacer(flex: 2),

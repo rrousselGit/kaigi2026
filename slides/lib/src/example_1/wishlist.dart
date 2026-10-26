@@ -66,23 +66,24 @@ class _EmptyWishlist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = ShopColors.of(context);
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          Text('💜', style: TextStyle(fontSize: 64)),
+          const Text('💜', style: TextStyle(fontSize: 64)),
           Text(
             'No favorites yet',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: ShopColors.ink,
+              color: colors.ink,
             ),
           ),
           Text(
             'Tap the heart on a product to save it.',
-            style: TextStyle(color: ShopColors.muted),
+            style: TextStyle(color: colors.muted),
           ),
         ],
       ),
@@ -97,6 +98,7 @@ class _WishlistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return ShopCard(
       padding: const EdgeInsets.all(10),
       child: Row(
@@ -115,10 +117,10 @@ class _WishlistItem extends StatelessWidget {
                   product.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: ShopColors.ink,
+                    color: colors.ink,
                   ),
                 ),
                 Row(
@@ -126,10 +128,10 @@ class _WishlistItem extends StatelessWidget {
                   children: [
                     Text(
                       formatPrice(product.price),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: ShopColors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     Rating(product),

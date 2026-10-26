@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:slides/src/example_1/models.dart';
 import 'package:slides/src/example_1/shop_app.dart';
+import 'package:slides/src/example_1/widgets.dart';
 import 'package:slides/src/site_map/shoply.dart';
+import 'package:slides/src/site_map/site_map.dart';
 import 'package:slides/src/site_map/site_map_view.dart';
 
 import 'fonts.dart';
@@ -214,6 +216,94 @@ void main() {
       await tester.tapAt(const Offset(150, 950));
       await tester.pumpAndSettle();
       expect(find.text('LIVE'), findsNothing);
+    });
+  });
+
+  group('preview settings', () {
+    /// The environment the catalog's page is rendered in.
+    BuildContext catalog(WidgetTester tester) =>
+        tester.element(find.text('Popular right now'));
+
+    Future<void> choose(WidgetTester tester, String option) async {
+      await tester.tap(find.text(option));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('are only offered for screens', (tester) async {
+      await _pumpSiteMap(tester);
+      expect(find.text('Preview'), findsNothing);
+
+      await _pumpSiteMap(tester, previews: true);
+      await tester.pumpAndSettle();
+      expect(find.text('Preview'), findsOne);
+    });
+
+    testWidgets('change the theme, text size and device', (tester) async {
+      await _pumpSiteMap(tester, previews: true);
+      await tester.pumpAndSettle();
+      await choose(tester, 'Preview');
+      expect(ShopColors.of(catalog(tester)), ShopColors.light);
+
+      await choose(tester, 'Dark');
+      expect(ShopColors.of(catalog(tester)), ShopColors.dark);
+
+      await choose(tester, '160%');
+      expect(MediaQuery.textScalerOf(catalog(tester)).scale(10), 16);
+
+      await choose(tester, 'Tablet');
+      expect(MediaQuery.sizeOf(catalog(tester)), PreviewDevice.tablet.size);
+      // Laid out for the tablet's width, minus the catalog's padding.
+      expect(
+        tester.getSize(find.text('Popular right now')).width,
+        PreviewDevice.tablet.size.width - 40,
+      );
+    });
+
+    testWidgets('every page renders in every environment', (tester) async {
+      tester.view
+        ..physicalSize = const Size(1800, 1100)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      for (final brightness in Brightness.values) {
+        for (final textScale in [1.0, 1.3, 1.6]) {
+          for (final device in PreviewDevice.values) {
+            final settings = PreviewSettings(
+              brightness: brightness,
+              textScale: textScale,
+              device: device,
+            );
+            await tester.pumpWidget(
+              MaterialApp(
+                home: SiteMapView(
+                  siteMap: shoplySiteMap,
+                  previews: true,
+                  settings: settings,
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: '$brightness, $textScale, ${device.label}',
+            );
+          }
+        }
+      }
+    });
+
+    testWidgets("don't change the app shown next to slides", (tester) async {
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      await tester.pumpWidget(
+        const MaterialApp(home: ShopApp(state: ShopState())),
+      );
+
+      expect(
+        ShopColors.of(tester.element(find.text('Popular right now'))),
+        ShopColors.light,
+      );
     });
   });
 }

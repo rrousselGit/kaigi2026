@@ -6,7 +6,9 @@ import 'package:material_ui/material_ui.dart';
 
 import 'src/example_1/models.dart';
 import 'src/example_1/shop_app.dart';
+import 'src/site_map/review_comment.dart';
 import 'src/site_map/shoply.dart';
+import 'src/site_map/site_map.dart';
 import 'src/site_map/site_map_view.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -75,6 +77,24 @@ class Foo {}
 test('test runtime behavior', () {
   expect(Foo().toString(), 'Foo()');
 });''';
+
+const _lintPrompt = '''
+Add a lint rule `avoid_hardcoded_string`, reporting
+string literals shown to users.
+
+- Implement it with package:analysis_server_plugin.
+- Test it with Dart files in test/lints/, using
+  ignore comments where the lint should trigger.
+- Run it on the app and generate a baseline file of
+  the existing violations, so only new code fails.''';
+
+const _lintBaseline = '''
+# lint_baseline.yaml
+# generated once: entries may only be removed
+avoid_hardcoded_string:
+  lib/screens/cart.dart: 4
+  lib/screens/checkout.dart: 7
+  lib/widgets/promo_banner.dart: 2''';
 
 const _demoCart = [CartItem('headphones'), CartItem('speaker', quantity: 2)];
 
@@ -422,6 +442,105 @@ final slides = <SlideData>[
         ),
       ],
     ),
+  ),
+  const SlideData(
+    title: 'Lints: Review Comments to Tools',
+    topic: Topic.lints,
+    notes:
+        'When you write the same review comment for the third time, stop. '
+        'That comment should become a pull request adding a tool: usually a '
+        'lint. Then nobody has to write, or read, that comment ever again.',
+    child: _ReviewToLintSlide(),
+  ),
+  const SlideData(
+    title: 'Pro Tip: Generate Lints with AI',
+    topic: Topic.lints,
+    notes:
+        'Writing a lint used to take an afternoon of reading analyzer docs. '
+        'Now it is a prompt. Be specific: name analysis_server_plugin, ask '
+        'for tests, and ask for a baseline of existing violations.',
+    child: ContentSlide(
+      title: 'Generate Lints with AI',
+      children: [
+        Grid(
+          columns: 2,
+          children: [
+            CodeBlock(_lintPrompt, fontSize: 15),
+            DeckCard(
+              child: _CardContent(
+                title: 'Be specific',
+                items: [
+                  'Name **`analysis_server_plugin`**: otherwise AIs often '
+                      'reach for other approaches.',
+                  'Ask for **tests**, written as code with `// ignore` '
+                      'comments.',
+                  'Ask for a **baseline file** of the existing violations, '
+                      'so that the lint can land today.',
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+  const SlideData(
+    title: 'Lints: Baselines',
+    topic: Topic.lints,
+    notes:
+        'A new lint on an old codebase reports hundreds of warnings. Instead of '
+        'fixing them all before merging, record them in a baseline: the lint '
+        'ignores those, and only reports new code.',
+    child: ContentSlide(
+      title: 'Baselines: No Big-Bang Migration',
+      children: [
+        Grid(
+          columns: 2,
+          children: [
+            CodeBlock(_lintBaseline, fontSize: 15),
+            DeckCard(
+              child: _CardContent(
+                title: 'How it works',
+                items: [
+                  'The lint **ignores** what the baseline lists.',
+                  '**New code** must follow the rule right away.',
+                  'Old code is **fixed over time**, when touching a file: '
+                      'its entry shrinks, then disappears.',
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+  const SlideData(
+    title: 'Danger: Never Grow the Baseline',
+    topic: Topic.lints,
+    notes:
+        'The one rule of baselines: once created, they only shrink. '
+        'Regenerating the baseline to silence a new warning defeats the lint. '
+        'Have CI fail if the baseline gains entries.',
+    child: BadgeCardSlide(
+      danger: true,
+      children: [
+        BadgeTitle('Once created, a baseline may only shrink.'),
+        BadgeSubtitle(
+          'Regenerating it to silence a new warning defeats the lint. Make CI '
+          'fail when the baseline gains entries: fixing old violations is '
+          'welcome, adding new ones is not.',
+        ),
+      ],
+    ),
+  ),
+  const SlideData(
+    title: 'Lints: Progressive Improvement',
+    topic: Topic.lints,
+    notes:
+        'Each review comment turned into a lint is one less thing to remember. '
+        'Over time, the rules of the codebase live in CI, not in the heads of '
+        'a few senior engineers.',
+    child: _ProgressiveImprovementSlide(),
   ),
   const SlideData(
     title: 'Tool: Code Generators',
@@ -891,6 +1010,34 @@ final slides = <SlideData>[
     ),
   ),
   const SlideData(
+    title: 'DevTool: Site Map Dark Mode',
+    topic: Topic.devtools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'The same pages, rendered in dark mode: every screen of the app '
+        'checked at once, without clicking through the app on a device.',
+    child: _SiteMapSlide(
+      title: 'Previewing Dark Mode',
+      example: _SiteMapExample.shoply,
+      previews: true,
+      settings: PreviewSettings(brightness: Brightness.dark),
+    ),
+  ),
+  const SlideData(
+    title: 'DevTool: Site Map Large Text',
+    topic: Topic.devtools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'And with a large font, as set by users who need it. Layout issues '
+        'show up on every page at once.',
+    child: _SiteMapSlide(
+      title: 'Previewing Large Text',
+      example: _SiteMapExample.shoply,
+      previews: true,
+      settings: PreviewSettings(brightness: Brightness.dark, textScale: 1.6),
+    ),
+  ),
+  const SlideData(
     title: 'DevTool: Review, Before',
     topic: Topic.devtools,
     group: _SiteMapExample.wishlist,
@@ -900,6 +1047,7 @@ final slides = <SlideData>[
     child: _SiteMapSlide(
       title: 'Reviewing a New Page',
       example: _SiteMapExample.wishlist,
+      previews: true,
       showBase: true,
     ),
   ),
@@ -913,6 +1061,7 @@ final slides = <SlideData>[
     child: _SiteMapSlide(
       title: 'Reviewing a New Page',
       example: _SiteMapExample.wishlist,
+      previews: true,
     ),
   ),
   const SlideData(
@@ -925,6 +1074,7 @@ final slides = <SlideData>[
     child: _SiteMapSlide(
       title: 'Can You Spot the Change?',
       example: _SiteMapExample.buyNow,
+      previews: true,
     ),
   ),
   const SlideData(
@@ -938,8 +1088,19 @@ final slides = <SlideData>[
     child: _SiteMapSlide(
       title: 'Highlighting the Change',
       example: _SiteMapExample.buyNow,
+      previews: true,
       highlight: true,
     ),
+  ),
+  const SlideData(
+    title: 'DevTool: In Code Review',
+    topic: Topic.devtools,
+    notes:
+        'Tools like this one belong in CI too. On every pull request, render '
+        'the site map, check that every page still renders and can be '
+        'reached, and post the visual diff where the review happens. '
+        'Reviewers see what users will see, not just lines of code.',
+    child: _CodeReviewSlide(),
   ),
   const SlideData(
     title: 'Pro Tip: DevTools in the AI Era',
@@ -1267,6 +1428,7 @@ class _SiteMapSlide extends StatelessWidget {
     required this.title,
     required this.example,
     this.previews = false,
+    this.settings = const PreviewSettings(),
     this.showBase = false,
     this.highlight = false,
   });
@@ -1274,6 +1436,10 @@ class _SiteMapSlide extends StatelessWidget {
   final String title;
   final _SiteMapExample example;
   final bool previews;
+
+  /// The theme and text size of the screens, shown in the preview panel when
+  /// changed.
+  final PreviewSettings settings;
   final bool showBase;
   final bool highlight;
 
@@ -1299,6 +1465,8 @@ class _SiteMapSlide extends StatelessWidget {
             _SiteMapExample.shoply => SiteMapView(
               siteMap: shoplySiteMap,
               previews: previews,
+              settings: settings,
+              showSettings: settings != const PreviewSettings(),
             ),
             _SiteMapExample.wishlist => SiteMapView.diff(
               shoplyWishlistDiff,
@@ -1313,6 +1481,709 @@ class _SiteMapSlide extends StatelessWidget {
               highlight: highlight,
             ),
           },
+        ),
+      ],
+    );
+  }
+}
+
+/// A pull request, where CI rendered the site map and a bot commented the
+/// pages it changes.
+class _CodeReviewSlide extends StatelessWidget {
+  const _CodeReviewSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Eyebrow(),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 24),
+          child: H2('Site Maps in Code Review'),
+        ),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 24,
+            children: [
+              const SizedBox(
+                width: 400,
+                child: DeckCard(child: _PullRequest()),
+              ),
+              Expanded(
+                child: DeckCard(
+                  child: SiteMapReviewComment(
+                    diff: shoplyBuyNowDiff,
+                    screenWidth: 168,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PullRequest extends StatelessWidget {
+  const _PullRequest();
+
+  static const _passed = Color(0xFF22C55E);
+  static const _pending = Color(0xFFF59E0B);
+
+  static const _checks = [
+    (true, 'analyze & test', 'Passed in 1m 12s'),
+    (true, 'site-map / render', '5 pages × 18 environments, no overflow'),
+    (true, 'site-map / links', 'Every page can still be reached'),
+    (false, 'site-map / review', '2 pages changed: needs an approval'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          spacing: 10,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _passed.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 4,
+                children: [
+                  Icon(Icons.call_split_rounded, size: 14, color: _passed),
+                  Text(
+                    'Open',
+                    style: TextStyle(
+                      color: _passed,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '#128',
+              style: TextStyle(color: palette.textMuted, fontSize: 15),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Add a "Buy now" button',
+          style: TextStyle(
+            color: palette.heading,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'feature/buy-now → main',
+          style: TextStyle(
+            color: palette.textMuted,
+            fontSize: 13,
+            fontFamily: Fonts.code,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Divider(color: palette.cardBorder, height: 1),
+        const SizedBox(height: 16),
+        Text(
+          'CHECKS',
+          style: TextStyle(
+            color: palette.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        for (final (passed, name, detail) in _checks)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 10,
+              children: [
+                Icon(
+                  passed ? Icons.check_circle_rounded : Icons.pending_rounded,
+                  size: 20,
+                  color: passed ? _passed : _pending,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          color: palette.textMain,
+                          fontSize: 14,
+                          fontFamily: Fonts.code,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        detail,
+                        style: TextStyle(
+                          color: palette.textMuted,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 12),
+        Text(
+          'Merging is blocked until the visual changes are approved.',
+          style: TextStyle(color: palette.textMuted, fontSize: 13, height: 1.4),
+        ),
+      ],
+    );
+  }
+}
+
+/// From a review comment to a lint enforced by CI, as a code review thread
+/// and the pull request that follows it.
+class _ReviewToLintSlide extends StatelessWidget {
+  const _ReviewToLintSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Eyebrow(),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 28),
+          child: H2('Turn Review Comments into Tools'),
+        ),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Expanded(
+                child: DeckCard(
+                  accentBar: false,
+                  padding: EdgeInsets.all(28),
+                  child: _ReviewThread(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 40,
+                  color: palette.accent,
+                ),
+              ),
+              const Expanded(
+                child: DeckCard(
+                  accentBar: false,
+                  padding: EdgeInsets.all(28),
+                  child: _LintPullRequest(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+abstract final class _Review {
+  static const added = Color(0xFF22C55E);
+  static const warning = Color(0xFFF59E0B);
+}
+
+/// A code review comment, on a diff, and its answer.
+class _ReviewThread extends StatelessWidget {
+  const _ReviewThread();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PrHeader(number: 87, title: 'Add a summer sale banner'),
+        const SizedBox(height: 30),
+        _CodeSnippet(
+          file: 'lib/widgets/promo_banner.dart',
+          lines: const [
+            (' ', 'Column('),
+            ('+', "  Text('SUMMER SALE'),"),
+            ('+', "  Text('Up to 30% off audio gear'),"),
+          ],
+        ),
+        const SizedBox(height: 30),
+        const _Comment(
+          author: 'alex',
+          color: Hues.sky,
+          text:
+              'Strings shown to users must go through l10n.\n'
+              'That is the third time this month 😅',
+        ),
+        const SizedBox(height: 20),
+        _Comment(
+          author: 'sam',
+          color: palette.accent,
+          text: 'Good catch! I\'ll make it a lint instead.',
+        ),
+        const SizedBox(height: 30),
+        const _TimelineEvent(
+          icon: Icons.link_rounded,
+          color: Hues.purpleLight,
+          text: 'sam linked a pull request: ',
+          detail: '#88 Add avoid_hardcoded_string lint',
+        ),
+      ],
+    );
+  }
+}
+
+/// The pull request adding a lint, after the review comment.
+class _LintPullRequest extends StatelessWidget {
+  const _LintPullRequest();
+
+  static const _files = [
+    ('A', 'lints/avoid_hardcoded_string.dart', '+64'),
+    ('A', 'test/lints/avoid_hardcoded_string.dart', '+31'),
+    ('A', 'lint_baseline.yaml', '+13'),
+    ('M', 'analysis_options.yaml', '+3'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final mono = TextStyle(fontFamily: Fonts.code, fontSize: 16);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _PrHeader(
+          number: 88,
+          title: 'Add avoid_hardcoded_string lint',
+          merged: true,
+        ),
+        const SizedBox(height: 30),
+        for (final (status, path, lines) in _files)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              spacing: 12,
+              children: [
+                Text(
+                  status,
+                  style: mono.copyWith(
+                    color: status == 'A' ? _Review.added : _Review.warning,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    path,
+                    style: mono.copyWith(color: palette.textMain),
+                  ),
+                ),
+                Text(lines, style: mono.copyWith(color: _Review.added)),
+              ],
+            ),
+          ),
+        const SizedBox(height: 18),
+        Row(
+          spacing: 10,
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 22,
+              color: _Review.added,
+            ),
+            Text(
+              'dart analyze',
+              style: mono.copyWith(
+                color: palette.textMain,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '0 new issues · 13 baselined',
+              style: TextStyle(color: palette.textMuted, fontSize: 16),
+            ),
+          ],
+        ),
+        const SizedBox(height: 36),
+        Text(
+          'NEXT TIME, BEFORE ANY REVIEWER',
+          style: TextStyle(
+            color: palette.textMuted,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _CodeSnippet(
+          file: 'lib/widgets/shipping_info.dart',
+          lines: const [('+', "  Text('Free shipping'),")],
+          warning: 'avoid_hardcoded_string: use l10n instead.',
+        ),
+        const SizedBox(height: 36),
+        const _TimelineEvent(
+          icon: Icons.merge_rounded,
+          color: Hues.purpleLight,
+          text: 'Merged ',
+          detail: '· approved by alex',
+        ),
+      ],
+    );
+  }
+}
+
+class _PrHeader extends StatelessWidget {
+  const _PrHeader({
+    required this.number,
+    required this.title,
+    this.merged = false,
+  });
+
+  final int number;
+  final String title;
+  final bool merged;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final color = merged ? Hues.purpleLight : _Review.added;
+    return Row(
+      spacing: 10,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 4,
+            children: [
+              Icon(
+                merged ? Icons.merge_rounded : Icons.call_split_rounded,
+                size: 16,
+                color: color,
+              ),
+              Text(
+                merged ? 'Merged' : 'Open',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Flexible(
+          child: Text.rich(
+            overflow: TextOverflow.ellipsis,
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: title,
+                  style: TextStyle(
+                    color: palette.heading,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 21,
+                  ),
+                ),
+                TextSpan(
+                  text: '  #$number',
+                  style: TextStyle(color: palette.textMuted, fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Lines of a diff, optionally with an analyzer warning on the last one.
+class _CodeSnippet extends StatelessWidget {
+  const _CodeSnippet({required this.file, required this.lines, this.warning});
+
+  final String file;
+  final List<(String, String)> lines;
+  final String? warning;
+
+  static int _indentOf(String code) => code.length - code.trimLeft().length;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    const mono = TextStyle(fontFamily: Fonts.code, fontSize: 17, height: 1.7);
+    return Container(
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Hues.codeBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: palette.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            color: const Color(0x14FFFFFF),
+            child: Text(
+              file,
+              style: mono.copyWith(fontSize: 14, color: Hues.slate),
+            ),
+          ),
+          for (final (index, (sign, code)) in lines.indexed)
+            Container(
+              color: sign == '+' ? _Review.added.withValues(alpha: 0.12) : null,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Text.rich(
+                TextSpan(
+                  style: mono.copyWith(color: Hues.codeText),
+                  children: [
+                    TextSpan(
+                      text: '$sign ',
+                      style: TextStyle(
+                        color: sign == '+' ? _Review.added : Hues.slate,
+                      ),
+                    ),
+                    // The warning underlines the code, not its indentation.
+                    TextSpan(text: code.substring(0, _indentOf(code))),
+                    TextSpan(
+                      text: code.substring(_indentOf(code)),
+                      style: warning != null && index == lines.length - 1
+                          ? const TextStyle(
+                              decoration: TextDecoration.underline,
+                              decorationStyle: TextDecorationStyle.wavy,
+                              decorationColor: _Review.warning,
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (warning case final warning?)
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+              child: Row(
+                spacing: 8,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 20,
+                    color: _Review.warning,
+                  ),
+                  Expanded(
+                    child: Text(
+                      warning,
+                      style: mono.copyWith(
+                        fontSize: 15,
+                        color: _Review.warning,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// An event in the timeline of a pull request.
+class _TimelineEvent extends StatelessWidget {
+  const _TimelineEvent({
+    required this.icon,
+    required this.color,
+    required this.text,
+    required this.detail,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Row(
+      spacing: 14,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.18),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 20, color: color),
+        ),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: text,
+                  style: TextStyle(color: palette.textMuted, fontSize: 16),
+                ),
+                TextSpan(
+                  text: detail,
+                  style: TextStyle(
+                    color: palette.heading,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A comment in a code review thread.
+class _Comment extends StatelessWidget {
+  const _Comment({
+    required this.author,
+    required this.color,
+    required this.text,
+  });
+
+  final String author;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 10,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            author[0].toUpperCase(),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: palette.cardBorder),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4,
+              children: [
+                Text(
+                  author,
+                  style: TextStyle(
+                    color: palette.heading,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: palette.textMain,
+                    fontSize: 18,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Why turning rules into tools pays off over time.
+class _ProgressiveImprovementSlide extends StatelessWidget {
+  const _ProgressiveImprovementSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const BadgeCardSlide(
+      maxWidth: 1000,
+      children: [
+        BadgeTitle('Progressive Improvement', bottom: 12),
+        BadgeSubtitle(
+          'As time passes, codebase rules become enforced by the CI, instead '
+          'of living in the heads of engineers.',
+        ),
+        SizedBox(height: 28),
+        Grid(
+          columns: 3,
+          gap: 16,
+          children: [
+            DiagramNode(
+              emoji: '🎯',
+              title: 'Consistency',
+              caption: 'The same rules, everywhere',
+              color: Hues.sky,
+              tint: Hues.sky,
+            ),
+            DiagramNode(
+              emoji: '🧭',
+              title: 'Onboarding',
+              caption: 'Newcomers learn the rules from warnings',
+              color: Hues.teal,
+              tint: Hues.teal,
+            ),
+            DiagramNode(
+              emoji: '🤖',
+              title: 'Better AI output',
+              caption: 'Agents run the tools too, and fix what they report',
+              color: Hues.purpleLight,
+              tint: Hues.purple,
+            ),
+          ],
         ),
       ],
     );

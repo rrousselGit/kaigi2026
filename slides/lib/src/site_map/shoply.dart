@@ -3,7 +3,6 @@
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../theme.dart';
 import '../example_1/cart.dart';
 import '../example_1/catalog.dart';
 import '../example_1/checkout.dart';
@@ -337,13 +336,6 @@ class _ShopPreview extends StatefulWidget {
 class _ShopPreviewState extends State<_ShopPreview> {
   late var _state = widget.state;
 
-  // Same as ShopApp's theme.
-  static final _theme = ThemeData(
-    colorSchemeSeed: const Color(0xFF4F46E5),
-    fontFamily: Fonts.body,
-    scaffoldBackgroundColor: const Color(0xFFF6F7FB),
-  );
-
   @override
   void didUpdateWidget(_ShopPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -353,7 +345,8 @@ class _ShopPreviewState extends State<_ShopPreview> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: _theme,
+      // Like an app following the system's theme, which the site map sets.
+      data: shopTheme(MediaQuery.platformBrightnessOf(context)),
       child: ShopScope(
         state: _state,
         onChanged: (state) => setState(() => _state = state),

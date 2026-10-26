@@ -80,3 +80,56 @@ class UiElement {
   /// arrows can start from it. The first match wins.
   final bool Function(Widget widget)? finder;
 }
+
+/// The devices pages can be previewed on.
+enum PreviewDevice {
+  phone('Phone', Size(390, 844)),
+  smallPhone('Small phone', Size(360, 640)),
+  tablet('Tablet', Size(768, 1024));
+
+  const PreviewDevice(this.label, this.size);
+
+  final String label;
+
+  /// The logical size of the screen.
+  final Size size;
+}
+
+/// The environment pages are previewed in, like the settings of a device.
+@immutable
+class PreviewSettings {
+  const PreviewSettings({
+    this.brightness = Brightness.light,
+    this.textScale = 1,
+    this.device = PreviewDevice.phone,
+  });
+
+  /// The system's theme, which apps may follow.
+  final Brightness brightness;
+
+  /// The system's font size.
+  final double textScale;
+  final PreviewDevice device;
+
+  PreviewSettings copyWith({
+    Brightness? brightness,
+    double? textScale,
+    PreviewDevice? device,
+  }) {
+    return PreviewSettings(
+      brightness: brightness ?? this.brightness,
+      textScale: textScale ?? this.textScale,
+      device: device ?? this.device,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PreviewSettings &&
+      other.brightness == brightness &&
+      other.textScale == textScale &&
+      other.device == device;
+
+  @override
+  int get hashCode => Object.hash(brightness, textScale, device);
+}

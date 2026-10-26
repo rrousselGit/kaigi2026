@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slides/main.dart';
 import 'package:slides/slides.dart';
+import 'package:slides/src/example_1/widgets.dart';
 
 import 'fonts.dart';
 
@@ -137,5 +138,27 @@ void main() {
         greaterThan(scrolled),
       );
     });
+  });
+
+  testWidgets('slides switch the site map to dark mode, then large text', (
+    tester,
+  ) async {
+    await goTo(tester, 'DevTool: Site Map Screens');
+    BuildContext catalog() => tester.element(find.text('Popular right now'));
+    final state = tester.state(find.byType(InteractiveViewer));
+    expect(ShopColors.of(catalog()), ShopColors.light);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(ShopColors.of(catalog()), ShopColors.dark);
+    expect(find.text('Dark'), findsOne, reason: 'the preview panel is open');
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pumpAndSettle();
+    expect(ShopColors.of(catalog()), ShopColors.dark);
+    expect(MediaQuery.textScalerOf(catalog()).scale(10), 16);
+
+    // The same map all along, updated in place.
+    expect(tester.state(find.byType(InteractiveViewer)), same(state));
   });
 }

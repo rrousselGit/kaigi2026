@@ -6,13 +6,96 @@ import 'package:material_ui/material_ui.dart';
 import 'models.dart';
 import 'shop_app.dart';
 
-abstract final class ShopColors {
-  static const ink = Color(0xFF111827);
-  static const muted = Color(0xFF6B7280);
-  static const border = Color(0xFFE5E7EB);
-  static const primary = Color(0xFF4F46E5);
-  static const success = Color(0xFF16A34A);
-  static const star = Color(0xFFF59E0B);
+/// The colors of the example app, in light or dark mode.
+@immutable
+class ShopColors extends ThemeExtension<ShopColors> {
+  const ShopColors({
+    required this.ink,
+    required this.muted,
+    required this.border,
+    required this.primary,
+    required this.success,
+    required this.star,
+    required this.surface,
+    required this.background,
+  });
+
+  static const light = ShopColors(
+    ink: Color(0xFF111827),
+    muted: Color(0xFF6B7280),
+    border: Color(0xFFE5E7EB),
+    primary: Color(0xFF4F46E5),
+    success: Color(0xFF16A34A),
+    star: Color(0xFFF59E0B),
+    surface: Color(0xFFFFFFFF),
+    background: Color(0xFFF6F7FB),
+  );
+
+  static const dark = ShopColors(
+    ink: Color(0xFFF3F4F6),
+    muted: Color(0xFF9CA3AF),
+    border: Color(0xFF374151),
+    primary: Color(0xFF6366F1),
+    success: Color(0xFF22C55E),
+    star: Color(0xFFFBBF24),
+    surface: Color(0xFF1F2937),
+    background: Color(0xFF111827),
+  );
+
+  static ShopColors of(BuildContext context) =>
+      Theme.of(context).extension<ShopColors>() ?? light;
+
+  /// Text and icons.
+  final Color ink;
+  final Color muted;
+  final Color border;
+  final Color primary;
+  final Color success;
+  final Color star;
+
+  /// Cards, headers and bars.
+  final Color surface;
+
+  /// Behind cards.
+  final Color background;
+
+  @override
+  ShopColors copyWith({
+    Color? ink,
+    Color? muted,
+    Color? border,
+    Color? primary,
+    Color? success,
+    Color? star,
+    Color? surface,
+    Color? background,
+  }) {
+    return ShopColors(
+      ink: ink ?? this.ink,
+      muted: muted ?? this.muted,
+      border: border ?? this.border,
+      primary: primary ?? this.primary,
+      success: success ?? this.success,
+      star: star ?? this.star,
+      surface: surface ?? this.surface,
+      background: background ?? this.background,
+    );
+  }
+
+  @override
+  ShopColors lerp(ShopColors? other, double t) {
+    if (other == null) return this;
+    return ShopColors(
+      ink: Color.lerp(ink, other.ink, t)!,
+      muted: Color.lerp(muted, other.muted, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      primary: Color.lerp(primary, other.primary, t)!,
+      success: Color.lerp(success, other.success, t)!,
+      star: Color.lerp(star, other.star, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      background: Color.lerp(background, other.background, t)!,
+    );
+  }
 }
 
 const _animationDuration = Duration(milliseconds: 300);
@@ -53,26 +136,24 @@ class ProductImage extends StatelessWidget {
 
 /// A button of the example. It does nothing without [onTap].
 class FakeButton extends StatelessWidget {
-  const FakeButton(
-    this.label, {
-    super.key,
-    this.icon,
-    this.color = ShopColors.primary,
-    this.onTap,
-  });
+  const FakeButton(this.label, {super.key, this.icon, this.color, this.onTap});
 
   final String label;
   final IconData? icon;
-  final Color color;
+
+  /// Defaults to [ShopColors.primary].
+  final Color? color;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? ShopColors.of(context).primary;
     return Tappable(
       onTap: onTap,
       child: AnimatedContainer(
         duration: _animationDuration,
         height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(14),
@@ -92,12 +173,18 @@ class FakeButton extends StatelessWidget {
             spacing: 8,
             children: [
               if (icon != null) Icon(icon, color: Colors.white, size: 20),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              // Shrinks with large fonts on small screens, rather than
+              // overflowing.
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -120,6 +207,7 @@ class FakeIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Tappable(
       onTap: onTap,
       child: SizedBox.square(
@@ -129,14 +217,14 @@ class FakeIconButton extends StatelessWidget {
           children: [
             Positioned.fill(
               child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: colors.surface,
                   shape: BoxShape.circle,
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(color: Color(0x14000000), blurRadius: 8),
                   ],
                 ),
-                child: Icon(icon, size: 20, color: ShopColors.ink),
+                child: Icon(icon, size: 20, color: colors.ink),
               ),
             ),
             Positioned(
@@ -153,7 +241,7 @@ class FakeIconButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFEF4444),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: colors.surface, width: 2),
                   ),
                   alignment: Alignment.center,
                   child: AnimatedSwitcher(
@@ -189,6 +277,7 @@ class ShopHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
@@ -201,10 +290,10 @@ class ShopHeader extends StatelessWidget {
             child: Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: ShopColors.ink,
+                color: colors.ink,
               ),
             ),
           ),
@@ -223,23 +312,24 @@ class Rating extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       spacing: 3,
       children: [
-        const Icon(Icons.star_rounded, size: 16, color: ShopColors.star),
+        Icon(Icons.star_rounded, size: 16, color: colors.star),
         Text(
           product.rating.toStringAsFixed(1),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
-            color: ShopColors.ink,
+            color: colors.ink,
           ),
         ),
         if (showReviews)
           Text(
             '(${product.reviews} reviews)',
-            style: const TextStyle(fontSize: 12.5, color: ShopColors.muted),
+            style: TextStyle(fontSize: 12.5, color: colors.muted),
           ),
       ],
     );
@@ -259,10 +349,11 @@ class ShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
           BoxShadow(
@@ -287,10 +378,11 @@ class SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     final style = TextStyle(
       fontSize: bold ? 17 : 14,
       fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-      color: bold ? ShopColors.ink : ShopColors.muted,
+      color: bold ? colors.ink : colors.muted,
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -300,7 +392,7 @@ class SummaryRow extends StatelessWidget {
           Text(
             value,
             style: style.copyWith(
-              color: ShopColors.ink,
+              color: colors.ink,
               fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
@@ -318,6 +410,7 @@ class BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = ShopColors.of(context);
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -325,9 +418,9 @@ class BottomBar extends StatelessWidget {
         20,
         14 + MediaQuery.paddingOf(context).bottom,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ShopColors.border)),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: child,
     );

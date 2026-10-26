@@ -10,11 +10,9 @@ import 'site_map.dart';
 abstract final class FrameMetrics {
   static const width = 280.0;
 
-  /// The logical size pages are previewed at, scaled down to [width].
-  static const screen = Size(_screenWidth, _screenHeight);
-  static const _screenWidth = 390.0;
-  static const _screenHeight = 844.0;
-  static const previewHeight = width * _screenHeight / _screenWidth;
+  /// The height of a page of a [screen] size, scaled down to [width].
+  static double previewHeight(Size screen) =>
+      width * screen.height / screen.width;
 
   /// The page name written above the frame, like in Figma.
   static const label = 28.0;
@@ -28,8 +26,12 @@ abstract final class FrameMetrics {
   static const rowGap = 64.0;
 
   /// The height of a frame listing [elements] buttons.
-  static double heightOf(int elements, {required bool previews}) => previews
-      ? label + previewHeight
+  static double heightOf(
+    int elements, {
+    required bool previews,
+    required Size screen,
+  }) => previews
+      ? label + previewHeight(screen)
       : label +
             appBar +
             condition +
@@ -64,8 +66,10 @@ class SiteMapLayout {
   factory SiteMapLayout(
     SiteMap siteMap, {
     required bool previews,
+    Size? screen,
     SiteMap? base,
   }) {
+    final screenSize = screen ?? PreviewDevice.phone.size;
     final versions = [siteMap, ?base];
     final ids = <String>{
       for (final version in versions)
@@ -103,8 +107,11 @@ class SiteMapLayout {
     for (final id in ids) {
       columns.putIfAbsent(depth[id]!, () => []).add(id);
     }
-    double heightOf(String id) =>
-        FrameMetrics.heightOf(elementsOf(id), previews: previews);
+    double heightOf(String id) => FrameMetrics.heightOf(
+      elementsOf(id),
+      previews: previews,
+      screen: screenSize,
+    );
     double columnHeight(List<String> column) =>
         column.map(heightOf).reduce((a, b) => a + b) +
         FrameMetrics.rowGap * (column.length - 1);
