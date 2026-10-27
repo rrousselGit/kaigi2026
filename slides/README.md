@@ -32,25 +32,45 @@ macOS runner must start Flutter without a window. After regenerating
 import Cocoa
 import FlutterMacOS
 
+/// Starts Flutter without any window: the app creates its windows itself,
+/// with Flutter's (experimental) multi-window API. See lib/main.dart.
 @main
 class AppDelegate: FlutterAppDelegate {
   var engine: FlutterEngine?
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
+    // Works around a crash on hot restart: the engine closes its windows
+    // after disposing their view controllers, and a focused window that closes
+    // then notifies its delegate, which reads the disposed controller.
+    NotificationCenter.default.addObserver(
+      forName: NSWindow.willCloseNotification,
+      object: nil,
+      queue: nil
+    ) { notification in
+      (notification.object as? NSWindow)?.delegate = nil
+    }
+
     let engine = FlutterEngine(name: "slides", project: nil)
     RegisterGeneratedPlugins(registry: engine)
     engine.run(withEntrypoint: nil)
     self.engine = engine
   }
 
+  // Hot restarts close every window before the app opens its main window
+  // again. The app quits itself when its main window is closed instead.
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    return false
+  }
+
+  override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
   }
 }
 ```
 
 and remove the `MainFlutterWindow` window (and its `mainFlutterWindow`
-outlet) from `macos/Runner/Base.lproj/MainMenu.xib`.
+outlet) from `macos/Runner/Base.lproj/MainMenu.xib`. The `willCloseNotification`
+observer works around a crash of Flutter's macOS embedder on hot restart.
 
 Both windows show the same deck, and either one can be used to navigate.
 

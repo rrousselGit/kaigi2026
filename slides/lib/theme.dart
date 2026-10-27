@@ -42,6 +42,12 @@ abstract final class Hues {
 enum Topic {
   intro('Introduction', Color(0xFF3B1A0B), Color(0xFF0D0807), Hues.pumpkin),
   why('Why tools', Color(0xFF3A0F1A), Color(0xFF0D0608), Hues.vermilion),
+  staticTools(
+    'Static tools',
+    Color(0xFF1F2A12),
+    Color(0xFF080A06),
+    Hues.matcha,
+  ),
   lints('Custom lints', Color(0xFF1F2A12), Color(0xFF080A06), Hues.matcha),
   codegen(
     'Code generation',
@@ -52,6 +58,24 @@ enum Topic {
   cli('CLIs', Color(0xFF0E2A33), Color(0xFF05090C), Hues.onibi),
   mcp('MCP servers', Color(0xFF2A1745), Color(0xFF0A0711), Hues.wisteria),
   devtools('DevTools', Color(0xFF3D1230), Color(0xFF0E060B), Hues.sakura),
+  runtimeTools(
+    'Runtime tools',
+    Color(0xFF0E2A33),
+    Color(0xFF05090C),
+    Hues.onibi,
+  ),
+  architecture(
+    'Architecture',
+    Color(0xFF1C1A40),
+    Color(0xFF07070F),
+    Hues.violet,
+  ),
+  humansAndAi(
+    'Humans & AI',
+    Color(0xFF2A1745),
+    Color(0xFF0A0711),
+    Hues.wisteria,
+  ),
   creation('Building tools', Color(0xFF1C1A40), Color(0xFF07070F), Hues.violet),
   conclusion('Wrap-up', Color(0xFF4A1D08), Color(0xFF0F0714), Hues.pumpkin);
 

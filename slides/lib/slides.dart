@@ -5,8 +5,10 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
+import 'src/example_1/debug_panel.dart';
 import 'src/example_1/models.dart';
 import 'src/example_1/shop_app.dart';
+import 'src/example_1/state_inspector.dart';
 import 'src/site_map/review_comment.dart';
 import 'src/site_map/shoply.dart';
 import 'src/site_map/site_map.dart';
@@ -81,26 +83,6 @@ linter:
   rules:
     - unnecessary_ignore''';
 
-const _testingTipCodegenDont = '''
-// test/generator_test.dart
-test('test generator string output', () {
-  final output = generate('class Foo {}');
-  expect(
-    output,
-    contains('void foo() {}'),
-  );
-});''';
-
-const _testingTipCodegenDo = '''
-// test/integration/foo_test.dart
-// Write target code, run generator & test runtime:
-@data
-class Foo {}
-
-test('test runtime behavior', () {
-  expect(Foo().toString(), 'Foo()');
-});''';
-
 const _lintPrompt = '''
 Add a lint rule `avoid_hardcoded_string`, reporting
 string literals shown to users.
@@ -163,10 +145,63 @@ class AvoidHardcodedString extends AnalysisRule {
   }
 }''';
 
+const _buttonSource = '''
+@Route('/catalog')
+class CatalogPage extends StatelessWidget {
+  const CatalogPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Link(
+      route: DetailPageRoute.route,
+      params: DetailPageArgs(id: 'headphones'),
+      child: ProductTile('headphones'),
+    );
+  }
+}''';
+
+const _mermaidSiteMap = '''
+graph LR
+  Catalog --> Product
+  Catalog --> Cart
+  Product --> Cart
+  Cart --> Checkout
+  Checkout --> OrderPlaced
+  OrderPlaced --> Catalog''';
+
+const _constSnippet = '''
+final path = '/\${config.catalog}'; // Only known at runtime
+const path = '/catalog'; // Readable by the analyzer''';
+
+const _annotationSnippet = '''
+@Route('/catalog') // Readable by the analyzer
+class CatalogPage extends StatelessWidget {}''';
+
+const _filesSnippet = '''
+lib/pages/cart/cart_page.dart
+lib/pages/cart/cart_page.fake.dart // Always next to its page
+lib/pages/checkout/checkout_page.dart''';
+
+const _fieldsSnippet = '''
+l10n.translate('cart.empty') // A string: opaque
+l10n.cartEmpty // A field: typed, and searchable''';
+
+const _vmServiceSnippet = '''
+final service = await vmServiceConnectUri(uri);
+
+// Run any expression in the running app.
+await service.evaluate(
+  isolateId,
+  libraryId,
+  'deck.goTo(42)',
+);''';
+
 const _demoCart = [CartItem('headphones'), CartItem('speaker', quantity: 2)];
 
-final slides = <SlideData>[
-  const SlideData(
+/// A getter rather than a variable, so that hot reload picks up edits to the
+/// slides: Dart does not re-run the initializer of global variables.
+List<SlideData> get slides => const <SlideData>[
+  SlideData(
     title: 'Title Slide',
     topic: Topic.intro,
     notes:
@@ -176,7 +211,7 @@ final slides = <SlideData>[
         'I realize: lots of developers are deferring programming to AI now.',
     child: _TitleSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'I Love Building Tools',
     steps: 2,
     topic: Topic.intro,
@@ -244,7 +279,7 @@ final slides = <SlideData>[
       ),
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Original Plan vs AI Reality',
     topic: Topic.intro,
     notes:
@@ -262,7 +297,7 @@ final slides = <SlideData>[
       ),
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Software Is Mostly Maintenance',
     steps: 2,
     topic: Topic.intro,
@@ -322,7 +357,7 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Two Kinds of Software',
     steps: 1,
     topic: Topic.intro,
@@ -369,7 +404,22 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
+    title: 'Vibe Coded Devtools',
+    topic: Topic.intro,
+    notes:
+        'Which is why I am perfectly happy to vibe code devtools, while I would '
+        'never ship a vibe coded app to users.',
+    child: _ImageSlide(
+      title: 'Know What to Vibe Code',
+      child: FramedImage(
+        'assets/img/vibe_coded_devtools.png',
+        aspectRatio: 1,
+        maxHeight: 520,
+      ),
+    ),
+  ),
+  SlideData(
     title: 'Build a Lot of Tools',
     steps: 3,
     topic: Topic.intro,
@@ -381,7 +431,7 @@ final slides = <SlideData>[
         'about which ones, and how to make them pay off.',
     child: _BuildALotSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Turn Review Comments into Tools',
     steps: 1,
     topic: Topic.why,
@@ -392,7 +442,7 @@ final slides = <SlideData>[
         'write, or read, that comment ever again.',
     child: _ReviewToLintSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Progressive Improvement',
     steps: 3,
     topic: Topic.why,
@@ -402,7 +452,7 @@ final slides = <SlideData>[
         'heads of a few senior engineers.',
     child: _ProgressiveImprovementSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Prompt or Program?',
     steps: 9,
     topic: Topic.why,
@@ -463,7 +513,7 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Same Prompt, Two Agents',
     steps: 1,
     topic: Topic.why,
@@ -526,7 +576,19 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
+    title: 'Two Kinds of Devtools',
+    steps: 1,
+    topic: Topic.staticTools,
+    notes:
+        'Most devtools fall into two families. Static tools read the code, '
+        'without running it: lints, generators, CI checks. They are built on '
+        'package:analyzer, which knows what every identifier refers to. '
+        'Runtime tools look at the running app instead, through '
+        "package:vm_service. Let's start with static tools.",
+    child: _DevtoolKindsSlide(focus: _DevtoolKind.static, highlight: 'Lints'),
+  ),
+  SlideData(
     title: 'Tool: Custom Lints',
     steps: 8,
     topic: Topic.lints,
@@ -536,7 +598,7 @@ final slides = <SlideData>[
         'a few hours.',
     child: _CustomLintsSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Lints: Things to Note',
     steps: 6,
     topic: Topic.lints,
@@ -598,7 +660,7 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Testing Tip: Custom Lints',
     steps: 1,
     topic: Topic.lints,
@@ -634,7 +696,7 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'Tool: Quick Fixes',
     steps: 8,
     topic: Topic.lints,
@@ -649,7 +711,7 @@ final slides = <SlideData>[
         'package used by thousands of developers.',
     child: _QuickFixSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Lints: Baselines',
     steps: 2,
     topic: Topic.lints,
@@ -660,7 +722,7 @@ final slides = <SlideData>[
     group: #baseline,
     child: _BaselineSlide(),
   ),
-  const SlideData(
+  SlideData(
     title: 'Danger: Never Grow the Baseline',
     topic: Topic.lints,
     notes:
@@ -670,7 +732,7 @@ final slides = <SlideData>[
     group: #baseline,
     child: _BaselineSlide(showDanger: true),
   ),
-  const SlideData(
+  SlideData(
     title: 'Pro Tip: Generate Lints with AI',
     steps: 3,
     topic: Topic.lints,
@@ -704,462 +766,108 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
-    title: 'Tool: Code Generators',
-    topic: Topic.codegen,
+  SlideData(
+    title: 'Built for Tools',
+    topic: Topic.architecture,
+    steps: 3,
     notes:
-        'Codegen is about zero PR review on boilerplate, uniform behavior, and '
-        'deterministic updates when fields change.',
-    child: ContentSlide(
-      title: 'Code Generators: Rethinking the Main Value',
-      children: [
-        P(
-          'Common Argument: *"Codegen reduces boilerplate."* → '
-          "**I couldn't care less, especially with AI!**",
-        ),
-        SizedBox(height: 16),
-        DeckCard(
-          child: _CardContent(
-            title: 'What Codegen is ACTUALLY About',
-            items: [
-              '**Reduce code to Review**',
-              '**Ensures Consistency**',
-              '**Update generated code is simple**',
-            ],
-          ),
-        ),
-      ],
-    ),
+        'Lints check the code. But design decisions decide what tools can do '
+        'at all: a few of them make the code readable by the analyzer. '
+        "None of them is about tools. Let's go through them, then see what "
+        'they enable on a real app.',
+    child: _BuiltForToolsSlide(),
   ),
-  const SlideData(
-    title: 'Pro Tip: Static Analyzability',
-    topic: Topic.codegen,
-    notes:
-        'Annotations make code statically analyzable, compounding the power '
-        'of downstream custom tools.',
-    child: BadgeCardSlide(
-      children: [
-        BadgeTitle('Codegen makes code statically analyzable.'),
-        BadgeSubtitle(
-          "It's hard to know if `Translation.of().translate('settings_title')` "
-          'is unused.\n'
-          "It's easy to know if `Translation.of().settingsTitle` is unused.\n\n"
-          "Delete the translation and you'll get a compilation error, ha!",
-          height: 1.7,
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Codegen Decisions',
-    topic: Topic.codegen,
-    notes:
-        'Many data layer codegen tools have existing open source packages. '
-        'Simple Dart scripts that read JSON and output files count as codegen '
-        'too!',
-    child: ContentSlide(
-      title: 'What to Automate with Codegen (and What to Avoid)',
-      children: [
-        Grid(
-          columns: 3,
-          gap: 20,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'Definitely Automate',
-                fontSize: 14.4,
-                items: [
-                  '**Backend Data Layer**: GraphQL / Swagger / gRPC schemas to '
-                      'Dart models.',
-                  '**On-Device DB**: Table schemas.',
-                  "**Assets**: `FontAwesome.check` instead of `'fa check'`.",
-                  '**Translations**: `L10n.of(context).homePageTitle`.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Maybe Automate',
-                fontSize: 14.4,
-                items: [
-                  '**Routing**: Type safety on route parameters & static '
-                      'route list.',
-                  '**Design system browser**: Auto-generated widget browser '
-                      'via `build_runner`.',
-                  '**Error-Prone Tasks**: Auto-generated `toString` to '
-                      'prevent stale fields.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Do NOT Automate',
-                fontSize: 14.4,
-                items: [
-                  "**Minor Boilerplate Gains** that aren't error prone (e.g. "
-                      'my old `functional_widget` saving 2-3 lines on '
-                      'StatelessWidgets).',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Pro Tip: Commit Generated Files',
-    topic: Topic.codegen,
-    notes: 'Commit generated files and let CI auto-commit codegen updates.',
-    child: BadgeCardSlide(
-      children: [
-        BadgeTitle('Commit generated files & let CI auto-update them'),
-        BadgeSubtitle(
-          'Always commit generated files into source control.\n'
-          'Configure your CI pipeline to auto-run codegen and commit updates '
-          'when schemas change!',
-          height: 1.7,
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Pro Tip: Simple Scripts over build_runner',
-    topic: Topic.codegen,
-    notes:
-        'Simple Dart scripts that read JSON and output files count as codegen '
-        'too!',
-    child: BadgeCardSlide(
-      children: [
-        BadgeTitle('Codegen can be a basic Dart script'),
-        BadgeSubtitle(
-          'Codegen can be a basic Dart script reading JSON and outputting a '
-          "file.\nIt doesn't have to be complex `build_runner` logic!",
-          height: 1.7,
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Testing Tip: Code Generators',
-    topic: Topic.codegen,
-    notes:
-        'Testing tip for code generators: avoid brittle string checks, test '
-        'runtime behavior of generated files instead.',
-    child: BadgeCardSlide(
-      maxWidth: 1000,
-      children: [
-        BadgeTitle('Testing Tip: Code Generators', bottom: 32),
-        Grid(
-          columns: 2,
-          gap: 24,
-          children: [
-            _DoDontCard(dont: true, code: _testingTipCodegenDont),
-            _DoDontCard(dont: false, code: _testingTipCodegenDo),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Tool: CLIs',
-    topic: Topic.cli,
-    notes:
-        'Bash can be daunting on Windows. Write Dart scripts instead! CLIs are '
-        'universally usable by humans, AIs, and CI pipelines.',
-    child: ContentSlide(
-      title: 'Command Line Interfaces (CLIs)',
-      children: [
-        _CliDiagram(),
-        Callout(
-          '👍 Skip bash. Dart is a scripting language, write Dart scripts!',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Pro Tip: Must-Have CLI Commands',
-    topic: Topic.cli,
-    notes:
-        'Essential CLI commands to standardize setup, running, testing, and '
-        'deploying across projects.',
-    child: BadgeCardSlide(
-      maxWidth: 950,
-      children: [
-        BadgeTitle('Must-Have Commands for All Projects', bottom: 16),
-        FeatureList(top: 16, gap: 12.8, [
-          '`./install`: Check Flutter/Dart versions, missing tools (Docker, '
-              'CLIs), set up hidden `.env` & codegen. Link solutions for '
-              'missing tools!',
-          '`./run`: Start emulators, Docker, local servers.',
-          '`./test`: Unit & integration tests on browser/simulators.',
-          '`./deploy`: Update changelogs, bump versions, release flags, '
-              'publish to stores.',
-        ]),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Danger: Avoid Module Templates',
-    topic: Topic.cli,
-    notes:
-        'Avoid writing CLI module templates. AI handles module creation '
-        'easily, and keeping templates updated is costly.',
-    child: BadgeCardSlide(
-      danger: true,
-      children: [
-        BadgeTitle('Skip Templates (Mason, etc)'),
-        BadgeSubtitle(
-          'High maintenance cost. Low usage rate. And AI is really good at '
-          'this sort of task.',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Testing Tip: CLI Tools',
-    topic: Topic.cli,
-    notes: 'Testing tip for CLI tools.',
-    child: BadgeCardSlide(
-      children: [
-        BadgeTitle('Testing Tip: CLI Tools'),
-        BadgeSubtitle('Integration tests are super easy with Process.run!'),
-        SizedBox(height: 32),
-        Center(
-          child: CodeBlock(
-            "Process.run('dart', ['path/to/bin.dart', '--machine']);",
-            fontSize: 15.2,
-          ),
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Tool: MCP Servers',
-    topic: Topic.mcp,
-    notes:
-        'MCPs are the perfect abstraction when allowing LLMs to perform tasks '
-        'that humans would generally do in a GUI.',
-    child: ContentSlide(
-      title: 'MCP Servers (Model Context Protocol)',
-      children: [
-        _McpDiagram(),
-        Callout(
-          '💡 **When to use MCP over CLI:** Long-lived servers save startup '
-          "costs & persist state when human/CI CLI interaction isn't required.",
-          fontSize: 15.2,
-          top: 10,
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
-    title: 'Tool: DevTools',
-    topic: Topic.devtools,
-    notes:
-        'DevTools are built primarily for human developers, splitting into '
-        'in-app inspectors for QA and external DevTools extensions for IDE '
-        'debugging.',
-    child: ContentSlide(
-      title: 'DevTools Extensions: For Humans Only',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: '📱 In-App DevTools',
-                items: [
-                  '**On-Device Inspection**: Embedded directly inside the app '
-                      'build for QA and devs.',
-                  '**No Debugger Required**: Test feature flags, inspect '
-                      'logs, & trigger state overrides on real hardware.',
-                  '**Ideal For**: Manual QA testing, quick runtime tweaks, & '
-                      'staging builds.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: '🖥️ External DevTools Extensions',
-                items: [
-                  '**Flutter DevTools Suite Integration**: Embedded extension '
-                      'tab inside standard DevTools.',
-                  '**Debugger API & Analyzer**: Powered by `vm_service` & '
-                      'static AST analysis.',
-                  '**Ideal For**: Rich state tree inspectors, visual '
-                      'debuggers, & time-travel state tracking.',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
+  SlideData(
     title: 'Example: Shoply',
-    topic: Topic.devtools,
-    notes:
-        "Here's the app we'll build tools for: a small e-commerce app. "
-        'Everything you see on the phone is derived from a single state object.',
+    topic: Topic.staticTools,
+    group: #meetShoply,
+    notes: "Here's the app: a small e-commerce app called Shoply. Let's click through it quickly.",
     example: ShopApp(state: ShopState()),
-    child: _ExampleSlide(
-      title: 'Meet Shoply',
-      points: [
-        'A tiny e-commerce app: **catalog**, **product pages**, **cart** and '
-            '**checkout**.',
-        'Everything on screen is derived from **one state object**.',
-      ],
-      code: 'ShopState()',
-    ),
+    child: _MeetShoplySlide(page: 'Catalog'),
   ),
-  const SlideData(
-    title: 'Example: Browsing',
-    topic: Topic.devtools,
-    notes: 'Users scroll through the catalog.',
-    example: ShopApp(state: ShopState(catalogScroll: 480)),
-    child: _ExampleSlide(
-      title: 'Browsing the Catalog',
-      points: ['Scroll position is UI state too.'],
-      code: 'ShopState(catalogScroll: 480)',
-    ),
+  SlideData(
+    title: 'Example: Shoply Product',
+    topic: Topic.staticTools,
+    group: #meetShoply,
+    notes: "A product page.",
+    example: ShopApp(state: ShopState(productId: 'headphones')),
+    child: _MeetShoplySlide(page: 'Product'),
   ),
-  const SlideData(
-    title: 'Example: Filtering',
-    topic: Topic.devtools,
-    notes: 'Users narrow down the catalog with categories.',
-    example: ShopApp(state: ShopState(category: 'Audio')),
-    child: _ExampleSlide(
-      title: 'Filtering by Category',
-      points: ['Filters change what the catalog shows.'],
-      code: "ShopState(category: 'Audio')",
-    ),
-  ),
-  const SlideData(
-    title: 'Example: Product Details',
-    topic: Topic.devtools,
-    notes: 'Opening a product pushes a new page.',
-    example: ShopApp(
-      state: ShopState(category: 'Audio', productId: 'headphones'),
-    ),
-    child: _ExampleSlide(
-      title: 'Opening a Product',
-      points: ['Navigation is state: the page stack derives from it.'],
-      code: '''ShopState(
-  category: 'Audio',
-  productId: 'headphones',
-)''',
-    ),
-  ),
-  const SlideData(
-    title: 'Example: Add to Cart',
-    topic: Topic.devtools,
-    notes: 'Adding to cart updates the badge, the button, and the catalog.',
+  SlideData(
+    title: 'Example: Shoply Cart',
+    topic: Topic.staticTools,
+    group: #meetShoply,
+    notes: "The cart.",
     example: ShopApp(
       state: ShopState(
-        category: 'Audio',
-        productId: 'headphones',
-        cart: [CartItem('headphones')],
-      ),
-    ),
-    child: _ExampleSlide(
-      title: 'Adding to the Cart',
-      points: ['One change, many widgets updated: badge, button, catalog.'],
-      code: '''ShopState(
-  category: 'Audio',
-  productId: 'headphones',
-  cart: [CartItem('headphones')],
-)''',
-    ),
-  ),
-  const SlideData(
-    title: 'Example: Cart',
-    topic: Topic.devtools,
-    notes: 'The cart lists items and computes totals.',
-    example: ShopApp(
-      state: ShopState(
-        category: 'Audio',
         productId: 'headphones',
         cart: _demoCart,
         cartOpen: true,
       ),
     ),
-    child: _ExampleSlide(
-      title: 'Reviewing the Cart',
-      points: ['Totals and shipping are **derived** from the cart.'],
-      code: '''ShopState(
-  ...,
-  cart: [
-    CartItem('headphones'),
-    CartItem('speaker', quantity: 2),
-  ],
-  cartOpen: true,
-)''',
-    ),
+    child: _MeetShoplySlide(page: 'Cart'),
   ),
-  const SlideData(
-    title: 'Example: Checkout',
-    topic: Topic.devtools,
-    notes: 'Checkout summarizes the order before placing it.',
+  SlideData(
+    title: 'Example: Shoply Checkout',
+    topic: Topic.staticTools,
+    group: #meetShoply,
+    notes: "Checkout.",
     example: ShopApp(
       state: ShopState(
-        category: 'Audio',
         productId: 'headphones',
         cart: _demoCart,
         cartOpen: true,
         checkout: CheckoutStep.review,
       ),
     ),
-    child: _ExampleSlide(
-      title: 'Checking Out',
-      points: ['Address, delivery & payment: more state to inspect.'],
-      code: '''ShopState(
-  ...,
-  checkout: CheckoutStep.review,
-)''',
-    ),
+    child: _MeetShoplySlide(page: 'Checkout'),
   ),
-  const SlideData(
-    title: 'Example: Order Placed',
-    topic: Topic.devtools,
-    notes: 'And the order is placed.',
+  SlideData(
+    title: 'Example: Shoply Order Placed',
+    topic: Topic.staticTools,
+    group: #meetShoply,
+    notes: "And the order is placed. Five pages in total.",
     example: ShopApp(
       state: ShopState(
-        category: 'Audio',
         productId: 'headphones',
         cart: _demoCart,
         cartOpen: true,
         checkout: CheckoutStep.confirmed,
       ),
     ),
-    child: _ExampleSlide(
-      title: 'Order Placed',
-      points: [
-        'How did we get here? A DevTool could **replay every state change**.',
-      ],
-      code: '''ShopState(
-  ...,
-  checkout: CheckoutStep.confirmed,
-)''',
-    ),
+    child: _MeetShoplySlide(page: 'Order placed'),
   ),
-  const SlideData(
+  SlideData(
+    title: 'Example of Custom Architecture to Power Tools',
+    topic: Topic.staticTools,
+    steps: 2,
+    notes:
+        'Lints look at one line at a time. But the analyzer can read the whole '
+        'app: every page, every button, and which page each button opens. '
+        'From that, you can generate anything: an image, a Mermaid graph, a '
+        "markdown file. Or something better. Let's see it on Shoply.",
+    child: _StaticGoesFurtherSlide(),
+  ),
+  SlideData(
     title: 'DevTool: Site Map',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.shoply,
     notes:
         'A first devtool for Shoply: a site map. Every page of the app, what '
         'can be tapped on it, and where each button leads. Like a Figma '
-        'prototype, but for the real app.',
+        'prototype, but for the real app. It is static analysis: a form of '
+        'codegen. The analyzer reads the routes and the buttons, and the same '
+        'graph could just as well be output as an image, a Mermaid graph, or '
+        'a markdown file.',
     child: _SiteMapSlide(
       title: 'A Site Map of Shoply',
       example: _SiteMapExample.shoply,
+      interactive: false,
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: Site Map Screens',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.shoply,
     notes:
         'The same map, rendering the real pages instead of wireframes. Each '
@@ -1169,39 +877,21 @@ final slides = <SlideData>[
       title: 'A Site Map of Shoply',
       example: _SiteMapExample.shoply,
       previews: true,
+      interactive: false,
     ),
   ),
-  const SlideData(
-    title: 'DevTool: Site Map Dark Mode',
-    topic: Topic.devtools,
-    group: _SiteMapExample.shoply,
+  SlideData(
+    title: 'Git Integration',
+    topic: Topic.staticTools,
     notes:
-        'The same pages, rendered in dark mode: every screen of the app '
-        'checked at once, without clicking through the app on a device.',
-    child: _SiteMapSlide(
-      title: 'Previewing Dark Mode',
-      example: _SiteMapExample.shoply,
-      previews: true,
-      settings: PreviewSettings(brightness: Brightness.dark),
-    ),
+        'The site map is generated from the code. And the code lives in git. '
+        'So the tool can build the site map of any branch, and compare two of '
+        'them: what does this pull request change, for the user?',
+    child: _GitIntegrationSlide(),
   ),
-  const SlideData(
-    title: 'DevTool: Site Map Large Text',
-    topic: Topic.devtools,
-    group: _SiteMapExample.shoply,
-    notes:
-        'And with a large font, as set by users who need it. Layout issues '
-        'show up on every page at once.',
-    child: _SiteMapSlide(
-      title: 'Previewing Large Text',
-      example: _SiteMapExample.shoply,
-      previews: true,
-      settings: PreviewSettings(brightness: Brightness.dark, textScale: 1.6),
-    ),
-  ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: Review, Before',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.wishlist,
     notes:
         'Now a pull request adds a wishlist. In the code review, that is four '
@@ -1213,9 +903,9 @@ final slides = <SlideData>[
       showBase: true,
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: Review, After',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.wishlist,
     notes:
         '...and after. One new page, and new arrows leading to and from it: '
@@ -1226,9 +916,9 @@ final slides = <SlideData>[
       previews: true,
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: Spot the Change',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.buyNow,
     notes:
         'Another pull request. This time, no new page: existing pages '
@@ -1239,9 +929,9 @@ final slides = <SlideData>[
       previews: true,
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: Highlighted Changes',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     group: _SiteMapExample.buyNow,
     notes:
         'With highlighting, the tool answers for you: Product gained a "Buy '
@@ -1254,9 +944,9 @@ final slides = <SlideData>[
       highlight: true,
     ),
   ),
-  const SlideData(
+  SlideData(
     title: 'DevTool: In Code Review',
-    topic: Topic.devtools,
+    topic: Topic.staticTools,
     notes:
         'Tools like this one belong in CI too. On every pull request, render '
         'the site map, check that every page still renders and can be '
@@ -1264,9 +954,191 @@ final slides = <SlideData>[
         'Reviewers see what users will see, not just lines of code.',
     child: _CodeReviewSlide(),
   ),
-  const SlideData(
-    title: 'Pro Tip: DevTools in the AI Era',
-    topic: Topic.devtools,
+  SlideData(
+    title: 'Two Kinds of Devtools: Runtime',
+    topic: Topic.runtimeTools,
+    steps: 1,
+    notes:
+        "Now the other family: runtime tools. They don't read the code, they "
+        'look at the app while it runs. Either from inside the app, like a '
+        'debug panel, or from outside, through package:vm_service like the '
+        'debugger. Our first example: switching the theme of the running app.',
+    child: _DevtoolKindsSlide(
+      focus: _DevtoolKind.runtime,
+      highlight: 'Theme switcher',
+    ),
+  ),
+  SlideData(
+    title: 'DevTool: Site Map Dark Mode',
+    topic: Topic.runtimeTools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'The same pages, rendered in dark mode: every screen of the app '
+        'checked at once, without clicking through the app on a device.',
+    child: _SiteMapSlide(
+      title: 'Previewing Dark Mode',
+      example: _SiteMapExample.shoply,
+      previews: true,
+      settings: PreviewSettings(brightness: Brightness.dark),
+    ),
+  ),
+  SlideData(
+    title: 'DevTool: Site Map Large Text',
+    topic: Topic.runtimeTools,
+    group: _SiteMapExample.shoply,
+    notes:
+        'And with a large font, as set by users who need it. Layout issues '
+        'show up on every page at once.',
+    child: _SiteMapSlide(
+      title: 'Previewing Large Text',
+      example: _SiteMapExample.shoply,
+      previews: true,
+      settings: PreviewSettings(brightness: Brightness.dark, textScale: 1.6),
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel',
+    topic: Topic.runtimeTools,
+    notes: "The site map previews are nice, but the running app is where bugs live. So let's put the devtool inside the app.",
+    example: ShopApp(state: ShopState(), debug: ShopDebug()),
+    child: _RuntimeAppSlide(
+      title: 'An In-App Debug Panel',
+      points: [
+        'Lives **inside the app**: on a real phone, for QA too.',
+        'Only in debug builds.',
+      ],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Settings',
+    topic: Topic.runtimeTools,
+    notes: "Open the panel: theme, text size.",
+    example: ShopApp(state: ShopState(), debug: ShopDebug(open: true)),
+    child: _RuntimeAppSlide(
+      title: 'Switch Theme & Text Size',
+      points: ['The running app, **not a preview**.'],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Dark Mode',
+    topic: Topic.runtimeTools,
+    notes: "Dark mode, in the running app.",
+    example: ShopApp(
+      state: ShopState(),
+      debug: ShopDebug(open: true, brightness: Brightness.dark),
+    ),
+    child: _RuntimeAppSlide(
+      title: 'Switch Theme & Text Size',
+      points: ['The running app, **not a preview**.'],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Large Text',
+    topic: Topic.runtimeTools,
+    notes: "And large text.",
+    example: ShopApp(
+      state: ShopState(),
+      debug: ShopDebug(open: true, brightness: Brightness.dark, textScale: 1.3),
+    ),
+    child: _RuntimeAppSlide(
+      title: 'Switch Theme & Text Size',
+      points: ['The running app, **not a preview**.'],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Test Users',
+    topic: Topic.runtimeTools,
+    notes: "Reproducing a bug often starts with: who has this in their account? The panel lists test users, filtered by what they have.",
+    example: ShopApp(
+      state: ShopState(),
+      debug: ShopDebug(open: true, tab: DebugTab.users, userQuery: 'in cart'),
+    ),
+    child: _RuntimeAppSlide(
+      title: 'Find a Test User',
+      points: [
+        'Search users **by what they have**: a cart, an order, a plan.',
+        'No more asking around for a test account.',
+      ],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Log In',
+    topic: Topic.runtimeTools,
+    notes: "One tap, and we're logged in as that user, looking at their cart.",
+    example: ShopApp(
+      state: ShopState(
+        cart: [CartItem('headphones'), CartItem('speaker', quantity: 2)],
+        cartOpen: true,
+      ),
+      debug: ShopDebug(user: 'alice@test.dev'),
+    ),
+    child: _RuntimeAppSlide(
+      title: 'Log In as Them',
+      points: ['One tap: the app now shows **their** cart.'],
+    ),
+  ),
+  SlideData(
+    title: 'Debug Panel: Network',
+    topic: Topic.runtimeTools,
+    notes: "And every request the app made. That failing checkout is the bug report.",
+    example: ShopApp(
+      state: ShopState(),
+      debug: ShopDebug(open: true, tab: DebugTab.network),
+    ),
+    child: _RuntimeAppSlide(
+      title: 'See Every Request',
+      points: [
+        'Every call, its **status** and **timing**.',
+        'That 402 is your bug report.',
+      ],
+    ),
+  ),
+  SlideData(
+    title: 'What vm_service Gives You',
+    topic: Topic.runtimeTools,
+    steps: 1,
+    notes:
+        'Everything so far lives inside the app. Tools outside it use '
+        'package:vm_service, like the debugger does: evaluate any expression '
+        'in the running app, read any live object. Fun fact: this very deck was '
+        'edited that way all along. After each change, the agent evaluated an '
+        'expression to jump to the slide it had just edited. A runtime tool, '
+        'built in minutes, for one talk.',
+    child: _VmServiceSlide(),
+  ),
+  SlideData(
+    title: 'State Inspector',
+    topic: Topic.runtimeTools,
+    notes:
+        'A devtool outside the app, reading the state of the running app '
+        'through vm_service: who is logged in, what is in the cart, which '
+        'page is open. And it can edit it: change a quantity here, and the '
+        'app updates. Switch user, and the app shows their account.',
+    example: ShopApp(
+      state: ShopState(
+        cart: [CartItem('headphones'), CartItem('speaker', quantity: 2)],
+        cartOpen: true,
+      ),
+      debug: ShopDebug(user: 'alice@test.dev'),
+      inspect: true,
+    ),
+    child: _StateInspectorSlide(),
+  ),
+  SlideData(
+    title: 'What You See vs. What Your Agent Sees',
+    steps: 2,
+    topic: Topic.humansAndAi,
+    notes:
+        'When I debug, I look at the logs, the network tab, the app state, '
+        'the screen, I log in as a test user. By default, my agent only has '
+        'the source code. Every gap is a place where it guesses, or burns '
+        'tokens hunting for something I could have handed it. So: any '
+        'information you have access to, your agent should have too.',
+    child: _AgentSeesSlide(),
+  ),
+  SlideData(
+    title: 'DevTools in the AI Era',
+    topic: Topic.humansAndAi,
     notes:
         'DevTools are the other side of the MCP coin. Expose MCP endpoints so '
         'both human developers and AI agents can query application state '
@@ -1290,142 +1162,37 @@ final slides = <SlideData>[
       ],
     ),
   ),
-  const SlideData(
-    title: 'How to Make Tools',
-    topic: Topic.creation,
+  SlideData(
+    title: 'Agents Debug Too',
+    steps: 1,
+    topic: Topic.humansAndAi,
     notes:
-        'A large chunk of tools fall into static analysis (analyzer) or '
-        'runtime tools (vm_service).',
-    child: ContentSlide(
-      title: 'How to Make Tools: Static vs. Runtime Analysis',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'Static Analysis (package:analyzer)',
-                description:
-                    "**Don't rely on greps/regex and string code parsing!** "
-                    'Analyzer is a must for precise code views.',
-                items: [
-                  'List all classes across workspace.',
-                  'Find everywhere a class is used.',
-                  'Inspect methods, doc comments, annotations, and AST fields.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Runtime Analysis (package:vm_service)',
-                description:
-                    'Inspect live application memory via VM Service URI (from '
-                    'logs or VS Code clipboard).',
-                items: [
-                  'Arbitrary code execution (`eval(code)` like VS Code '
-                      'Debugger Expression Evaluator).',
-                  'Inspect full application memory.',
-                  'List all object instances and read field values live.',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+        'The tools we built for ourselves are just as useful to an agent. '
+        'Here it finds a premium test user, logs in as them, opens the cart, '
+        'reads the crash and evaluates the state, without ever asking me to '
+        'reproduce the bug. Only possible because each of those panels has a '
+        'machine-readable counterpart.',
+    child: _AgentDebugSlide(),
   ),
-  const SlideData(
-    title: 'Case Study: Riverpod',
-    topic: Topic.creation,
+  SlideData(
+    title: 'Start Monday',
+    steps: 4,
+    topic: Topic.conclusion,
     notes:
-        'By sharing analyzer utilities and vm_service logic, we can easily '
-        'power lints, codegen, devtools, and MCP servers simultaneously.',
-    child: ContentSlide(
-      title: 'Practical Architecture: The Riverpod Tooling Suite',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'riverpod_lint & riverpod_generator',
-                items: [
-                  '**Shared Implementation**: All provider metadata parsing '
-                      'logic is extracted into `riverpod_analyzer_utils` '
-                      'library and used by both tools.',
-                  'Technically allows anyone to build custom Riverpod lint '
-                      'rules or documentation tools.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: 'Riverpod DevTool & MCP Refactor',
-                items: [
-                  'Uses `vm_service` to inspect running app & display all '
-                      'providers and their states.',
-                  'Supports **time travel** state history & live provider '
-                      'modification.',
-                  '**Current Refactor**: Extracting logic so a **Riverpod MCP '
-                      'Server** can be created for AI agents!',
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
+        "You don't need a tooling team or a roadmap. Next time something "
+        'annoys you twice, that is your next tool. Ask your agent to write '
+        'it, in the middle of the rush. Shipped software is expensive, tools '
+        "are cheap: spend the cheap kind on the expensive kind. Don't replace "
+        'tools with prompts, use prompts to create your tools.',
+    child: _StartMondaySlide(),
   ),
-  const SlideData(
-    title: 'Role of AI Skills',
-    topic: Topic.creation,
-    notes:
-        'Skills are for discoverability. Let tools document themselves '
-        'through --help flags, MCP tool schemas, and Dart docs.',
-    child: ContentSlide(
-      title: 'So, When DO We Use Skills Then?',
-      children: [
-        Grid(
-          columns: 2,
-          children: [
-            DeckCard(
-              child: _CardContent(
-                title: 'Skills ARE for Discoverability',
-                items: [
-                  "Installing a tool doesn't mean the AI knows it exists.",
-                  'A simple prompt: *"You can inspect memory of the debugged '
-                      'app using MyState MCP"* is enough for AIs to use it.',
-                ],
-              ),
-            ),
-            DeckCard(
-              child: _CardContent(
-                title: "DON'T Write Tool Manuals in Skills",
-                items: [
-                  'Tools have natural discovery mechanisms!',
-                  'CLIs have `--help` (agents check this natively).',
-                  'MCP servers list tools with descriptions.',
-                  'Generators have READMEs and Dart doc comments.',
-                ],
-              ),
-            ),
-          ],
-        ),
-        Callout(
-          "🚫 **Avoid Context Pollution:** Don't pollute prompt context with "
-          'manuals the AI needs once in a blue moon. Using skills to solve '
-          'coding problems directly is a last resort!',
-        ),
-      ],
-    ),
-  ),
-  const SlideData(
+  SlideData(
     title: 'Conclusion',
     topic: Topic.conclusion,
     notes:
-        "Thank you, and happy Halloween! Remember: Don't replace tools with prompts, use prompts to "
-        'create your tools. Plus, all these tools can be written in Dart, so '
-        "they're super easy to get started with!",
+        'The flywheel: every tool removes some maintenance, which frees time '
+        'for the next tool. Thank you, '
+        'and happy Halloween!',
     child: _ConclusionSlide(),
   ),
 ];
@@ -2270,11 +2037,15 @@ class _SiteMapSlide extends StatelessWidget {
     this.settings = const PreviewSettings(),
     this.showBase = false,
     this.highlight = false,
+    this.interactive = true,
   });
 
   final String title;
   final _SiteMapExample example;
   final bool previews;
+
+  /// See [SiteMapView.interactive].
+  final bool interactive;
 
   /// The theme and text size of the screens, shown in the preview panel when
   /// changed.
@@ -2306,6 +2077,7 @@ class _SiteMapSlide extends StatelessWidget {
               previews: previews,
               settings: settings,
               showSettings: settings != const PreviewSettings(),
+              interactive: interactive,
             ),
             _SiteMapExample.wishlist => SiteMapView.diff(
               shoplyWishlistDiff,
@@ -3054,6 +2826,793 @@ class _BaselineSlide extends StatelessWidget {
   }
 }
 
+enum _DevtoolKind { static, runtime }
+
+/// Static vs. runtime devtools, with the family about to be covered
+/// highlighted.
+class _DevtoolKindsSlide extends StatelessWidget {
+  const _DevtoolKindsSlide({required this.focus, required this.highlight});
+
+  final _DevtoolKind focus;
+
+  /// The example of the focused family that the next step highlights: the
+  /// one the following slides are about.
+  final String highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentSlide(
+      title: 'Two Kinds of Devtools',
+      children: [
+        Grid(
+          columns: 2,
+          gap: 32,
+          children: [
+            _DevtoolKindCard(
+              focused: focus == _DevtoolKind.static,
+              // Static tools come first, so they are never "later".
+              later: false,
+              icon: Icons.description_rounded,
+              title: 'Static tools',
+              package: 'package:analyzer',
+              tagline: 'Read the code, without running it.',
+              abilities: const [
+                'List every class, and **everywhere** it is used',
+                'Read **types**, annotations and doc comments',
+              ],
+              examples: const ['Lints', 'Code generators', 'Site maps'],
+              highlight: focus == _DevtoolKind.static ? highlight : null,
+              color: Hues.matcha,
+            ),
+            _DevtoolKindCard(
+              focused: focus == _DevtoolKind.runtime,
+              later: focus == _DevtoolKind.static,
+              icon: Icons.play_circle_rounded,
+              title: 'Runtime tools',
+              package: 'in-app, or package:vm_service',
+              tagline: 'Inspect the app while it runs.',
+              abilities: const [
+                '**In-app** panels: theme, test users, requests',
+                '**From outside**, with vm_service: the debugger',
+              ],
+              examples: const ['Theme switcher', 'Log viewer', 'Debugger'],
+              highlight: focus == _DevtoolKind.runtime ? highlight : null,
+              color: Hues.onibi,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DevtoolKindCard extends StatelessWidget {
+  const _DevtoolKindCard({
+    required this.focused,
+    required this.later,
+    required this.icon,
+    required this.title,
+    required this.package,
+    required this.tagline,
+    required this.abilities,
+    required this.examples,
+    required this.highlight,
+    required this.color,
+  });
+
+  final bool focused;
+
+  /// Whether the slides cover this family of tools later on.
+  final bool later;
+
+  /// Which of [examples] to highlight from step 1 onwards.
+  final String? highlight;
+  final IconData icon;
+  final String title;
+  final String package;
+  final String tagline;
+  final List<String> abilities;
+  final List<String> examples;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return AnimatedOpacity(
+      opacity: focused ? 1 : 0.35,
+      duration: const Duration(milliseconds: 400),
+      child: Container(
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: palette.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: focused ? color.withValues(alpha: 0.7) : palette.cardBorder,
+            width: focused ? 2 : 1,
+          ),
+          boxShadow: [
+            if (focused)
+              BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 32),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              spacing: 14,
+              children: [
+                Icon(icon, size: 40, color: color),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: Fonts.heading,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    color: palette.heading,
+                  ),
+                ),
+                const Spacer(),
+                if (later)
+                  Text(
+                    'LATER',
+                    style: TextStyle(
+                      fontSize: 12.8,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
+                      color: palette.textDim,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            InlineCode(package, fontSize: 16, color: color),
+            const SizedBox(height: 16),
+            Text(
+              tagline,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: palette.textMain,
+              ),
+            ),
+            FeatureList(abilities, fontSize: 17.6, top: 14),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 16,
+              runSpacing: 10,
+              children: [
+                for (final example in examples)
+                  _ExampleChip(
+                    example,
+                    color: color,
+                    highlighted: highlight == example,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A pill naming a kind of devtool. When [highlighted], it lights up with a
+/// pulsing glow once the slide reaches step 1, and the other pills fade.
+class _ExampleChip extends StatefulWidget {
+  const _ExampleChip(
+    this.label, {
+    required this.color,
+    required this.highlighted,
+  });
+
+  final String label;
+  final Color color;
+  final bool highlighted;
+
+  @override
+  State<_ExampleChip> createState() => _ExampleChipState();
+}
+
+class _ExampleChipState extends State<_ExampleChip>
+    with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+  var _lit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final step = SlideStep.of(context);
+    // Outside of a slide (e.g. the overview), every step is revealed: keep
+    // the pills as they are.
+    final lit = widget.highlighted && step >= 1 && step < 1 << 20;
+    if (lit && !_lit) {
+      // A few pulses, then a steady glow: an endless animation would keep
+      // the slide from ever settling.
+      _pulse.repeat(reverse: true, count: 6);
+    } else if (!lit) {
+      _pulse.value = 0;
+    }
+    _lit = lit;
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final step = SlideStep.of(context);
+    final dimmed = !widget.highlighted && step >= 1 && step < 1 << 20;
+    final color = widget.color;
+    const duration = Duration(milliseconds: 350);
+
+    return AnimatedOpacity(
+      opacity: dimmed ? 0.35 : 1,
+      duration: duration,
+      child: AnimatedScale(
+        scale: _lit ? 1.1 : 1,
+        duration: duration,
+        curve: Curves.easeOutBack,
+        child: AnimatedBuilder(
+          animation: _pulse,
+          builder: (context, child) {
+            final pulse = Curves.easeInOut.transform(_pulse.value);
+            return AnimatedContainer(
+              duration: duration,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: _lit ? color : color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: color.withValues(alpha: _lit ? 1 : 0.4),
+                ),
+                boxShadow: [
+                  if (_lit)
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.45 + 0.4 * pulse),
+                      blurRadius: 14 + 22 * pulse,
+                      spreadRadius: 1 + 5 * pulse,
+                    ),
+                ],
+              ),
+              child: child,
+            );
+          },
+          child: AnimatedDefaultTextStyle(
+            duration: duration,
+            style: TextStyle(
+              fontFamily: Fonts.body,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _lit ? Hues.codeBg : color,
+            ),
+            child: Text(widget.label),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// From one button in the code, to a graph of the whole app.
+class _StaticGoesFurtherSlide extends StatelessWidget {
+  const _StaticGoesFurtherSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    Widget arrow(int step) => Reveal(
+      step,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Icon(
+          Icons.arrow_forward_rounded,
+          size: 36,
+          color: palette.accent,
+        ),
+      ),
+    );
+
+    return ContentSlide(
+      title: 'Example of Custom Architecture to Power Tools',
+      children: [
+        const P(
+          'Lints check one line at a time. The analyzer can read **the whole '
+          'app**.',
+          fontSize: 20,
+          bottom: 24,
+        ),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Expanded(
+                flex: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    H3('The code'),
+                    CodeBlock(_buttonSource, fontSize: 13),
+                  ],
+                ),
+              ),
+              Center(child: arrow(1)),
+              const Expanded(
+                flex: 5,
+                child: Reveal(
+                  1,
+                  child: DeckCard(
+                    child: _CardContent(
+                      title: 'What the analyzer sees',
+                      fontSize: 17.6,
+                      items: [
+                        'All `@Route` classes',
+                        'All references to `Link` within a route',
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Center(child: arrow(2)),
+              const Expanded(
+                flex: 5,
+                child: Reveal(
+                  2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      H3('Generate a graph of routes → links'),
+                      CodeBlock(_mermaidSiteMap, fontSize: 14.4),
+                      SizedBox(height: 12),
+                      P(
+                        'A Mermaid graph. Or an image, a markdown file, or…',
+                        fontSize: 15.2,
+                        bottom: 0,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The title next to the example app, while clicking through its pages.
+///
+/// Its slides share one instance (see [SlideData.group]), so only the page
+/// name changes.
+class _MeetShoplySlide extends StatelessWidget {
+  const _MeetShoplySlide({required this.page});
+
+  final String page;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Eyebrow(),
+        const H1('Meet Shoply', fontSize: 72),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Text(
+            page,
+            key: ValueKey(page),
+            style: TextStyle(
+              fontFamily: Fonts.heading,
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              color: palette.accent,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Separates the site map from its git integration, around a big git logo.
+class _GitIntegrationSlide extends StatelessWidget {
+  const _GitIntegrationSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox.square(
+          dimension: 260,
+          child: CustomPaint(painter: _GitLogoPainter()),
+        ),
+        SizedBox(height: 48),
+        H1('Site Map × Git', fontSize: 64),
+        SizedBox(height: 16),
+        P(
+          'The site map of **any branch**, and what a pull request changes.',
+          fontSize: 22,
+          bottom: 0,
+        ),
+      ],
+    );
+  }
+}
+
+/// The git logo: a branch drawn on an orange diamond.
+class _GitLogoPainter extends CustomPainter {
+  const _GitLogoPainter();
+
+  static const _orange = Color(0xFFF05033);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final side = size.shortestSide;
+    Offset at(double x, double y) => Offset(x * side, y * side);
+
+    // A rounded square, turned into a diamond.
+    canvas
+      ..save()
+      ..translate(side / 2, side / 2)
+      ..rotate(math.pi / 4)
+      ..drawShadow(
+        Path()..addRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset.zero,
+              width: side * 0.7,
+              height: side * 0.7,
+            ),
+            Radius.circular(side * 0.07),
+          ),
+        ),
+        _orange,
+        24,
+        false,
+      )
+      ..drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: side * 0.7,
+            height: side * 0.7,
+          ),
+          Radius.circular(side * 0.07),
+        ),
+        Paint()..color = _orange,
+      )
+      ..restore();
+
+    final branch = Paint()
+      ..color = Colors.white
+      ..strokeWidth = side * 0.06
+      ..strokeCap = StrokeCap.round;
+    final top = at(0.42, 0.36);
+    final bottom = at(0.42, 0.68);
+    final right = at(0.62, 0.56);
+    canvas
+      ..drawLine(at(0.27, 0.21), top, branch)
+      ..drawLine(top, bottom, branch)
+      ..drawLine(top, right, branch);
+    for (final node in [top, bottom, right]) {
+      canvas.drawCircle(node, side * 0.065, branch);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GitLogoPainter oldDelegate) => false;
+}
+
+/// The architecture decisions the demos rely on, revealed one at a time.
+class _BuiltForToolsSlide extends StatelessWidget {
+  const _BuiltForToolsSlide();
+
+  /// Each decision, with a snippet shown while it is the latest one revealed.
+  static const _decisions = [
+    (
+      '🔒',
+      'Constants',
+      'Values the analyzer can read',
+      Hues.sky,
+      _constSnippet,
+    ),
+    (
+      '🏷️',
+      'Annotations',
+      'Find every page in one query',
+      Hues.teal,
+      _annotationSnippet,
+    ),
+    (
+      '📁',
+      'File conventions',
+      'Know where everything lives',
+      Hues.candyCorn,
+      _filesSnippet,
+    ),
+    (
+      '🧩',
+      'Fields, not strings',
+      'Typed, instead of dynamic',
+      Hues.purpleLight,
+      _fieldsSnippet,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final current = SlideStep.of(context).clamp(0, _decisions.length - 1);
+    return ContentSlide(
+      title: 'Built for Tools',
+      children: [
+        const P(
+          'Design decisions impact **what tools can do**.',
+          fontSize: 22,
+          bottom: 32,
+        ),
+        Grid(
+          columns: 4,
+          gap: 20,
+          children: [
+            for (final (index, (emoji, title, caption, color, _))
+                in _decisions.indexed)
+              Reveal(
+                index,
+                // Earlier decisions fade back, to follow the current one.
+                child: AnimatedOpacity(
+                  opacity: index < current ? 0.4 : 1,
+                  duration: const Duration(milliseconds: 350),
+                  child: DiagramNode(
+                    emoji: emoji,
+                    title: title,
+                    caption: caption,
+                    color: color,
+                    tint: color,
+                    emojiSize: 36,
+                    titleSize: 20,
+                    captionSize: 14.4,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 36),
+        // Fixed height, so that swapping snippets does not move the slide.
+        SizedBox(
+          height: 200,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.08),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            child: Center(
+              key: ValueKey(current),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: IntrinsicHeight(
+                  child: CodeBlock(_decisions[current].$5, fontSize: 18),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What package:vm_service can do, with the call that drove this deck.
+class _VmServiceSlide extends StatelessWidget {
+  const _VmServiceSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ContentSlide(
+      title: 'What vm_service Gives You',
+      children: [
+        Grid(
+          columns: 2,
+          gap: 40,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FeatureList(fontSize: 20.8, gap: 18, top: 0, [
+                  '**Evaluate** any expression, like the debugger.',
+                  'Read every **live object**, and its fields.',
+                  '**Hot reload**, hot restart, and more.',
+                ]),
+              ],
+            ),
+            CodeBlock(_vmServiceSnippet, fontSize: 16),
+          ],
+        ),
+        Reveal(
+          1,
+          child: Callout(
+            '**This deck was edited this way.** After each change, the agent '
+            'evaluated an expression to jump to the slide it had edited.',
+            fontSize: 19.2,
+            top: 32,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A short title and a few points, next to the example app.
+class _RuntimeAppSlide extends StatelessWidget {
+  const _RuntimeAppSlide({required this.title, required this.points});
+
+  final String title;
+  final List<String> points;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Eyebrow(),
+        Padding(padding: const EdgeInsets.only(bottom: 28), child: H2(title)),
+        FeatureList(points, fontSize: 22, gap: 16, top: 0),
+      ],
+    );
+  }
+}
+
+/// An editable view of the example app's state, next to the app.
+class _StateInspectorSlide extends StatelessWidget {
+  const _StateInspectorSlide();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Eyebrow(),
+        Padding(
+          padding: EdgeInsets.only(bottom: 16),
+          child: H2('State Inspector'),
+        ),
+        StateInspector(),
+        SizedBox(height: 12),
+        _PubPackageCard(
+          name: 'vm_service',
+          version: '15.4.0',
+          description:
+              'A library to communicate with a service implementing the Dart '
+              'VM service protocol.',
+          publisher: 'tools.dart.dev',
+          likes: '62',
+          points: '150',
+          downloads: '22.1M',
+        ),
+      ],
+    );
+  }
+}
+
+class _AgentDebugSlide extends StatelessWidget {
+  const _AgentDebugSlide();
+
+  static const _tools = [
+    ('👥', 'Find test users'),
+    ('🔑', 'Log in as anyone'),
+    ('🧭', 'Open any page'),
+    ('💥', 'Read runtime errors'),
+    ('🔍', 'Inspect app state'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final accent = palette.topicAccent(Topic.runtimeTools);
+    return ContentSlide(
+      title: 'Agents Debug Too',
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 32,
+            children: [
+              const Expanded(
+                flex: 3,
+                child: _AgentRun(
+                  prompt:
+                      'Use available MCPs to find why the cart page crashes '
+                      'for premium users',
+                  title: 'Using runtime tools',
+                  color: Hues.emeraldLight,
+                  revealDuration: Duration(seconds: 3),
+                  seconds: 48,
+                  tokens: 9400,
+                  lines: [
+                    "• shoply.find_users(query: 'premium')",
+                    '  -> alice@test.dev (3 items), dan@test.dev (empty cart)',
+                    "• shoply.login('dan@test.dev')",
+                    "• shoply.open('/cart')",
+                    '• dart.get_runtime_errors()',
+                    '  -> Null check operator used on a null value',
+                    '  -> cart_page.dart:58 PremiumDiscount.build',
+                    "• dart.evaluate('cart.premiumDiscount')",
+                    '  -> null',
+                    'Crashes when a premium cart is empty.',
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 12,
+                  children: [
+                    H3('Tools you already built', color: accent),
+                    for (final (emoji, label) in _tools)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          '$emoji   $label',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: palette.textMain,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Reveal(
+          1,
+          child: Callout(
+            '**No "can you reproduce it?"** The agent uses the same tools you '
+            'do, as long as they have a machine-readable side.',
+            top: 24,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProgressiveImprovementSlide extends StatelessWidget {
   const _ProgressiveImprovementSlide();
 
@@ -3109,44 +3668,244 @@ class _ProgressiveImprovementSlide extends StatelessWidget {
   }
 }
 
-/// A step of the example app walkthrough, shown next to the app itself.
-class _ExampleSlide extends StatelessWidget {
-  const _ExampleSlide({
-    required this.title,
-    required this.points,
-    required this.code,
-  });
+class _AgentSeesSlide extends StatelessWidget {
+  const _AgentSeesSlide();
 
-  final String title;
-  final List<String> points;
-
-  /// The state the example is in, as Dart code.
-  final String code;
+  /// What a developer looks at while working, and whether the agent sees it
+  /// by default.
+  static const _sources = [
+    ('📄', 'Source code', true),
+    ('📜', 'Logs', false),
+    ('🌐', 'Network requests', false),
+    ('🧠', 'App state', false),
+    ('📱', 'The screen', false),
+    ('👥', 'Test accounts', false),
+    ('🚨', 'CI & crash reports', false),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final step = SlideStep.of(context);
     return ContentSlide(
-      title: title,
+      title: 'What You See vs. What Your Agent Sees',
       children: [
-        FeatureList(points, fontSize: 19),
-        const SizedBox(height: 32),
-        CodeBlock(code, fontSize: 17),
+        Grid(
+          columns: 2,
+          gap: 32,
+          children: [
+            _SourcesCard(
+              title: '🧑‍💻  You',
+              color: Hues.emeraldLight,
+              sources: [
+                for (final (emoji, label, _) in _sources) (emoji, label, true),
+              ],
+            ),
+            _SourcesCard(
+              title: '🤖  Your agent',
+              color: palette.topicAccent(Topic.humansAndAi),
+              // Once the rule is applied, the agent sees everything too.
+              sources: [
+                for (final (emoji, label, seen) in _sources)
+                  (emoji, label, seen || step >= 2),
+              ],
+            ),
+          ],
+        ),
+        const Reveal(
+          1,
+          child: Callout(
+            '**Any information you have access to, your agent should have '
+            'too.** Every gap is a place where it guesses.',
+            fontSize: 19.2,
+            top: 24,
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _SourcesCard extends StatelessWidget {
+  const _SourcesCard({
+    required this.title,
+    required this.color,
+    required this.sources,
+  });
+
+  final String title;
+  final Color color;
+
+  /// Each source as (emoji, label, whether it is visible).
+  final List<(String, String, bool)> sources;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return DeckCard(
+      accentBar: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          H3(title, color: color, fontSize: 24),
+          for (final (emoji, label, visible) in sources)
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 400),
+              opacity: visible ? 1 : 0.25,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: visible ? 0.1 : 0.03),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: color.withValues(alpha: visible ? 0.4 : 0.15),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '$emoji   $label',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: palette.textMain,
+                        ),
+                      ),
+                    ),
+                    if (!visible)
+                      Text(
+                        '?',
+                        style: TextStyle(
+                          fontFamily: Fonts.heading,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: palette.textMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StartMondaySlide extends StatelessWidget {
+  const _StartMondaySlide();
+
+  /// Each habit as (the pain, what to do about it).
+  static const _habits = [
+    ('You write the same review comment twice', 'Make it a lint'),
+    (
+      'A tool cannot understand your code',
+      'Architect your app to be tool compatible',
+    ),
+    ('Your agent is guessing', 'Give AI access to everything you have'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final accent = palette.topicAccent(Topic.conclusion);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1000),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Eyebrow(),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 28),
+              child: H2('Start Monday'),
+            ),
+            for (final (index, (trigger, tool)) in _habits.indexed)
+              Reveal(
+                index,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: DeckCard(
+                    accentBar: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: Text(
+                            trigger,
+                            style: TextStyle(
+                              fontSize: 22,
+                              color: palette.textMuted,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 32,
+                            color: accent,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            tool,
+                            style: TextStyle(
+                              fontFamily: Fonts.heading,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: accent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            const Reveal(
+              3,
+              child: Callout(
+                '**Shipped software is expensive, tools are cheap.** Spend '
+                'the cheap kind on the expensive kind.',
+                fontSize: 21,
+                top: 8,
+              ),
+            ),
+            Reveal(
+              4,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  "Don't replace tools with prompts. Use prompts to create "
+                  'your tools.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: Fonts.heading,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: palette.heading,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _ConclusionSlide extends StatelessWidget {
   const _ConclusionSlide();
-
-  static const _points = [
-    "**Don't replace tools with prompts.** Use prompts to create your tools.",
-    '**Avoid using Skills to solve problems.** Use them to make an agent '
-        'discover the tools to solve said problem.',
-    '**Building tools has never been easier** thanks to AI.',
-    '**Write all tools in Dart:** Custom lints, codegen, CLIs, and MCP '
-        'servers can all be written in Dart!',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -3157,7 +3916,7 @@ class _ConclusionSlide extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎃', style: TextStyle(fontSize: 44)),
+            const Text('🎃', style: TextStyle(fontSize: 40)),
             const SizedBox(width: 20),
             ShaderMask(
               blendMode: BlendMode.srcIn,
@@ -3166,65 +3925,19 @@ class _ConclusionSlide extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [Hues.candyCorn, Hues.pumpkin, Hues.vermilion],
               ).createShader(bounds),
-              child: const H1('Conclusion', fontSize: 48),
+              child: const H1('Conclusion', fontSize: 44),
             ),
             const SizedBox(width: 20),
-            const Text('👻', style: TextStyle(fontSize: 44)),
+            const Text('👻', style: TextStyle(fontSize: 40)),
           ],
         ),
-        const SizedBox(height: 32),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 850),
-          child: Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: palette.isLight
-                  ? palette.cardBg
-                  : const Color.fromRGBO(22, 12, 10, 0.88),
-              border: Border.all(color: Hues.pumpkin.withValues(alpha: 0.4)),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Hues.pumpkin.withValues(alpha: 0.25),
-                  blurRadius: 40,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: Hues.wisteria.withValues(alpha: 0.15),
-                  blurRadius: 60,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(28),
-                  child: FeatureList(_points, fontSize: 19.2, gap: 16, top: 0),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 4,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Hues.pumpkin, Hues.vermilion],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
+        const SizedBox.square(dimension: 460, child: _Flywheel()),
+        const SizedBox(height: 24),
         Text(
           'ありがとう！ Trick or treat? Q & A 🍬',
           style: TextStyle(
-            fontSize: 21.6,
+            fontSize: 20,
             color: palette.accent,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.1,
@@ -3235,18 +3948,142 @@ class _ConclusionSlide extends StatelessWidget {
   }
 }
 
-/// The usual card body: a heading, an optional paragraph and a bullet list.
+/// The loop of the talk: each tool frees time for the next one.
+class _Flywheel extends StatelessWidget {
+  const _Flywheel();
+
+  static const _stages = [
+    ('😤', 'Notice friction'),
+    ('🤖', 'AI builds a tool'),
+    ('🧹', 'Less maintenance'),
+    ('⏳', 'Time for the next tool'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeInOut,
+      builder: (context, progress, _) {
+        return CustomPaint(
+          painter: _FlywheelPainter(color: Hues.pumpkin, progress: progress),
+          child: Stack(
+            children: [
+              for (final (index, (emoji, label)) in _stages.indexed)
+                Align(
+                  // Top, right, bottom, left.
+                  alignment: switch (index) {
+                    0 => Alignment.topCenter,
+                    1 => Alignment.centerRight,
+                    2 => Alignment.bottomCenter,
+                    _ => Alignment.centerLeft,
+                  },
+                  child: Container(
+                    width: 130,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: palette.isLight
+                          ? palette.cardBg
+                          : const Color.fromRGBO(22, 12, 10, 0.95),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Hues.pumpkin.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(emoji, style: const TextStyle(fontSize: 24)),
+                        Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: palette.textMain,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FlywheelPainter extends CustomPainter {
+  _FlywheelPainter({required this.color, required this.progress});
+
+  final Color color;
+
+  /// How much of the loop is drawn, from 0 to 1.
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 - 40;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // One clockwise arc per stage, from one node to the next.
+    for (var i = 0; i < 4; i++) {
+      final drawn = (progress * 4 - i).clamp(0.0, 1.0);
+      if (drawn == 0) continue;
+      final start = -math.pi / 2 + i * math.pi / 2;
+      canvas.drawArc(rect, start, math.pi / 2 * drawn, false, paint);
+      if (drawn < 1) continue;
+
+      // An arrowhead just before the next node, pointing clockwise.
+      final angle = start + math.pi / 2 - 0.42;
+      final tip = center + Offset(math.cos(angle), math.sin(angle)) * radius;
+      final direction = Offset(-math.sin(angle), math.cos(angle));
+      final normal = Offset(math.cos(angle), math.sin(angle));
+      canvas.drawPath(
+        Path()
+          ..moveTo(tip.dx, tip.dy)
+          ..lineTo(
+            (tip - direction * 14 + normal * 8).dx,
+            (tip - direction * 14 + normal * 8).dy,
+          )
+          ..lineTo(
+            (tip - direction * 14 - normal * 8).dx,
+            (tip - direction * 14 - normal * 8).dy,
+          )
+          ..close(),
+        Paint()..color = color,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FlywheelPainter oldDelegate) =>
+      color != oldDelegate.color || progress != oldDelegate.progress;
+}
+
+/// The usual card body: a heading and a bullet list.
 class _CardContent extends StatelessWidget {
   const _CardContent({
     required this.title,
     required this.items,
-    this.description,
     this.fontSize = 16.8,
     this.firstStep,
   });
 
   final String title;
-  final String? description;
   final List<String> items;
   final double fontSize;
 
@@ -3259,8 +4096,6 @@ class _CardContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         H3(title),
-        if (description case final description?)
-          P(description, fontSize: 15.2, bottom: 8),
         FeatureList(items, fontSize: fontSize, firstStep: firstStep),
       ],
     );
@@ -3356,6 +4191,7 @@ class _BuildALotSlide extends StatelessWidget {
 /// [revealDuration] to show how long it takes.
 class _AgentRun extends StatelessWidget {
   const _AgentRun({
+    this.prompt = 'Check this PR for hardcoded strings',
     required this.title,
     required this.color,
     required this.revealDuration,
@@ -3364,8 +4200,7 @@ class _AgentRun extends StatelessWidget {
     required this.lines,
   });
 
-  static const _prompt = 'Check this PR for hardcoded strings';
-
+  final String prompt;
   final String title;
   final Color color;
   final Duration revealDuration;
@@ -3414,7 +4249,7 @@ class _AgentRun extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '> $_prompt',
+                  '> $prompt',
                   style: code.copyWith(color: Colors.white),
                 ),
               ),
@@ -4131,250 +4966,6 @@ class _DoDontCard extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CliDiagram extends StatelessWidget {
-  const _CliDiagram();
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = Palette.of(context);
-    return DeckCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const H3(
-            'CLI as Universal Interface Layer',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Column(
-            spacing: 12,
-            children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: const Grid(
-                  columns: 3,
-                  gap: 16,
-                  children: [
-                    DiagramNode(
-                      emoji: '👨‍💻',
-                      title: 'Humans',
-                      caption: 'Terminal / Scripts',
-                      color: Hues.sky,
-                      tint: Hues.sky,
-                    ),
-                    DiagramNode(
-                      emoji: '🤖',
-                      title: 'AI Agents',
-                      caption: 'Tool Calling / Exec',
-                      color: Hues.purpleLight,
-                      tint: Hues.purple,
-                    ),
-                    DiagramNode(
-                      emoji: '⚙️',
-                      title: 'Tools & GUIs',
-                      caption: 'CI Pipelines / IDEs',
-                      color: Hues.emeraldLight,
-                      tint: Hues.emerald,
-                    ),
-                  ],
-                ),
-              ),
-              const Arrows(['↓', '↓', '↓']),
-              DiagramBox(
-                highlight: true,
-                gradient: const [Hues.sky, Hues.emerald],
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                child: Text.rich(
-                  TextSpan(
-                    text: '💻 CLI Abstraction Layer ',
-                    children: [
-                      TextSpan(
-                        text: '(Dart Scripts / Executables)',
-                        style: TextStyle(
-                          color: palette.accent,
-                          fontSize: 14.4,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: Fonts.code,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17.6,
-                    color: palette.heading,
-                  ),
-                ),
-              ),
-              const Arrows(['↓']),
-              DiagramBox(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 10,
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Underlying Project Actions',
-                      style: TextStyle(
-                        fontSize: 15.2,
-                        fontWeight: FontWeight.w700,
-                        color: palette.calloutText,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Environment Setup • Emulators & Docker • Tests • '
-                      'Codegen • Deployments',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13.6, color: palette.textDim),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _McpDiagram extends StatelessWidget {
-  const _McpDiagram();
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = Palette.of(context);
-    return DeckCard(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const H3(
-            'MCP Architecture: Connecting AI Agents to App State',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Column(
-            spacing: 10,
-            children: [
-              const DiagramNode(
-                emoji: '🤖',
-                title:
-                    'AI Agent (LLM Client / Cursor / Claude Desktop / Custom '
-                    'Agent)',
-                caption:
-                    'Discovers tool schemas & invokes actions autonomously',
-                color: Hues.purpleLight,
-                tint: Hues.purple,
-                emojiSize: 20.8,
-                titleSize: 15.2,
-                captionSize: 12.5,
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 8,
-                children: [
-                  const Arrows(['↓'], maxWidth: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: palette.accent.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: palette.accent.withValues(alpha: 0.25),
-                      ),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      'JSON-RPC over Stdio / HTTP',
-                      style: TextStyle(
-                        fontFamily: Fonts.code,
-                        fontSize: 13.6,
-                        fontWeight: FontWeight.w600,
-                        color: palette.accent,
-                      ),
-                    ),
-                  ),
-                  const Arrows(['↓'], maxWidth: 20),
-                ],
-              ),
-              DiagramBox(
-                highlight: true,
-                gradient: const [Hues.sky, Hues.purple],
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                child: Text.rich(
-                  TextSpan(
-                    text: '⚡ MCP Server ',
-                    children: [
-                      TextSpan(
-                        text:
-                            '(package:dart_mcp — Stateful / Long-Lived Server)',
-                        style: TextStyle(
-                          color: palette.accent,
-                          fontSize: 13.6,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: Fonts.code,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16.8,
-                    color: palette.heading,
-                  ),
-                ),
-              ),
-              const Arrows(['↓', '↓']),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: const Grid(
-                  columns: 2,
-                  gap: 16,
-                  children: [
-                    DiagramNode(
-                      emoji: '🛠️',
-                      title: 'Tools',
-                      caption:
-                          'Executable actions, API probes, app control, & '
-                          'state mutation',
-                      color: Hues.sky,
-                      emojiSize: 20,
-                      titleSize: 15.2,
-                    ),
-                    DiagramNode(
-                      emoji: '📁',
-                      title: 'Files & Resources',
-                      caption:
-                          'Workspace files, logs, URIs, test fixtures, & '
-                          'documentation',
-                      color: Hues.emeraldLight,
-                      emojiSize: 20,
-                      titleSize: 15.2,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

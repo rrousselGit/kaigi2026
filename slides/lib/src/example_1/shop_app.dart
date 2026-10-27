@@ -7,6 +7,7 @@ import '../../theme.dart';
 import 'cart.dart';
 import 'catalog.dart';
 import 'checkout.dart';
+import 'debug_panel.dart';
 import 'models.dart';
 import 'product.dart';
 import 'widgets.dart';
@@ -21,9 +22,21 @@ import 'wishlist.dart';
 /// The app can also be clicked through. Clicks change a local copy of the
 /// state, which is reset to [state] whenever the slides change it.
 class ShopApp extends StatefulWidget {
-  const ShopApp({super.key, required this.state});
+  const ShopApp({
+    super.key,
+    required this.state,
+    this.debug,
+    this.inspect = false,
+  });
 
   final ShopState state;
+
+  /// The in-app debug panel, available when non-null, as in debug builds.
+  final ShopDebug? debug;
+
+  /// Whether the app shares its state through [ShopInspection], for a state
+  /// inspector to show and edit it.
+  final bool inspect;
 
   @override
   State<ShopApp> createState() => _ShopAppState();
@@ -31,20 +44,61 @@ class ShopApp extends StatefulWidget {
 
 class _ShopAppState extends State<ShopApp> {
   late var _state = widget.state;
+  late var _debug = widget.debug;
+
+  @override
+  void initState() {
+    super.initState();
+    ShopInspection.current.addListener(_onInspected);
+  }
+
+  @override
+  void dispose() {
+    ShopInspection.current.removeListener(_onInspected);
+    super.dispose();
+  }
+
+  /// Applies the edits made by the state inspector.
+  void _onInspected() {
+    final inspected = ShopInspection.current.value;
+    if (!widget.inspect || inspected == null) return;
+    if (identical(inspected.state, _state) && inspected.user == _debug?.user) {
+      return;
+    }
+    setState(() {
+      _state = inspected.state;
+      if (inspected.user case final user?) {
+        _debug = (_debug ?? const ShopDebug()).copyWith(user: user);
+      }
+    });
+  }
+
+  /// Shares the state with the state inspector, once the frame is built:
+  /// listeners can't be notified while building.
+  void _publish() {
+    final inspected = (state: _state, user: _debug?.user);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.inspect) ShopInspection.current.value = inspected;
+    });
+  }
 
   @override
   void didUpdateWidget(ShopApp oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.state != oldWidget.state) _state = widget.state;
+    if (widget.debug != oldWidget.debug) _debug = widget.debug;
   }
 
   @override
   Widget build(BuildContext context) {
     final state = _state;
     final productId = state.productId;
-    return Theme(
-      // The slides show the app in light mode, whatever the system's theme.
-      data: shopTheme(Brightness.light),
+    final debug = _debug;
+    if (widget.inspect) _publish();
+    final app = Theme(
+      // The slides show the app in light mode, whatever the system's theme,
+      // unless the debug panel changes it.
+      data: shopTheme(debug?.brightness ?? Brightness.light),
       child: ShopScope(
         state: state,
         onChanged: (state) => setState(() => _state = state),
@@ -79,7 +133,68 @@ class _ShopAppState extends State<ShopApp> {
         ),
       ),
     );
+    if (debug == null) return app;
+
+    final media = MediaQuery.of(context);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: MediaQuery(
+            data: media.copyWith(
+              textScaler: TextScaler.linear(debug.textScale),
+            ),
+            child: app,
+          ),
+        ),
+        if (debug.user case final user?)
+          Positioned(
+            top: media.padding.top + 8,
+            left: 0,
+            right: 0,
+            child: Center(child: LoggedInBanner(email: user)),
+          ),
+        Positioned(
+          right: 16,
+          bottom: media.padding.bottom + 90,
+          child: DebugButton(
+            onTap: () =>
+                setState(() => _debug = debug.copyWith(open: !debug.open)),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedSlide(
+            offset: debug.open ? Offset.zero : const Offset(0, 1.1),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            child: DebugPanel(
+              debug: debug,
+              onChanged: (debug) => setState(() => _debug = debug),
+              onLogin: (user) => setState(() {
+                _state = user.state;
+                _debug = debug.copyWith(open: false, user: user.email);
+              }),
+            ),
+          ),
+        ),
+      ],
+    );
   }
+}
+
+/// The state of the [ShopApp] being inspected, and the test user it is
+/// logged in as.
+typedef InspectedShop = ({ShopState state, String? user});
+
+/// Shares the state of the [ShopApp] with a state inspector shown next to it.
+///
+/// In a real app, the inspector would be a devtool reading and editing the
+/// state through package:vm_service. In the slides, both live in the same
+/// process, so they share this notifier instead.
+abstract final class ShopInspection {
+  static final current = ValueNotifier<InspectedShop?>(null);
 }
 
 /// The theme of the [ShopApp], in light or dark mode.

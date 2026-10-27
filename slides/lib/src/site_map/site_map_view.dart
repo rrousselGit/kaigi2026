@@ -72,6 +72,7 @@ class SiteMapView extends StatefulWidget {
     this.previews = false,
     this.settings = const PreviewSettings(),
     this.showSettings = false,
+    this.interactive = true,
   }) : diff = null,
        showBase = false,
        highlight = false;
@@ -86,6 +87,7 @@ class SiteMapView extends StatefulWidget {
     this.showSettings = false,
     this.showBase = false,
     this.highlight = true,
+    this.interactive = true,
   }) : siteMap = diff.head;
 
   final SiteMap siteMap;
@@ -105,6 +107,10 @@ class SiteMapView extends StatefulWidget {
 
   /// Whether what the [diff] changed is highlighted.
   final bool highlight;
+
+  /// Whether the toolbar has buttons. Without them, the map reads as
+  /// something generated from the code, like an image or a diagram.
+  final bool interactive;
 
   @override
   State<SiteMapView> createState() => _SiteMapViewState();
@@ -468,7 +474,20 @@ class _SiteMapViewState extends State<SiteMapView>
                 top: 16,
                 child: _Toolbar(
                   children: [
-                    if (widget.diff case final diff?) ...[
+                    if (!widget.interactive) ...[
+                      Text(
+                        widget.siteMap.source,
+                        style: _mono.copyWith(color: _Colors.label),
+                      ),
+                      Text(
+                        '${widget.siteMap.routes.length} pages · '
+                        '${_layout.links.length} links',
+                        style: const TextStyle(
+                          color: _Colors.label,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ] else if (widget.diff case final diff?) ...[
                       _Segmented(
                         value: _showBase,
                         onChanged: (value) =>
@@ -507,16 +526,17 @@ class _SiteMapViewState extends State<SiteMapView>
                         ),
                       ),
                     ],
-                    _Segmented(
-                      value: _previews,
-                      onChanged: (value) =>
-                          setState(() => _applyPreviews(value)),
-                      options: const [
-                        (false, 'Wireframes', Icons.view_agenda_outlined),
-                        (true, 'Screens', Icons.smartphone_rounded),
-                      ],
-                    ),
-                    if (_previews)
+                    if (widget.interactive)
+                      _Segmented(
+                        value: _previews,
+                        onChanged: (value) =>
+                            setState(() => _applyPreviews(value)),
+                        options: const [
+                          (false, 'Wireframes', Icons.view_agenda_outlined),
+                          (true, 'Screens', Icons.smartphone_rounded),
+                        ],
+                      ),
+                    if (_previews && widget.interactive)
                       _Toggle(
                         label: 'Preview',
                         icon: Icons.tune_rounded,
@@ -524,11 +544,12 @@ class _SiteMapViewState extends State<SiteMapView>
                         onChanged: (value) =>
                             setState(() => _showSettings = value),
                       ),
-                    _ZoomControls(
-                      transform: _transform,
-                      onZoom: (factor) => _zoomBy(factor, viewport),
-                      onFit: () => setState(() => _fit(viewport)),
-                    ),
+                    if (widget.interactive)
+                      _ZoomControls(
+                        transform: _transform,
+                        onZoom: (factor) => _zoomBy(factor, viewport),
+                        onFit: () => setState(() => _fit(viewport)),
+                      ),
                   ],
                 ),
               ),

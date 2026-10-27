@@ -110,56 +110,7 @@ and English is fuzzy: you're not watching what your agent reads.
 
 ---
 
-## Act 1: Architecture ⇄ tools
-
-### 11. Architecture and tools are intertwined `[NEW]`
-
-Diagram: a two-way loop.
-
-- **Strict guidelines → tools become possible.**
-- **Tools → guidelines are enforced.**
-
-**Notes:** People think of architecture as something for humans to read. It's also what makes
-your code machine-understandable.
-
-### 12. Strict shapes make code analysable `[EDIT]` _(was "Static Analyzability")_
-
-Shoply's rules:
-
-- Every page is a route class, with a `fake()` constructor.
-- Every model is annotated.
-- Every network call goes through one client.
-
-→ A tool can **list every page**, **render it with fake data**, **find every model**,
-**log every request**.
-
-**Notes:** None of this is clever. It's consistency. But consistency is what turns "a codebase"
-into "data a tool can read". Keep these rules in mind: they come back in the site map demo.
-
-### 13. Proof: Riverpod `[EDIT]` _(first half of "Case Study: Riverpod")_
-
-`@riverpod` gives a strict, annotated shape →
-
-- riverpod_generator
-- riverpod_lint
-- the Riverpod devtool
-
-All share `riverpod_analyzer_utils`.
-
-**Notes:** One strict shape, three tools. The parsing logic is written once.
-
-### 14. Strictness used to be expensive. Not anymore. `[NEW]`
-
-- Strict rules used to mean more typing and more friction for devs.
-- The agent doesn't mind typing.
-- **The stricter the architecture, the more tools you get almost for free.**
-
-**Notes:** The cost of strictness was paid by humans writing code. Now it's mostly paid by agents,
-and the benefits (tooling, consistency) remain.
-
----
-
-## Act 2: Static tools (package:analyzer)
+## Act 1: Static tools (package:analyzer)
 
 ### 15. Two kinds of devtools `[EDIT]` _(first half of "How to Make Tools")_
 
@@ -246,7 +197,7 @@ and agents, because its interface is a command and text output.
 
 ---
 
-## Act 3: Runtime tools (package:vm_service)
+## Act 2: Runtime tools (package:vm_service)
 
 ### 24. Runtime tools `[EDIT]` _(second half of "How to Make Tools")_
 
@@ -278,7 +229,7 @@ Side panel: browsing → product → add to cart → cart → checkout → order
 
 Every page, what can be tapped, and where it leads. Like a Figma prototype, but for the real app.
 
-**Notes:** Callback to slide 12: this is only possible because every page is a route with a `fake()` constructor.
+**Notes:** Plant the question for act 3: how does the tool know every page, and how to fill it with data?
 
 ### 32. Site map: real screens `[KEEP]`
 
@@ -300,6 +251,59 @@ On every PR: render the site map, check every page renders and is reachable, pos
 
 **Notes:** The runtime tool becomes a CI step. It's the same tool with a different front-end,
 which leads into the last act.
+
+---
+
+## Act 3: Architecture ⇄ tools
+
+> The comeback after the demos: "these demos are cool, but to do this, your app needs to be
+> architected the right way."
+
+### 11. Architecture and tools are intertwined `[NEW]`
+
+Diagram: a two-way loop.
+
+- **Strict guidelines → tools become possible.**
+- **Tools → guidelines are enforced.**
+
+**Notes:** Everything you just saw relied on the app following strict rules. People think of
+architecture as something for humans to read. It's also what makes your code machine-understandable.
+
+### 12. Strict shapes make code analysable `[EDIT]` _(was "Static Analyzability")_
+
+Shoply's rules:
+
+- Every page is a route class, with a `fake()` constructor.
+- Every model is annotated.
+- Every network call goes through one client.
+
+→ A tool can **list every page**, **render it with fake data**, **find every model**,
+**log every request**.
+
+**Notes:** None of this is clever. It's consistency. But consistency is what turns "a codebase"
+into "data a tool can read". That's the answer to the site map: every page is a route with a
+`fake()` constructor, so a tool can list them all and render them.
+
+### 13. Proof: Riverpod `[EDIT]` _(first half of "Case Study: Riverpod")_
+
+`@riverpod` gives a strict, annotated shape →
+
+- riverpod_generator
+- riverpod_lint
+- the Riverpod devtool
+
+All share `riverpod_analyzer_utils`.
+
+**Notes:** One strict shape, three tools. The parsing logic is written once.
+
+### 14. Strictness used to be expensive. Not anymore. `[NEW]`
+
+- Strict rules used to mean more typing and more friction for devs.
+- The agent doesn't mind typing.
+- **The stricter the architecture, the more tools you get almost for free.**
+
+**Notes:** The cost of strictness was paid by humans writing code. Now it's mostly paid by agents,
+and the benefits (tooling, consistency) remain.
 
 ---
 

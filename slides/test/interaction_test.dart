@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show Icons;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:slides/main.dart';
 import 'package:slides/slides.dart';
+import 'package:slides/src/example_1/shop_app.dart';
+import 'package:slides/src/example_1/state_inspector.dart';
 import 'package:slides/src/example_1/widgets.dart';
 
 import 'fonts.dart';
@@ -75,6 +78,35 @@ void main() {
     });
   });
 
+  group('state inspector', () {
+    Finder inInspector(Finder finder) =>
+        find.descendant(of: find.byType(StateInspector), matching: finder);
+    Finder inApp(Finder finder) =>
+        find.descendant(of: find.byType(ShopApp), matching: finder);
+
+    testWidgets('edits made in the inspector update the app', (tester) async {
+      await goTo(tester, 'State Inspector');
+      expect(inApp(find.text('My cart (3)')), findsOne);
+
+      // The second cart item is the speaker.
+      await click(tester, inInspector(find.byIcon(Icons.add_rounded)).at(1));
+      expect(inApp(find.text('My cart (4)')), findsOne);
+      expect(inInspector(find.text('\$326.00')), findsOne);
+
+      await click(tester, inInspector(find.text('bob@test.dev')));
+      expect(inApp(find.text('Logged in as bob@test.dev')), findsOne);
+      expect(inInspector(find.text('Empty')), findsOne);
+    });
+
+    testWidgets('changes made in the app update the inspector', (tester) async {
+      await goTo(tester, 'State Inspector');
+      expect(inInspector(find.text('\$267.00')), findsOne);
+
+      await click(tester, inApp(find.byIcon(Icons.remove_rounded)).first);
+      expect(inInspector(find.text('\$118.00')), findsOne);
+    });
+  });
+
   group('live site map page', () {
     Future<void> goLive(WidgetTester tester) async {
       await goTo(tester, 'DevTool: Site Map Screens');
@@ -143,16 +175,12 @@ void main() {
     });
   });
 
-  testWidgets('slides switch the site map to dark mode, then large text', (
+  testWidgets('slides show the site map in dark mode, then large text', (
     tester,
   ) async {
-    await goTo(tester, 'DevTool: Site Map Screens');
+    await goTo(tester, 'DevTool: Site Map Dark Mode');
     BuildContext catalog() => tester.element(find.text('Popular right now'));
     final state = tester.state(find.byType(InteractiveViewer));
-    expect(ShopColors.of(catalog()), ShopColors.light);
-
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    await tester.pumpAndSettle();
     expect(ShopColors.of(catalog()), ShopColors.dark);
     expect(find.text('Dark'), findsOne, reason: 'the preview panel is open');
 
