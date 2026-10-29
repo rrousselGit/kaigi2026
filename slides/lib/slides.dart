@@ -212,74 +212,6 @@ List<SlideData> get slides => const <SlideData>[
     child: _TitleSlide(),
   ),
   SlideData(
-    title: 'I Love Building Tools',
-    steps: 2,
-    topic: Topic.intro,
-    notes:
-        "I've always been passionate about building tools that empower "
-        'developers, from code generators to ecosystem tooling across Riverpod '
-        'and Provider projects.',
-    child: _ImageSlide(
-      title: 'I Love Building Tools',
-      maxWidth: 1100,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FramedImage(
-            'assets/img/provider_generator.png',
-            aspectRatio: 678 / 1096,
-            maxHeight: 440,
-          ),
-          SizedBox(width: 16),
-          FramedImage(
-            'assets/img/riverpod_projects.png',
-            aspectRatio: 924 / 1302,
-            maxHeight: 440,
-          ),
-          SizedBox(width: 24),
-          SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Reveal(
-                  1,
-                  child: _PubPackageCard(
-                    name: 'custom_lint',
-                    version: '0.8.1',
-                    description:
-                        'Lint rules are a powerful way to improve the '
-                        'maintainability of a project. Custom Lint allows '
-                        'package authors and developers to easily write '
-                        'custom lint rules.',
-                    publisher: 'invertase.io',
-                    likes: '264',
-                    points: '130',
-                    downloads: '749k',
-                  ),
-                ),
-                SizedBox(height: 16),
-                Reveal(
-                  2,
-                  child: _PubPackageCard(
-                    name: 'expect_error',
-                    version: '1.0.16',
-                    description:
-                        'A testing utility for checking compilation errors',
-                    publisher: 'dash-overflow.net',
-                    likes: '6',
-                    points: '110',
-                    downloads: '5.9k',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-  SlideData(
     title: 'Original Plan vs AI Reality',
     topic: Topic.intro,
     notes:
@@ -298,68 +230,8 @@ List<SlideData> get slides => const <SlideData>[
     ),
   ),
   SlideData(
-    title: 'Software Is Mostly Maintenance',
-    steps: 2,
-    topic: Topic.intro,
-    notes:
-        "AI didn't remove maintenance, it multiplied it. Every PR an agent "
-        'opens is a PR someone has to review, and code someone has to keep '
-        'working.',
-    child: ContentSlide(
-      title: 'Software Is Mostly Maintenance',
-      children: [
-        Grid(
-          columns: 2,
-          gap: 48,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FeatureList(fontSize: 20.8, gap: 18, top: 0, firstStep: 0, [
-                  '**Writing the code:** a few days.',
-                  '**Living with it:** years. Reviews, refactors, upgrades, '
-                      'bugs, onboarding.',
-                ]),
-                SizedBox(height: 16),
-                Reveal(
-                  2,
-                  child: Callout(
-                    '**AI made writing cheap.** So we write more. So there is '
-                    'more to maintain.',
-                    fontSize: 19.2,
-                  ),
-                ),
-              ],
-            ),
-            _TrendChart(
-              yLabel: 'Time to implement a feature',
-              stacked: true,
-              series: [
-                _Series('Coding', Hues.pumpkin, [
-                  Offset(0, 0.6),
-                  Offset(0.45, 0.58),
-                  Offset(0.68, 0.54),
-                  Offset(0.85, 0.16),
-                  Offset(1, 0.1),
-                ]),
-                _Series('Review', Hues.wisteria, [
-                  Offset(0, 0.22),
-                  Offset(0.45, 0.22),
-                  Offset(0.68, 0.23),
-                  Offset(0.85, 0.3),
-                  Offset(1, 0.33),
-                ]),
-              ],
-            ),
-          ],
-        ),
-      ],
-    ),
-  ),
-  SlideData(
     title: 'Two Kinds of Software',
-    steps: 1,
+    steps: 2,
     topic: Topic.intro,
     notes:
         "A lint, a CLI or a debug panel doesn't need the care of production "
@@ -372,20 +244,23 @@ List<SlideData> get slides => const <SlideData>[
           columns: 2,
           gap: 40,
           children: [
-            _SoftwareKind(
-              title: 'Shipped to users',
-              verdict: 'Expensive and slow',
-              color: Hues.roseLight,
-              illustration: _ShippedIllustration(),
-              metrics: [
-                ('Users', 'Thousands', 1),
-                ('Devices', 'Unknown', 0.95),
-                ('Review', 'Every line', 1),
-                ('Cost of a bug', 'High', 0.9),
-              ],
-            ),
             Reveal(
               1,
+              child: _SoftwareKind(
+                title: 'Shipped to users',
+                verdict: 'Expensive and slow',
+                color: Hues.roseLight,
+                illustration: _ShippedIllustration(),
+                metrics: [
+                  ('Users', 'Thousands', 1),
+                  ('Devices', 'Unknown', 0.95),
+                  ('Review', 'Every line', 1),
+                  ('Cost of a bug', 'High', 0.9),
+                ],
+              ),
+            ),
+            Reveal(
+              2,
               child: _SoftwareKind(
                 title: 'Internal tools',
                 verdict: 'Cheap. Let AI write it.',
@@ -411,7 +286,6 @@ List<SlideData> get slides => const <SlideData>[
         'Which is why I am perfectly happy to vibe code devtools, while I would '
         'never ship a vibe coded app to users.',
     child: _ImageSlide(
-      title: 'Know What to Vibe Code',
       child: FramedImage(
         'assets/img/vibe_coded_devtools.png',
         aspectRatio: 1,
@@ -420,8 +294,8 @@ List<SlideData> get slides => const <SlideData>[
     ),
   ),
   SlideData(
-    title: 'Build a Lot of Tools',
-    steps: 3,
+    title: 'Worth Building Complex Tools',
+    steps: 2,
     topic: Topic.intro,
     notes:
         'This is the thesis of the talk. The asymmetry from the previous slide '
@@ -443,7 +317,7 @@ List<SlideData> get slides => const <SlideData>[
     child: _ReviewToLintSlide(),
   ),
   SlideData(
-    title: 'Progressive Improvement',
+    title: 'DRY Applies to More Than Code',
     steps: 3,
     topic: Topic.why,
     notes:
@@ -500,7 +374,7 @@ List<SlideData> get slides => const <SlideData>[
                       pros: [
                         '**Deterministic**',
                         '**Zero context**',
-                        '**Pays electricity**',
+                        '**Zero cost**',
                       ],
                       cons: ['**Sounds scary to build**, but AI can write it'],
                     ),
@@ -515,7 +389,7 @@ List<SlideData> get slides => const <SlideData>[
   ),
   SlideData(
     title: 'Same Prompt, Two Agents',
-    steps: 1,
+    steps: 2,
     topic: Topic.why,
     notes:
         'Same prompt, same model. On the left, the agent figures things out '
@@ -538,7 +412,6 @@ List<SlideData> get slides => const <SlideData>[
               seconds: 167,
               tokens: 214000,
               lines: [
-                '• Bash(git diff --name-only main)',
                 '• Read(lib/screens/cart.dart)',
                 '• Read(lib/screens/checkout.dart)',
                 '• Read(lib/widgets/promo_banner.dart)',
@@ -567,7 +440,7 @@ List<SlideData> get slides => const <SlideData>[
           ],
         ),
         Reveal(
-          1,
+          2,
           child: Callout(
             '**On every PR, forever.** And the one figuring it out missed two.',
             top: 24,
@@ -976,7 +849,7 @@ List<SlideData> get slides => const <SlideData>[
         'The same pages, rendered in dark mode: every screen of the app '
         'checked at once, without clicking through the app on a device.',
     child: _SiteMapSlide(
-      title: 'Previewing Dark Mode',
+      title: 'Sandbox: Dark Mode',
       example: _SiteMapExample.shoply,
       previews: true,
       settings: PreviewSettings(brightness: Brightness.dark),
@@ -990,7 +863,7 @@ List<SlideData> get slides => const <SlideData>[
         'And with a large font, as set by users who need it. Layout issues '
         'show up on every page at once.',
     child: _SiteMapSlide(
-      title: 'Previewing Large Text',
+      title: 'Sandbox: Large Text',
       example: _SiteMapExample.shoply,
       previews: true,
       settings: PreviewSettings(brightness: Brightness.dark, textScale: 1.6),
@@ -1016,7 +889,7 @@ List<SlideData> get slides => const <SlideData>[
     example: ShopApp(state: ShopState(), debug: ShopDebug(open: true)),
     child: _RuntimeAppSlide(
       title: 'Switch Theme & Text Size',
-      points: ['The running app, **not a preview**.'],
+      points: ['The app on **a real device**.'],
     ),
   ),
   SlideData(
@@ -1029,7 +902,7 @@ List<SlideData> get slides => const <SlideData>[
     ),
     child: _RuntimeAppSlide(
       title: 'Switch Theme & Text Size',
-      points: ['The running app, **not a preview**.'],
+      points: ['The app on **a real device**.'],
     ),
   ),
   SlideData(
@@ -1042,7 +915,7 @@ List<SlideData> get slides => const <SlideData>[
     ),
     child: _RuntimeAppSlide(
       title: 'Switch Theme & Text Size',
-      points: ['The running app, **not a preview**.'],
+      points: ['The app on **a real device**.'],
     ),
   ),
   SlideData(
@@ -1314,15 +1187,10 @@ class _TitleSlide extends StatelessWidget {
 }
 
 class _ImageSlide extends StatelessWidget {
-  const _ImageSlide({
-    required this.title,
-    required this.child,
-    this.maxWidth = 950,
-  });
+  const _ImageSlide({this.title, required this.child});
 
-  final String title;
+  final String? title;
   final Widget child;
-  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1330,12 +1198,13 @@ class _ImageSlide extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Eyebrow(center: true),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 28),
-          child: H2(title, textAlign: TextAlign.center),
-        ),
+        if (title case final title?)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 28),
+            child: H2(title, textAlign: TextAlign.center),
+          ),
         ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
+          constraints: const BoxConstraints(maxWidth: 950),
           child: child,
         ),
       ],
@@ -1453,8 +1322,9 @@ class _QuickFixSlide extends StatelessWidget {
         Reveal(
           8,
           child: Callout(
-            '**Skip quick fixes for in-house lints.** Write them for packages '
-            'used by thousands of developers.',
+            '**Build tools to detect bad code, not to correct it.** Let AI '
+            'write the fix. Quick fixes are only worth it for packages used by '
+            'thousands of developers.',
             top: 16,
           ),
         ),
@@ -3621,10 +3491,10 @@ class _ProgressiveImprovementSlide extends StatelessWidget {
     return const BadgeCardSlide(
       maxWidth: 1000,
       children: [
-        BadgeTitle('Progressive Improvement', bottom: 12),
+        BadgeTitle('DRY Applies to More Than Just Code', bottom: 12),
         BadgeSubtitle(
-          'As time passes, codebase rules become enforced by the CI, instead '
-          'of living in the heads of engineers.',
+          'Write a rule once, as a tool, instead of repeating it in every '
+          'review.',
         ),
         SizedBox(height: 28),
         Grid(
@@ -4117,9 +3987,7 @@ class _BuildALotSlide extends StatelessWidget {
           children: [
             const Eyebrow(center: true),
             Md(
-              'Building custom tools became so cheap with AI that it is worth '
-              'building **a lot of them**, to improve maintenance on what you '
-              'ship to users.',
+              "It's finally worth building **complex tools** for your app.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: Fonts.heading,
@@ -4130,22 +3998,19 @@ class _BuildALotSlide extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 28),
-            const Reveal(
-              1,
-              child: _TrendChart(
-                yLabel: 'Cost of a custom tool',
-                height: 240,
-                threshold: (0.4, 'Worth building'),
-                series: [
-                  _Series('', Hues.pumpkin, [
-                    Offset(0, 0.85),
-                    Offset(0.45, 0.82),
-                    Offset(0.66, 0.76),
-                    Offset(0.82, 0.24),
-                    Offset(1, 0.12),
-                  ]),
-                ],
-              ),
+            const _TrendChart(
+              yLabel: 'Cost of a custom tool',
+              height: 240,
+              threshold: (0.4, 'Worth building'),
+              series: [
+                _Series('', Hues.pumpkin, [
+                  Offset(0, 0.85),
+                  Offset(0.45, 0.82),
+                  Offset(0.66, 0.76),
+                  Offset(0.82, 0.24),
+                  Offset(1, 0.12),
+                ]),
+              ],
             ),
             const SizedBox(height: 24),
             const Grid(
@@ -4153,7 +4018,7 @@ class _BuildALotSlide extends StatelessWidget {
               gap: 24,
               children: [
                 Reveal(
-                  2,
+                  1,
                   child: DeckCard(
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                     child: _CardContent(
@@ -4166,7 +4031,7 @@ class _BuildALotSlide extends StatelessWidget {
                   ),
                 ),
                 Reveal(
-                  3,
+                  2,
                   child: DeckCard(
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                     child: _CardContent(
@@ -4220,9 +4085,13 @@ class _AgentRun extends StatelessWidget {
       color: Hues.codeText,
     );
 
+    // The agent starts running on the first step. Before it, only the prompt
+    // shows.
+    final started = SlideStep.of(context) >= 1;
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: revealDuration,
+      tween: Tween(begin: 0, end: started ? 1 : 0),
+      // Going back to before the start resets the run at once.
+      duration: started ? revealDuration : Duration.zero,
       builder: (context, progress, _) {
         final visibleLines = (progress * lines.length).ceil();
         return Container(
@@ -4651,8 +4520,6 @@ class _CrowdPainter extends CustomPainter {
 
 /// A line of a [_TrendChart], with [points] from (0, 0) at the bottom left
 /// to (1, 1) at the top right.
-///
-/// In a stacked chart, the y of [points] is the thickness of the band instead.
 class _Series {
   const _Series(this.label, this.color, this.points);
 
@@ -4668,16 +4535,11 @@ class _TrendChart extends StatelessWidget {
     required this.yLabel,
     required this.series,
     this.threshold,
-    this.stacked = false,
     this.height = 320,
   });
 
   final String yLabel;
   final List<_Series> series;
-
-  /// Draws [series] as bands stacked on top of each other, instead of lines.
-  /// The points of all series must share the same x.
-  final bool stacked;
 
   /// A dashed horizontal line, as (y, label).
   final (double, String)? threshold;
@@ -4693,7 +4555,6 @@ class _TrendChart extends StatelessWidget {
           yLabel: yLabel,
           series: series,
           threshold: threshold,
-          stacked: stacked,
           axisColor: palette.textMuted,
           accent: palette.accent,
           textStyle: DefaultTextStyle.of(context).style
@@ -4709,7 +4570,6 @@ class _TrendChartPainter extends CustomPainter {
     required this.yLabel,
     required this.series,
     required this.threshold,
-    required this.stacked,
     required this.axisColor,
     required this.accent,
     required this.textStyle,
@@ -4721,7 +4581,6 @@ class _TrendChartPainter extends CustomPainter {
   final String yLabel;
   final List<_Series> series;
   final (double, String)? threshold;
-  final bool stacked;
   final Color axisColor;
   final Color accent;
   final TextStyle textStyle;
@@ -4764,19 +4623,14 @@ class _TrendChartPainter extends CustomPainter {
       text.paint(canvas, Offset(chart.left + 12, lineY - text.height - 4));
     }
 
-    if (stacked) {
-      _paintBands(canvas, chart, toCanvas);
-    } else {
-      _paintLines(canvas, chart, toCanvas);
-    }
+    _paintLines(canvas, chart, toCanvas);
 
     final agentsX = toCanvas(const Offset(_agentsX, 0)).dx;
     _dashedLine(
       canvas,
       Offset(agentsX, chart.top),
       Offset(agentsX, chart.bottom),
-      // White stands out over the colored bands of stacked charts.
-      (stacked ? Colors.white : accent).withValues(alpha: 0.7),
+      accent.withValues(alpha: 0.7),
     );
     final agents = _text('🤖 Coding agents', color: accent);
     agents.paint(canvas, Offset(agentsX - agents.width / 2, 0));
@@ -4822,56 +4676,6 @@ class _TrendChartPainter extends CustomPainter {
             ..strokeWidth = 4
             ..strokeCap = StrokeCap.round,
         );
-    }
-  }
-
-  void _paintBands(
-    Canvas canvas,
-    Rect chart,
-    Offset Function(Offset) toCanvas,
-  ) {
-    var bottom = [for (final point in series.first.points) Offset(point.dx, 0)];
-    for (final band in series) {
-      final top = [
-        for (final (index, point) in band.points.indexed)
-          bottom[index].translate(0, point.dy),
-      ];
-      final upper = top.map(toCanvas).toList();
-      final lower = bottom.map(toCanvas).toList().reversed.toList();
-
-      final area = Path()..moveTo(upper.first.dx, upper.first.dy);
-      _curveThrough(area, upper);
-      area.lineTo(lower.first.dx, lower.first.dy);
-      _curveThrough(area, lower);
-      area.close();
-      final edge = Path()..moveTo(upper.first.dx, upper.first.dy);
-      _curveThrough(edge, upper);
-      canvas
-        ..drawPath(
-          area,
-          // Opaque, so that bands read as solid blocks over the background.
-          Paint()
-            ..color = Color.alphaBlend(
-              band.color.withValues(alpha: 0.7),
-              Hues.codeBg,
-            ),
-        )
-        ..drawPath(
-          edge,
-          Paint()
-            ..color = band.color
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2.5,
-        );
-
-      final label = _text(band.label, color: Colors.white, bold: true);
-      final labelY = toCanvas(Offset(0, (bottom.first.dy + top.first.dy) / 2));
-      label.paint(
-        canvas,
-        Offset(chart.left + 12, labelY.dy - label.height / 2),
-      );
-
-      bottom = top;
     }
   }
 

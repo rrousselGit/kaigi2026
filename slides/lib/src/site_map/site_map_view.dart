@@ -538,7 +538,7 @@ class _SiteMapViewState extends State<SiteMapView>
                       ),
                     if (_previews && widget.interactive)
                       _Toggle(
-                        label: 'Preview',
+                        label: 'Sandbox',
                         icon: Icons.tune_rounded,
                         value: _showSettings,
                         onChanged: (value) =>

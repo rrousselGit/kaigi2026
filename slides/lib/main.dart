@@ -11,6 +11,8 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/src/foundation/_features.dart' show isWindowingEnabled;
 import 'package:flutter/src/widgets/_window.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 // ignore: depend_on_referenced_packages
@@ -18,6 +20,7 @@ import 'package:flutter_driver/driver_extension.dart';
 
 import 'confetti.dart';
 import 'example_panel.dart';
+import 'pdf_export.dart';
 import 'slides.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -124,6 +127,10 @@ class _DeckState extends State<Deck> {
   /// enabled (`flutter config --enable-windowing`).
   WindowController? _audience;
 
+  /// The slide being rendered while exporting the deck to PDF, if any.
+  int? _exportingPage;
+  final _exportBoundary = GlobalKey();
+
   @override
   void dispose() {
     _focusNode.dispose();
@@ -193,6 +200,50 @@ class _DeckState extends State<Deck> {
     }
   }
 
+  /// Renders every slide, fully revealed, and saves them as a PDF.
+  Future<void> _exportPdf() async {
+    if (_exportingPage != null) return;
+
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    if (!mounted) return;
+    await Future.wait([
+      for (final asset in manifest.listAssets())
+        if (asset.startsWith('assets/img/'))
+          precacheImage(AssetImage(asset), context),
+    ]);
+
+    final pages = <Future<Uint8List>>[];
+    try {
+      for (var i = 0; i < slides.length; i++) {
+        setState(() => _exportingPage = i);
+        await _settle();
+        final boundary =
+            _exportBoundary.currentContext!.findRenderObject()!
+                as RenderRepaintBoundary;
+        final image = await boundary.toImage(pixelRatio: 2);
+        pages.add(encodePage(image).whenComplete(image.dispose));
+      }
+    } finally {
+      if (mounted) setState(() => _exportingPage = null);
+    }
+
+    await savePdf(
+      await Future.wait(pages),
+      pageSize: _canvas,
+      title: 'Build devtools for your app',
+      fileName: 'build_devtools_for_your_app.pdf',
+    );
+  }
+
+  /// Waits for animations to end, for up to a second.
+  static Future<void> _settle() async {
+    final deadline = DateTime.now().add(const Duration(seconds: 1));
+    do {
+      await WidgetsBinding.instance.endOfFrame;
+    } while (SchedulerBinding.instance.hasScheduledFrame &&
+        DateTime.now().isBefore(deadline));
+  }
+
   void _toggleOverview([bool? show]) {
     setState(() => _showOverview = show ?? !_showOverview);
     _focusNode.requestFocus();
@@ -208,6 +259,8 @@ class _DeckState extends State<Deck> {
       if (key == LogicalKeyboardKey.escape) _focusNode.requestFocus();
       return KeyEventResult.ignored;
     }
+
+    if (_exportingPage != null) return KeyEventResult.handled;
 
     if (_showOverview) {
       if (key == LogicalKeyboardKey.escape) _toggleOverview(false);
@@ -234,6 +287,8 @@ class _DeckState extends State<Deck> {
         _cycleTheme();
       case LogicalKeyboardKey.keyP when !repeatable:
         _togglePresentation();
+      case LogicalKeyboardKey.keyE when !repeatable:
+        unawaited(_exportPdf());
       default:
         return KeyEventResult.ignored;
     }
@@ -294,6 +349,19 @@ class _DeckState extends State<Deck> {
                         onClose: () => _toggleOverview(false),
                       ),
                     ),
+                  if (_exportingPage case final page?) ...[
+                    // Laid out at the size of a PDF page whatever the size of
+                    // the window, and hidden behind the progress.
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: RepaintBoundary(
+                        key: _exportBoundary,
+                        child: _exportedSlide(palette, page),
+                      ),
+                    ),
+                    Positioned.fill(child: _ExportProgress(page: page)),
+                  ],
                 ],
               ),
             ),
@@ -343,6 +411,45 @@ class _DeckState extends State<Deck> {
     );
   }
 
+  /// The slide at [index] as in the exported PDF: with everything revealed,
+  /// and without the progress bar.
+  Widget _exportedSlide(Palette palette, int index) {
+    final slide = slides[index];
+    final (glow, base) = palette.background(slide.topic);
+    return KeyedSubtree(
+      // Not updating the previous slide in place, which would animate it.
+      key: ValueKey(index),
+      child: SizedBox.fromSize(
+        size: _canvas,
+        child: Material(
+          color: base,
+          child: DefaultTextStyle.merge(
+            style: TextStyle(fontFamily: Fonts.body, color: palette.textMain),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: _Background(
+                    glow: glow,
+                    base: base,
+                    accent: palette.topicAccent(slide.topic),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      Expanded(child: _slideCanvas(index, slide.steps)),
+                      ExamplePanel(example: slide.example),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _navBar() {
     return _NavBar(
       index: _index,
@@ -353,6 +460,7 @@ class _DeckState extends State<Deck> {
       onNotes: () => setState(() => _showNotes = !_showNotes),
       onTheme: _cycleTheme,
       onPresent: _togglePresentation,
+      onExport: () => unawaited(_exportPdf()),
     );
   }
 
@@ -728,26 +836,28 @@ class _SlideViewportState extends State<_SlideViewport>
           offset: Offset(0, 20 * (1 - pose.progress)),
           child: Transform.scale(
             scale: 0.96 + 0.04 * pose.progress,
-            child: FittedBox(
-              child: SizedBox.fromSize(
-                size: slides[index].example == null ? _canvas : _splitCanvas,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 72,
-                    vertical: 40,
-                  ),
-                  child: SlideTopic(
-                    topic: slides[index].topic,
-                    child: SlideStep(step: step, child: slides[index].child),
-                  ),
-                ),
-              ),
-            ),
+            child: _slideCanvas(index, step),
           ),
         ),
       ),
     );
   }
+}
+
+/// The slide at [index], laid out on its canvas and scaled to fit.
+Widget _slideCanvas(int index, int step) {
+  return FittedBox(
+    child: SizedBox.fromSize(
+      size: slides[index].example == null ? _canvas : _splitCanvas,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 40),
+        child: SlideTopic(
+          topic: slides[index].topic,
+          child: SlideStep(step: step, child: slides[index].child),
+        ),
+      ),
+    ),
+  );
 }
 
 /// The page background: a glow from the top, a faint orb of the topic's
@@ -1062,6 +1172,7 @@ class _NavBar extends StatelessWidget {
     required this.onTheme,
     required this.presenting,
     required this.onPresent,
+    required this.onExport,
   });
 
   final int index;
@@ -1072,6 +1183,7 @@ class _NavBar extends StatelessWidget {
   final VoidCallback onOverview;
   final VoidCallback onNotes;
   final VoidCallback onTheme;
+  final VoidCallback onExport;
 
   @override
   Widget build(BuildContext context) {
@@ -1144,6 +1256,11 @@ class _NavBar extends StatelessWidget {
                     tooltip: 'Toggle Presentation Mode (P)',
                     onTap: onPresent,
                   ),
+                  _NavButton(
+                    'Export PDF',
+                    tooltip: 'Export to PDF (E)',
+                    onTap: onExport,
+                  ),
                 ],
               ),
             ),
@@ -1189,6 +1306,50 @@ class _NavButton extends StatelessWidget {
               fontSize: 13.6,
               fontWeight: FontWeight.w500,
               color: hovered ? palette.heading : palette.textMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Covers the deck while it is exported to PDF.
+class _ExportProgress extends StatelessWidget {
+  const _ExportProgress({required this.page});
+
+  /// The index of the slide being rendered.
+  final int page;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    return AbsorbPointer(
+      child: ColoredBox(
+        color: palette.isLight
+            ? const Color(0xFFF8FAFC)
+            : const Color(0xFF090D16),
+        child: Center(
+          child: SizedBox(
+            width: 320,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 16,
+              children: [
+                Text(
+                  'Exporting slide ${page + 1} / ${slides.length}',
+                  style: TextStyle(
+                    fontFamily: Fonts.code,
+                    fontSize: 13.6,
+                    color: palette.textMuted,
+                  ),
+                ),
+                LinearProgressIndicator(
+                  value: (page + 1) / slides.length,
+                  color: palette.accent,
+                  backgroundColor: palette.texture,
+                ),
+              ],
             ),
           ),
         ),

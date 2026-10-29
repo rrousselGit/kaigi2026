@@ -10,7 +10,8 @@ Platform folders are gitignored by the repo; regenerate them with
 `flutter create --platforms=macos,web .` if missing.
 
 Shortcuts: `←`/`→`/`Space`/`PageUp`/`PageDown` navigate, `Home`/`End` jump,
-`N` speaker notes, `M` overview grid, `T` cycle theme, `P` presentation mode.
+`N` speaker notes, `M` overview grid, `T` cycle theme, `P` presentation mode,
+`E` export to PDF.
 
 ## Presentation mode
 
@@ -73,6 +74,20 @@ outlet) from `macos/Runner/Base.lproj/MainMenu.xib`. The `willCloseNotification`
 observer works around a crash of Flutter's macOS embedder on hot restart.
 
 Both windows show the same deck, and either one can be used to navigate.
+
+## PDF export
+
+`E` (or "Export PDF" in the nav bar) renders every slide, fully revealed and
+in the current theme, and saves them as a PDF (downloaded on the web).
+
+On macOS, the save dialog requires the sandbox to allow user-selected files.
+After regenerating `macos/`, add to both `macos/Runner/DebugProfile.entitlements`
+and `macos/Runner/Release.entitlements`:
+
+```xml
+<key>com.apple.security.files.user-selected.read-write</key>
+<true/>
+```
 
 ## Side-panel examples
 
