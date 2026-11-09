@@ -30,7 +30,11 @@ jobs:
 
       - name: Build slides
         working-directory: slides
-        run: flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+        run: |
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+          # Pages serves 404.html for unknown paths, so that /5 opens the
+          # app on the fifth slide.
+          cp build/web/index.html build/web/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:

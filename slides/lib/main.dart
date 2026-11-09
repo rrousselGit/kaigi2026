@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_driver/driver_extension.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'confetti.dart';
 import 'example_panel.dart';
@@ -28,8 +29,14 @@ import 'widgets.dart';
 /// Whether the slides can open other windows, which the web does not support.
 final _windowing = isWindowingEnabled && !kIsWeb;
 
+/// Whether the speaker notes can be shown, which the public web version
+/// doesn't do.
+const _speakerNotes = !kIsWeb;
+
 void main() {
   if (kDebugMode || kProfileMode) enableFlutterDriverExtension();
+  // On the web, `/5` links to the fifth slide (see [_DeckState._initialIndex]).
+  usePathUrlStrategy();
   if (_windowing) {
     // The macOS runner starts without any window (see AppDelegate.swift), as
     // windows can only be added at runtime if the app creates all of them.
@@ -98,6 +105,8 @@ class SlidesApp extends StatelessWidget {
           selectionColor: Color(0x5538BDF8),
         ),
       ),
+      // The route is the slide number, which the deck handles by itself.
+      initialRoute: '/',
       home: const Deck(),
     );
   }
@@ -114,7 +123,7 @@ class _DeckState extends State<Deck> {
   final _focusNode = FocusNode(debugLabel: 'deck');
   final _confetti = GlobalKey<ConfettiState>();
   final _audienceConfetti = GlobalKey<ConfettiState>();
-  var _index = 0;
+  var _index = _initialIndex();
 
   /// How much of the current slide is revealed, up to its [SlideData.steps].
   var _step = 0;
@@ -172,6 +181,32 @@ class _DeckState extends State<Deck> {
     }
   }
 
+  /// The slide the app was opened on: `/5` is the fifth slide, so that the
+  /// web version can link to any slide.
+  static int _initialIndex() {
+    if (!kIsWeb) return 0;
+    final segments = Uri.base.pathSegments.where((s) => s.isNotEmpty);
+    final number = segments.isEmpty ? null : int.tryParse(segments.last);
+    if (number == null) return 0;
+    return (number - 1).clamp(0, slides.length - 1);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // After the navigator's own report of its initial route.
+    SchedulerBinding.instance.addPostFrameCallback((_) => _updateUrl());
+  }
+
+  /// Shows the current slide number in the URL (see [_initialIndex]).
+  void _updateUrl() {
+    if (!kIsWeb) return;
+    SystemNavigator.routeInformationUpdated(
+      uri: Uri(path: '/${_index + 1}'),
+      replace: true,
+    );
+  }
+
   /// Shows the slide at [index], with nothing revealed, or everything when
   /// [revealed] (e.g. when coming back to it).
   void _goTo(int index, {bool revealed = false}) {
@@ -181,6 +216,7 @@ class _DeckState extends State<Deck> {
       _index = target;
       _step = revealed ? slides[target].steps : 0;
     });
+    _updateUrl();
     if (target == slides.length - 1) {
       _confetti.currentState?.fire();
       _audienceConfetti.currentState?.fire();
@@ -282,7 +318,7 @@ class _DeckState extends State<Deck> {
         _goTo(0);
       case LogicalKeyboardKey.end when !repeatable:
         _goTo(slides.length - 1);
-      case LogicalKeyboardKey.keyN when !repeatable:
+      case LogicalKeyboardKey.keyN when !repeatable && _speakerNotes:
         setState(() => _showNotes = !_showNotes);
       case LogicalKeyboardKey.keyM when !repeatable:
         _toggleOverview();
@@ -460,7 +496,9 @@ class _DeckState extends State<Deck> {
       onPrevious: _previous,
       onNext: _next,
       onOverview: _toggleOverview,
-      onNotes: () => setState(() => _showNotes = !_showNotes),
+      onNotes: _speakerNotes
+          ? () => setState(() => _showNotes = !_showNotes)
+          : null,
       onTheme: _cycleTheme,
       onPresent: _togglePresentation,
       onExport: () => unawaited(_exportPdf()),
@@ -675,7 +713,7 @@ class _PresenterPanelState extends State<_PresenterPanel> {
               ),
             ],
           ),
-          if (!widget.audienceWindow) ...[
+          if (!widget.audienceWindow && !kIsWeb) ...[
             const SizedBox(height: 12),
             Text(
               'No audience window: enable it with flutter config --enable-windowing.',
@@ -701,21 +739,23 @@ class _PresenterPanelState extends State<_PresenterPanel> {
             upNext,
             style: TextStyle(fontSize: 16, color: palette.textMuted),
           ),
-          const SizedBox(height: 24),
-          Text('SPEAKER NOTES', style: label),
-          const SizedBox(height: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Text(
-                slide.notes,
-                style: TextStyle(
-                  fontSize: 20,
-                  height: 1.5,
-                  color: palette.textMain,
+          if (_speakerNotes) ...[
+            const SizedBox(height: 24),
+            Text('SPEAKER NOTES', style: label),
+            const SizedBox(height: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  slide.notes,
+                  style: TextStyle(
+                    fontSize: 20,
+                    height: 1.5,
+                    color: palette.textMain,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1184,7 +1224,9 @@ class _NavBar extends StatelessWidget {
   final VoidCallback onPrevious;
   final VoidCallback onNext;
   final VoidCallback onOverview;
-  final VoidCallback onNotes;
+
+  /// Toggles the speaker notes, if they can be shown.
+  final VoidCallback? onNotes;
   final VoidCallback onTheme;
   final VoidCallback onExport;
 
@@ -1244,11 +1286,12 @@ class _NavBar extends StatelessWidget {
                     tooltip: 'Toggle Overview (M)',
                     onTap: onOverview,
                   ),
-                  _NavButton(
-                    'Speaker Notes',
-                    tooltip: 'Toggle Speaker Notes (N)',
-                    onTap: onNotes,
-                  ),
+                  if (onNotes case final onNotes?)
+                    _NavButton(
+                      'Speaker Notes',
+                      tooltip: 'Toggle Speaker Notes (N)',
+                      onTap: onNotes,
+                    ),
                   _NavButton(
                     'Theme',
                     tooltip: 'Toggle Theme (T)',
