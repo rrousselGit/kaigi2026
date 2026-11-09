@@ -980,6 +980,23 @@ List<SlideData> get slides => const <SlideData>[
     child: _VmServiceSlide(),
   ),
   SlideData(
+    title: 'The Riverpod DevTool',
+    topic: Topic.runtimeTools,
+    notes:
+        'This is what the Riverpod extension looks like: every provider, which '
+        'ones changed, their current state, and a timeline to travel back and '
+        'forth between states. It is built on that same vm_service, and the '
+        'terminal at the bottom evaluates expressions in the running app.',
+    child: _ImageSlide(
+      title: 'The Riverpod DevTool',
+      child: FramedImage(
+        'assets/img/devtool.png',
+        aspectRatio: 2332 / 1152,
+        maxHeight: 480,
+      ),
+    ),
+  ),
+  SlideData(
     title: 'State Inspector',
     topic: Topic.runtimeTools,
     notes:
