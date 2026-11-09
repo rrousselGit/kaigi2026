@@ -5,3 +5,5 @@ windows
 linux
 web
 .dart_tool
+# The slides are also built for the web (see .github/workflows/pages.yml).
+!slides/web/

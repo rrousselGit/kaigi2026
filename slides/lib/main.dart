@@ -25,9 +25,12 @@ import 'slides.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// Whether the slides can open other windows, which the web does not support.
+final _windowing = isWindowingEnabled && !kIsWeb;
+
 void main() {
   if (kDebugMode || kProfileMode) enableFlutterDriverExtension();
-  if (isWindowingEnabled) {
+  if (_windowing) {
     // The macOS runner starts without any window (see AppDelegate.swift), as
     // windows can only be added at runtime if the app creates all of them.
     runWidget(const _MainWindow());
@@ -147,7 +150,7 @@ class _DeckState extends State<Deck> {
     setState(() {
       _presenting = true;
       _presentingSince = DateTime.now();
-      if (isWindowingEnabled) {
+      if (_windowing) {
         _audience = WindowController(
           size: _canvas,
           title: 'Build devtools for your app',
